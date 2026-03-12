@@ -2686,6 +2686,8 @@ document.addEventListener('DOMContentLoaded', function () {
   initAiAnalysis();
   initFactorAnalysis();
   fetchMarketSentiment();
+  fetchMarketLive();
+  fetchMacroData();
   fetchOverviewNews();
   fetchMarketNewsFeed();
   checkIbkrConnection();
