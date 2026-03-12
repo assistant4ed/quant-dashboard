@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: quant-dashboard
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: PYTHON_BIN
+        value: /opt/render/project/.venv/bin/python
+      - key: ANTHROPIC_API_KEY
+        sync: false
