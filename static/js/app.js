@@ -321,25 +321,27 @@ function renderAll() {
    Rendering: Static Labels (i18n)
    ============================================================ */
 function renderLabels() {
-  dom.headerTitle.textContent = t('app.title');
-  dom.headerSubtitle.textContent = t('app.subtitle');
-  dom.langBtn.textContent = getLang() === 'en' ? 'CN' : 'EN';
-  dom.langBtn.setAttribute(
-    'aria-label',
-    getLang() === 'en' ? 'Switch to Chinese' : 'Switch to English',
-  );
-  dom.refreshLabel.textContent = t('auto.refresh');
+  if (dom.headerTitle) dom.headerTitle.textContent = t('app.title');
+  if (dom.headerSubtitle) dom.headerSubtitle.textContent = t('app.subtitle');
+  if (dom.langBtn) {
+    dom.langBtn.textContent = getLang() === 'en' ? 'CN' : 'EN';
+    dom.langBtn.setAttribute(
+      'aria-label',
+      getLang() === 'en' ? 'Switch to Chinese' : 'Switch to English',
+    );
+  }
+  if (dom.refreshLabel) dom.refreshLabel.textContent = t('auto.refresh');
 
-  dom.overviewLabel.textContent = t('market.overview');
-  dom.recsLabel.textContent = t('top.recommendations');
-  dom.toggleConsensus.textContent = t('view.consensus');
-  dom.toggleSingleday.textContent = t('view.singleday');
-  dom.showMoreBtn.textContent = isExpanded ? t('show.less') : t('show.more');
-  dom.sectorLabel.textContent = t('sector.breakdown');
-  dom.methodologyLabel.textContent = t('methodology');
-  dom.methodologyStepsLabel.textContent = t('methodology.steps');
-  dom.quantLabel.textContent = t('methodology.quant');
-  dom.perfLabel.textContent = t('model.performance');
+  if (dom.overviewLabel) dom.overviewLabel.textContent = t('market.overview');
+  if (dom.recsLabel) dom.recsLabel.textContent = t('top.recommendations');
+  if (dom.toggleConsensus) dom.toggleConsensus.textContent = t('view.consensus');
+  if (dom.toggleSingleday) dom.toggleSingleday.textContent = t('view.singleday');
+  if (dom.showMoreBtn) dom.showMoreBtn.textContent = isExpanded ? t('show.less') : t('show.more');
+  if (dom.sectorLabel) dom.sectorLabel.textContent = t('sector.breakdown');
+  if (dom.methodologyLabel) dom.methodologyLabel.textContent = t('methodology');
+  if (dom.methodologyStepsLabel) dom.methodologyStepsLabel.textContent = t('methodology.steps');
+  if (dom.quantLabel) dom.quantLabel.textContent = t('methodology.quant');
+  if (dom.perfLabel) dom.perfLabel.textContent = t('model.performance');
 
   if (dom.chartLabel) dom.chartLabel.textContent = t('stock.analysis');
   if (dom.growthLabel) dom.growthLabel.textContent = t('growth.predictions');
@@ -354,20 +356,20 @@ function renderOverview() {
   var overview = predictionData.market_overview;
   if (!overview) return;
 
-  dom.cardStocksLabel.textContent = t('stocks.analyzed');
-  dom.cardStocksValue.textContent = overview.total_stocks;
+  if (dom.cardStocksLabel) dom.cardStocksLabel.textContent = t('stocks.analyzed');
+  if (dom.cardStocksValue) dom.cardStocksValue.textContent = overview.total_stocks;
 
-  dom.cardPositiveLabel.textContent = t('positive.signals');
-  dom.cardPositiveValue.textContent =
+  if (dom.cardPositiveLabel) dom.cardPositiveLabel.textContent = t('positive.signals');
+  if (dom.cardPositiveValue) dom.cardPositiveValue.textContent =
     overview.positive_signal_count + ' / ' + overview.negative_signal_count;
-  dom.cardPositiveSub.textContent = t('signal.ratio');
+  if (dom.cardPositiveSub) dom.cardPositiveSub.textContent = t('signal.ratio');
 
-  dom.cardSignalLabel.textContent = t('avg.signal');
-  dom.cardSignalValue.textContent = formatSignal(overview.avg_signal);
+  if (dom.cardSignalLabel) dom.cardSignalLabel.textContent = t('avg.signal');
+  if (dom.cardSignalValue) dom.cardSignalValue.textContent = formatSignal(overview.avg_signal);
 
   var topSectorKey = 'sector.' + overview.top_sector;
-  dom.cardSectorLabel.textContent = t('top.sector');
-  dom.cardSectorValue.textContent = t(topSectorKey);
+  if (dom.cardSectorLabel) dom.cardSectorLabel.textContent = t('top.sector');
+  if (dom.cardSectorValue) dom.cardSectorValue.textContent = t(topSectorKey);
 }
 
 /* ============================================================
@@ -506,6 +508,48 @@ function renderOverviewNews(articles) {
   el.innerHTML = html;
 }
 
+function fetchMarketNewsFeed() {
+  var feed = document.getElementById('news-feed');
+  if (!feed) return;
+  fetch('/api/news')
+    .then(function (r) { return r.json(); })
+    .then(function (resp) {
+      var articles = (resp.data || {}).articles || [];
+      if (!articles.length) {
+        feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">No recent news available.</p>';
+        return;
+      }
+      var html = '';
+      articles.slice(0, 20).forEach(function (a) {
+        var title = escapeHtml(a.title || 'No title');
+        var summary = escapeHtml((a.summary || '').substring(0, 180));
+        var source = escapeHtml(a.source || '');
+        var url = a.url || '#';
+        var pubDate = '';
+        if (a.publishedAt) {
+          try {
+            var d = new Date(a.publishedAt);
+            pubDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          } catch (e) {}
+        }
+        html +=
+          '<a class="overview-news-card" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:0.75rem;">' +
+            '<div class="overview-news-meta">' +
+              '<span class="overview-news-source">' + source + '</span>' +
+              '<span class="overview-news-date">' + pubDate + '</span>' +
+            '</div>' +
+            '<div class="overview-news-title">' + title + '</div>' +
+            (summary ? '<div class="overview-news-summary">' + summary + '...</div>' : '') +
+          '</a>';
+      });
+      feed.innerHTML = html;
+      updateSectionTimestamp('news');
+    })
+    .catch(function () {
+      feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">Failed to load news.</p>';
+    });
+}
+
 function getActiveStocks() {
   if (activeView === 'singleday') {
     return predictionData.single_day_top || [];
@@ -618,7 +662,7 @@ function createStockCard(stock, index) {
    ============================================================ */
 function renderSectorChart() {
   var sectors = predictionData.sector_breakdown;
-  if (!sectors || sectors.length === 0) return;
+  if (!sectors || sectors.length === 0 || !dom.sectorChart) return;
 
   var maxSignal = 0;
   sectors.forEach(function (s) {
@@ -2621,16 +2665,19 @@ document.addEventListener('DOMContentLoaded', function () {
   setInterval(updateClock, 1000);
 
   /* Wire up event listeners */
-  dom.langBtn.addEventListener('click', handleLangToggle);
-  dom.showMoreBtn.addEventListener('click', handleShowMore);
-  dom.toggleConsensus.addEventListener('click', function () {
-    handleViewToggle('consensus');
-  });
-  dom.toggleSingleday.addEventListener('click', function () {
-    handleViewToggle('singleday');
-  });
-
-  dom.toggleConsensus.classList.add('active');
+  if (dom.langBtn) dom.langBtn.addEventListener('click', handleLangToggle);
+  if (dom.showMoreBtn) dom.showMoreBtn.addEventListener('click', handleShowMore);
+  if (dom.toggleConsensus) {
+    dom.toggleConsensus.addEventListener('click', function () {
+      handleViewToggle('consensus');
+    });
+    dom.toggleConsensus.classList.add('active');
+  }
+  if (dom.toggleSingleday) {
+    dom.toggleSingleday.addEventListener('click', function () {
+      handleViewToggle('singleday');
+    });
+  }
 
   document.documentElement.lang = getLang() === 'cn' ? 'zh-CN' : 'en';
 
@@ -2639,6 +2686,8 @@ document.addEventListener('DOMContentLoaded', function () {
   initAiAnalysis();
   initFactorAnalysis();
   fetchMarketSentiment();
+  fetchOverviewNews();
+  fetchMarketNewsFeed();
   checkIbkrConnection();
 
   /* Initialize trading and options */
