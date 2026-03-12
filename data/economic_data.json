@@ -1,0 +1,85 @@
+{
+  "updated_at": "2026-03-09",
+  "indicators": [
+    {
+      "id": "gdp_growth",
+      "name": "GDP Growth Rate",
+      "name_cn": "GDP增长率",
+      "value": 2.3,
+      "unit": "%",
+      "change": 0.1,
+      "direction": "up",
+      "period": "Q4 2025"
+    },
+    {
+      "id": "unemployment",
+      "name": "Unemployment Rate",
+      "name_cn": "失业率",
+      "value": 3.9,
+      "unit": "%",
+      "change": -0.1,
+      "direction": "down",
+      "period": "Feb 2026"
+    },
+    {
+      "id": "cpi",
+      "name": "CPI Inflation",
+      "name_cn": "CPI通胀率",
+      "value": 2.8,
+      "unit": "%",
+      "change": 0.2,
+      "direction": "up",
+      "period": "Feb 2026"
+    },
+    {
+      "id": "fed_rate",
+      "name": "Fed Funds Rate",
+      "name_cn": "联邦基金利率",
+      "value": 4.25,
+      "unit": "%",
+      "change": -0.25,
+      "direction": "down",
+      "period": "Mar 2026"
+    },
+    {
+      "id": "vix",
+      "name": "VIX Index",
+      "name_cn": "VIX恐慌指数",
+      "value": 18.5,
+      "unit": "",
+      "change": -2.3,
+      "direction": "down",
+      "period": "Current"
+    },
+    {
+      "id": "consumer_confidence",
+      "name": "Consumer Confidence",
+      "name_cn": "消费者信心指数",
+      "value": 104.2,
+      "unit": "",
+      "change": 1.8,
+      "direction": "up",
+      "period": "Feb 2026"
+    },
+    {
+      "id": "pmi",
+      "name": "Manufacturing PMI",
+      "name_cn": "制造业PMI",
+      "value": 52.1,
+      "unit": "",
+      "change": 0.5,
+      "direction": "up",
+      "period": "Feb 2026"
+    },
+    {
+      "id": "trade_balance",
+      "name": "Trade Balance",
+      "name_cn": "贸易差额",
+      "value": -68.3,
+      "unit": "B USD",
+      "change": -3.2,
+      "direction": "down",
+      "period": "Jan 2026"
+    }
+  ]
+}

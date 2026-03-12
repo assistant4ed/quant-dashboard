@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-03-09T18:52:00Z",
+  "model_info": {
+    "name": "LightGBM + Alpha158",
+    "description": "Gradient boosting model with 158 technical alpha factors",
+    "train_period": ["2008-01-01", "2023-12-31"],
+    "valid_period": ["2024-01-01", "2025-06-30"],
+    "test_period": ["2025-07-01", "2026-03-06"],
+    "last_prediction_date": "2026-03-06",
+    "total_tickers_analyzed": 458,
+    "data_source": "Yahoo Finance (full history)",
+    "metrics": {
+      "ic": 0.002596,
+      "icir": 0.022526,
+      "rank_ic": 0.003620,
+      "rank_icir": 0.034308
+    }
+  },
+  "market_overview": {
+    "date": "2026-03-06",
+    "total_stocks": 458,
+    "positive_signal_count": 234,
+    "negative_signal_count": 224,
+    "avg_signal": 0.0012,
+    "top_sector": "Technology",
+    "prediction_window_days": 20
+  },
+  "top_stocks": [
+    {"rank": 1, "ticker": "STX", "name": "Seagate Technology", "name_cn": "希捷科技", "sector": "Technology", "sector_cn": "科技", "signal": 0.02823, "consistency": 0.90, "combined_score": 0.9997, "trend": "up"},
+    {"rank": 2, "ticker": "NTRS", "name": "Northern Trust", "name_cn": "北方信托", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.01813, "consistency": 0.85, "combined_score": 0.9953, "trend": "up"},
+    {"rank": 3, "ticker": "LUV", "name": "Southwest Airlines", "name_cn": "西南航空", "sector": "Airlines", "sector_cn": "航空", "signal": 0.02320, "consistency": 0.75, "combined_score": 0.9925, "trend": "up"},
+    {"rank": 4, "ticker": "KMX", "name": "CarMax", "name_cn": "CarMax汽车", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.01691, "consistency": 0.80, "combined_score": 0.9917, "trend": "up"},
+    {"rank": 5, "ticker": "CMG", "name": "Chipotle Mexican Grill", "name_cn": "墨式烧烤", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.01569, "consistency": 0.80, "combined_score": 0.9871, "trend": "up"},
+    {"rank": 6, "ticker": "BA", "name": "Boeing", "name_cn": "波音", "sector": "Industrials", "sector_cn": "工业", "signal": 0.01638, "consistency": 0.75, "combined_score": 0.9863, "trend": "up"},
+    {"rank": 7, "ticker": "XRX", "name": "Xerox Holdings", "name_cn": "施乐", "sector": "Technology", "sector_cn": "科技", "signal": 0.01556, "consistency": 0.80, "combined_score": 0.9840, "trend": "up"},
+    {"rank": 8, "ticker": "RCL", "name": "Royal Caribbean", "name_cn": "皇家加勒比", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.01564, "consistency": 0.70, "combined_score": 0.9783, "trend": "up"},
+    {"rank": 9, "ticker": "INTC", "name": "Intel", "name_cn": "英特尔", "sector": "Technology", "sector_cn": "科技", "signal": 0.01436, "consistency": 0.75, "combined_score": 0.9770, "trend": "up"},
+    {"rank": 10, "ticker": "LEG", "name": "Leggett & Platt", "name_cn": "礼恩派", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.01642, "consistency": 0.65, "combined_score": 0.9769, "trend": "up"},
+    {"rank": 11, "ticker": "BWA", "name": "BorgWarner", "name_cn": "博格华纳", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.01537, "consistency": 0.70, "combined_score": 0.9752, "trend": "up"},
+    {"rank": 12, "ticker": "ALK", "name": "Alaska Air Group", "name_cn": "阿拉斯加航空", "sector": "Airlines", "sector_cn": "航空", "signal": 0.01238, "consistency": 0.80, "combined_score": 0.9747, "trend": "up"},
+    {"rank": 13, "ticker": "IPGP", "name": "IPG Photonics", "name_cn": "IPG光电", "sector": "Technology", "sector_cn": "科技", "signal": 0.01461, "consistency": 0.70, "combined_score": 0.9736, "trend": "up"},
+    {"rank": 14, "ticker": "IVZ", "name": "Invesco", "name_cn": "景顺", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.01033, "consistency": 0.85, "combined_score": 0.9705, "trend": "up"},
+    {"rank": 15, "ticker": "MCHP", "name": "Microchip Technology", "name_cn": "微芯科技", "sector": "Technology", "sector_cn": "科技", "signal": 0.01394, "consistency": 0.70, "combined_score": 0.9705, "trend": "up"},
+    {"rank": 16, "ticker": "STT", "name": "State Street", "name_cn": "道富集团", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.01304, "consistency": 0.70, "combined_score": 0.9690, "trend": "up"},
+    {"rank": 17, "ticker": "DAL", "name": "Delta Air Lines", "name_cn": "达美航空", "sector": "Airlines", "sector_cn": "航空", "signal": 0.01161, "consistency": 0.70, "combined_score": 0.9659, "trend": "up"},
+    {"rank": 18, "ticker": "ZION", "name": "Zions Bancorporation", "name_cn": "锡安银行", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.01048, "consistency": 0.70, "combined_score": 0.9628, "trend": "up"},
+    {"rank": 19, "ticker": "MS", "name": "Morgan Stanley", "name_cn": "摩根士丹利", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.00848, "consistency": 0.90, "combined_score": 0.9595, "trend": "up"},
+    {"rank": 20, "ticker": "GM", "name": "General Motors", "name_cn": "通用汽车", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.01115, "consistency": 0.65, "combined_score": 0.9584, "trend": "up"},
+    {"rank": 21, "ticker": "AAP", "name": "Advance Auto Parts", "name_cn": "先进汽车零件", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.00899, "consistency": 0.70, "combined_score": 0.9551, "trend": "up"},
+    {"rank": 22, "ticker": "HBAN", "name": "Huntington Bancshares", "name_cn": "亨廷顿银行", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.01012, "consistency": 0.65, "combined_score": 0.9538, "trend": "up"},
+    {"rank": 23, "ticker": "ALB", "name": "Albemarle", "name_cn": "雅保", "sector": "Materials", "sector_cn": "原材料", "signal": 0.00879, "consistency": 0.70, "combined_score": 0.9535, "trend": "up"},
+    {"rank": 24, "ticker": "AMD", "name": "Advanced Micro Devices", "name_cn": "超威半导体", "sector": "Technology", "sector_cn": "科技", "signal": 0.00981, "consistency": 0.65, "combined_score": 0.9522, "trend": "up"},
+    {"rank": 25, "ticker": "KEY", "name": "KeyCorp", "name_cn": "KeyCorp银行", "sector": "Financial Services", "sector_cn": "金融服务", "signal": 0.00821, "consistency": 0.70, "combined_score": 0.9474, "trend": "up"},
+    {"rank": 26, "ticker": "NFLX", "name": "Netflix", "name_cn": "奈飞", "sector": "Communication Services", "sector_cn": "通信服务", "signal": 0.00811, "consistency": 0.70, "combined_score": 0.9443, "trend": "up"},
+    {"rank": 27, "ticker": "FMC", "name": "FMC Corporation", "name_cn": "FMC富美实", "sector": "Materials", "sector_cn": "原材料", "signal": 0.00859, "consistency": 0.60, "combined_score": 0.9411, "trend": "up"},
+    {"rank": 28, "ticker": "VFC", "name": "VF Corporation", "name_cn": "威富集团", "sector": "Consumer Discretionary", "sector_cn": "可选消费", "signal": 0.00971, "consistency": 0.55, "combined_score": 0.9374, "trend": "up"},
+    {"rank": 29, "ticker": "NEM", "name": "Newmont Corporation", "name_cn": "纽蒙特矿业", "sector": "Materials", "sector_cn": "原材料", "signal": 0.00851, "consistency": 0.55, "combined_score": 0.9312, "trend": "up"},
+    {"rank": 30, "ticker": "FFIV", "name": "F5 Networks", "name_cn": "F5网络", "sector": "Technology", "sector_cn": "科技", "signal": 0.00708, "consistency": 0.60, "combined_score": 0.9272, "trend": "up"}
+  ],
+  "single_day_top": [
+    {"rank": 1, "ticker": "TPR", "name": "Tapestry", "name_cn": "泰佩思琦", "signal": 0.06127},
+    {"rank": 2, "ticker": "MOS", "name": "Mosaic Company", "name_cn": "美盛", "signal": 0.04403},
+    {"rank": 3, "ticker": "BWA", "name": "BorgWarner", "name_cn": "博格华纳", "signal": 0.04315},
+    {"rank": 4, "ticker": "RCL", "name": "Royal Caribbean", "name_cn": "皇家加勒比", "signal": 0.04286},
+    {"rank": 5, "ticker": "NEM", "name": "Newmont", "name_cn": "纽蒙特", "signal": 0.04205},
+    {"rank": 6, "ticker": "LB", "name": "L Brands", "name_cn": "L Brands", "signal": 0.03928},
+    {"rank": 7, "ticker": "FCX", "name": "Freeport-McMoRan", "name_cn": "自由港", "signal": 0.03905},
+    {"rank": 8, "ticker": "LUV", "name": "Southwest Airlines", "name_cn": "西南航空", "signal": 0.03833},
+    {"rank": 9, "ticker": "JBHT", "name": "J.B. Hunt Transport", "name_cn": "JB亨特运输", "signal": 0.03567},
+    {"rank": 10, "ticker": "PPG", "name": "PPG Industries", "name_cn": "PPG工业", "signal": 0.03364}
+  ],
+  "sector_breakdown": [
+    {"sector": "Technology", "sector_cn": "科技", "count": 7, "avg_signal": 0.01566},
+    {"sector": "Financial Services", "sector_cn": "金融服务", "count": 7, "avg_signal": 0.01013},
+    {"sector": "Consumer Discretionary", "sector_cn": "可选消费", "count": 8, "avg_signal": 0.01302},
+    {"sector": "Airlines", "sector_cn": "航空", "count": 3, "avg_signal": 0.01573},
+    {"sector": "Materials", "sector_cn": "原材料", "count": 3, "avg_signal": 0.00863},
+    {"sector": "Industrials", "sector_cn": "工业", "count": 1, "avg_signal": 0.01638},
+    {"sector": "Communication Services", "sector_cn": "通信服务", "count": 1, "avg_signal": 0.00811}
+  ],
+  "methodology": {
+    "steps": [
+      {"title": "Data Collection", "title_cn": "数据采集", "desc": "18 years of daily OHLCV data for 458 SP500 stocks from Yahoo Finance (2008-2026). Point-in-time data to prevent look-ahead bias, with survivorship bias correction for delisted stocks.", "desc_cn": "从Yahoo Finance获取458只标普500成分股18年的日线OHLCV数据(2008-2026)。使用时点数据防止前视偏差，并对退市股票进行生存偏差校正。"},
+      {"title": "Feature Engineering", "title_cn": "特征工程", "desc": "Alpha158: 158 technical alpha factors including momentum, volatility, volume patterns, and price ratios. Factors cover return features, volatility measures, RSI, Bollinger Bands, MACD derivatives, and volume-weighted metrics.", "desc_cn": "Alpha158: 158个技术Alpha因子，包括动量、波动率、成交量模式和价格比率。因子涵盖收益特征、波动率度量、RSI、布林带、MACD衍生指标和成交量加权指标。"},
+      {"title": "Model Training", "title_cn": "模型训练", "desc": "LightGBM gradient boosting with optimized hyperparameters, trained on 16 years of data. LightGBM is the industry-standard workhorse at quant funds for its handling of tabular data, built-in feature importance, and fast training/inference.", "desc_cn": "使用优化超参数的LightGBM梯度提升模型，基于16年数据训练。LightGBM是量化基金的行业标准主力模型，擅长处理表格数据，内置特征重要性，训练和推理速度快。"},
+      {"title": "Validation", "title_cn": "验证", "desc": "Three-period validation: train (2008-2023), validation (2024-2025H1), test (2025H2-2026). Evaluated using IC, ICIR, Rank IC, and Rank ICIR. Walk-forward analysis is the gold standard in the industry.", "desc_cn": "三段式验证：训练(2008-2023)、验证(2024-2025上半年)、测试(2025下半年-2026)。使用IC、ICIR、Rank IC和Rank ICIR评估。滚动前进分析是行业金标准。"},
+      {"title": "Signal Generation", "title_cn": "信号生成", "desc": "Model predicts excess returns for each stock. Higher signal = stronger buy recommendation. Even a small positive IC (0.02-0.10) is meaningful when applied consistently across hundreds of stocks.", "desc_cn": "模型预测每只股票的超额收益。信号越高 = 买入推荐越强。即使较小的正IC(0.02-0.10)在数百只股票上持续应用时也很有意义。"},
+      {"title": "Ranking & Filtering", "title_cn": "排名与筛选", "desc": "Combined score: 70% signal strength + 30% consistency in top quartile over 20 trading days. Cross-sectional ranking ensures stocks are compared to peers. Top 30 stocks presented as recommendations.", "desc_cn": "综合评分: 70%信号强度 + 30%在20个交易日内进入前25%的一致性。截面排名确保股票与同类比较。前30只股票作为推荐展示。"}
+    ],
+    "quant_fund_approach": {
+      "title": "How Quant Funds Build Prediction Systems",
+      "title_cn": "量化基金如何构建预测系统",
+      "research_doc": "research_quant_funds.md",
+      "sections": [
+        {"heading": "Data Infrastructure", "heading_cn": "数据基础设施", "content": "Top quant funds (Renaissance Technologies, Two Sigma, DE Shaw, Citadel) invest hundreds of millions in data infrastructure. Two Sigma stores 380+ petabytes and runs 110,000+ daily simulations. Alternative data sources include satellite imagery (parking lot analysis, oil tank monitoring), credit card transactions, geolocation foot traffic, web-scraped data, social media sentiment, and shipping data. Hedge funds using alternative data reported 20% higher alpha generation in 2024.", "content_cn": "顶级量化基金(文艺复兴科技、Two Sigma、DE Shaw、Citadel)在数据基础设施上投入数亿美元。Two Sigma存储380+PB数据，每日运行11万+次模拟。另类数据源包括卫星图像(停车场分析、油罐监测)、信用卡交易、地理位置人流、网络爬取数据、社交媒体情绪和航运数据。使用另类数据的对冲基金在2024年报告了20%更高的Alpha生成。"},
+        {"heading": "Factor Models", "heading_cn": "因子模型", "content": "Funds build multi-factor models combining: value factors (P/E, P/B, EV/EBITDA), momentum factors (12-month with 1-month reversal skip), quality factors (ROE, gross profitability, Piotroski F-Score), volatility factors (low-vol anomaly), and sentiment factors (NLP news, 13F filings, options flow). AQR focuses on five core styles: value, quality, momentum, carry, and defensive. Factor combination uses linear IC-weighting, ML-based non-linear combination, or risk-parity weighting.", "content_cn": "基金构建多因子模型，结合：价值因子(市盈率、市净率、EV/EBITDA)、动量因子(12个月含1个月反转跳过)、质量因子(ROE、毛利率、Piotroski F分)、波动率因子(低波动异常)和情绪因子(NLP新闻、13F备案、期权流)。AQR聚焦五大核心风格：价值、质量、动量、套利和防守。因子组合使用线性IC加权、ML非线性组合或风险平价加权。"},
+        {"heading": "Machine Learning Pipeline", "heading_cn": "机器学习流程", "content": "Gradient boosting (LightGBM, XGBoost) remains the production workhorse. Deep learning advances include Transformers for time series (ATFNet, Galformer, Stockformer), LSTM/GRU networks, and hybrid TCN-GRU-MHA architectures. Reinforcement learning (PPO, SAC, A2C) is used for dynamic portfolio rebalancing. Renaissance Technologies pioneered Hidden Markov Models and Bayesian inference from speech recognition research. Stacked heterogeneous ensembles combine statistical, ML, and deep learning models with meta-learners.", "content_cn": "梯度提升(LightGBM、XGBoost)仍是生产主力。深度学习进展包括时序Transformer(ATFNet、Galformer、Stockformer)、LSTM/GRU网络和混合TCN-GRU-MHA架构。强化学习(PPO、SAC、A2C)用于动态投资组合再平衡。文艺复兴科技从语音识别研究中率先引入隐马尔可夫模型和贝叶斯推断。堆叠异构集成将统计、ML和深度学习模型与元学习器结合。"},
+        {"heading": "Backtesting & Validation", "heading_cn": "回测与验证", "content": "Walk-forward analysis is the gold standard: optimize on in-sample data, test on out-of-sample, shift window forward, repeat. Combinatorial Purged Cross-Validation (CPCV) by Lopez de Prado creates multiple train/test splits respecting time ordering with embargo periods. Key metrics: IC (Pearson correlation of predicted vs actual returns), ICIR (IC stability = mean IC / std IC), Rank IC (Spearman rank correlation). An IC of 0.05-0.10 is stellar; ICIR of 0.40-0.60 is highly favorable.", "content_cn": "滚动前进分析是金标准：在样本内数据上优化，在样本外测试，窗口前移，重复。Lopez de Prado的组合清洗交叉验证(CPCV)创建多个训练/测试分割，尊重时间顺序并有禁止期。关键指标：IC(预测与实际收益的皮尔逊相关)、ICIR(IC稳定性=均值IC/标准差IC)、Rank IC(斯皮尔曼秩相关)。IC 0.05-0.10为优秀；ICIR 0.40-0.60为高度理想。"},
+        {"heading": "Risk Management", "heading_cn": "风险管理", "content": "Position sizing uses fractional Kelly criterion (1/2 or 1/3 of full Kelly) to balance growth and drawdown control. Funds maintain sector neutrality and market neutrality (near-zero beta). Dynamic position reduction during drawdowns limits further losses. VaR/CVaR monitoring, stress testing against historical crises, and correlation monitoring detect concentration risk.", "content_cn": "仓位管理使用分数凯利准则(全凯利的1/2或1/3)平衡增长和回撤控制。基金维持行业中性和市场中性(接近零Beta)。回撤期间动态减仓限制进一步损失。VaR/CVaR监控、历史危机压力测试和相关性监控检测集中度风险。"},
+        {"heading": "Execution", "heading_cn": "执行", "content": "Smart order routing splits large orders across venues and time to minimize price impact. Dark pools provide anonymous execution for institutional-sized orders. Co-located servers enable microsecond-level execution speed. Transaction cost analysis (TCA) compares execution to VWAP and arrival price benchmarks.", "content_cn": "智能订单路由将大订单分散到多个场所和时间以最小化价格影响。暗池为机构规模订单提供匿名执行。机房托管服务器实现微秒级执行速度。交易成本分析(TCA)将执行与VWAP和到达价格基准进行比较。"},
+        {"heading": "Open Source Tools", "heading_cn": "开源工具", "content": "Key platforms: Qlib (Microsoft, AI-oriented quant platform with Alpha158/360 factors, RD-Agent automation), QuantConnect/LEAN (institutional-grade backtesting and live trading), Backtrader (fast setup, Pythonic), VectorBT (vectorized backtesting at extreme speed), FinRL (deep RL for portfolio optimization). Supporting tools: alphalens (factor analysis), pyfolio (portfolio analytics), pandas-ta (technical indicators).", "content_cn": "关键平台：Qlib(微软，面向AI的量化平台，含Alpha158/360因子和RD-Agent自动化)、QuantConnect/LEAN(机构级回测和实盘交易)、Backtrader(快速设置、Python风格)、VectorBT(极速向量化回测)、FinRL(深度RL投资组合优化)。辅助工具：alphalens(因子分析)、pyfolio(组合分析)、pandas-ta(技术指标)。"},
+        {"heading": "Industry Benchmarks (2025)", "heading_cn": "行业基准(2025)", "content": "Top quant fund returns in 2025: DE Shaw Oculus ~28.2%, AQR Multi-strategy 19.6%, DE Shaw Composite 18.5%, Citadel Flagship 10.2%. Renaissance Medallion Fund's historical record: 66% annual returns before fees (1988-2018) with only 50.75% trade accuracy, demonstrating how small statistical edges compound over millions of trades.", "content_cn": "2025年顶级量化基金回报：DE Shaw Oculus约28.2%、AQR多策略19.6%、DE Shaw综合18.5%、Citadel旗舰10.2%。文艺复兴大奖章基金历史记录：1988-2018年费前年化66%回报，交易准确率仅50.75%，展示了小的统计优势如何在数百万笔交易中复利增长。"}
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "is_running": false,
+  "current_round": 0,
+  "total_rounds": 0,
+  "best_ic": null,
+  "best_icir": null,
+  "best_composite": null,
+  "history": [],
+  "last_run": null
+}

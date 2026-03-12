@@ -1,0 +1,70 @@
+{
+  "total_quizzes": 5,
+  "total_questions": 14,
+  "total_correct": 8,
+  "overall_accuracy": 57.1,
+  "by_deck": {
+    "options_trading": {
+      "quizzes": 2,
+      "total_questions": 6,
+      "total_correct": 6,
+      "accuracy": 100.0
+    },
+    "technical_analysis": {
+      "quizzes": 2,
+      "total_questions": 5,
+      "total_correct": 2,
+      "accuracy": 40.0
+    },
+    "fundamental_analysis": {
+      "quizzes": 1,
+      "total_questions": 3,
+      "total_correct": 0,
+      "accuracy": 0.0
+    }
+  },
+  "skill_levels": {
+    "options_trading": "advanced",
+    "technical_analysis": "beginner",
+    "fundamental_analysis": "beginner"
+  },
+  "streak": 1,
+  "last_quiz": "2026-03-09T19:17:34.946576+00:00",
+  "quiz_history": [
+    {
+      "quiz_id": "b2888928-f635-4ee2-bddc-b676e9ff7b34",
+      "deck": "options_trading",
+      "score_pct": 100.0,
+      "grade": "A",
+      "timestamp": "2026-03-09T19:00:52.748461+00:00"
+    },
+    {
+      "quiz_id": "a4ee43fc69af",
+      "deck": "options_trading",
+      "score_pct": 100.0,
+      "grade": "A",
+      "timestamp": "2026-03-09T19:09:27.296653+00:00"
+    },
+    {
+      "quiz_id": "933d0b8cf6ab",
+      "deck": "technical_analysis",
+      "score_pct": 0.0,
+      "grade": "F",
+      "timestamp": "2026-03-09T19:10:39.168620+00:00"
+    },
+    {
+      "quiz_id": "07b62d6d59eb",
+      "deck": "fundamental_analysis",
+      "score_pct": 0.0,
+      "grade": "F",
+      "timestamp": "2026-03-09T19:12:17.621498+00:00"
+    },
+    {
+      "quiz_id": "b803945a3919",
+      "deck": "technical_analysis",
+      "score_pct": 40.0,
+      "grade": "F",
+      "timestamp": "2026-03-09T19:17:34.946576+00:00"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "updated_at": "2026-03-09",
+  "articles": [
+    {
+      "title": "Fed Signals Potential Rate Cut in Q2 2026",
+      "title_cn": "美联储暗示2026年第二季度可能降息",
+      "source": "Reuters",
+      "date": "2026-03-08",
+      "category": "monetary_policy",
+      "sentiment": "positive",
+      "impact": "high",
+      "summary": "Federal Reserve Chair indicated openness to rate cuts if inflation continues to moderate, boosting equity markets.",
+      "summary_cn": "美联储主席表示如果通胀继续缓和，可能考虑降息，提振股市。",
+      "affected_sectors": ["Financial Services", "Technology", "Consumer Discretionary"]
+    },
+    {
+      "title": "US-China Trade Tensions Ease After New Framework Agreement",
+      "title_cn": "美中贸易紧张关系在新框架协议后缓解",
+      "source": "Bloomberg",
+      "date": "2026-03-07",
+      "category": "trade",
+      "sentiment": "positive",
+      "impact": "high",
+      "summary": "New bilateral trade framework reduces tariff uncertainty for tech and manufacturing sectors.",
+      "summary_cn": "新双边贸易框架减少了科技和制造业的关税不确定性。"
+    },
+    {
+      "title": "AI Infrastructure Spending Surges 40% YoY",
+      "title_cn": "AI基础设施支出同比激增40%",
+      "source": "WSJ",
+      "date": "2026-03-07",
+      "category": "technology",
+      "sentiment": "positive",
+      "impact": "medium",
+      "summary": "Major tech companies increase capital expenditure on AI infrastructure, benefiting semiconductor and data center stocks.",
+      "summary_cn": "大型科技公司增加AI基础设施资本支出，利好半导体和数据中心股票。"
+    },
+    {
+      "title": "Consumer Spending Shows Signs of Slowdown",
+      "title_cn": "消费支出显示放缓迹象",
+      "source": "CNBC",
+      "date": "2026-03-06",
+      "category": "economy",
+      "sentiment": "negative",
+      "impact": "medium",
+      "summary": "Retail sales data disappoints as consumers pull back on discretionary spending amid persistent inflation.",
+      "summary_cn": "零售销售数据令人失望，消费者在持续通胀下减少可选消费支出。"
+    },
+    {
+      "title": "Oil Prices Drop on Increased OPEC+ Production",
+      "title_cn": "OPEC+增产导致油价下跌",
+      "source": "Financial Times",
+      "date": "2026-03-06",
+      "category": "commodities",
+      "sentiment": "neutral",
+      "impact": "medium",
+      "summary": "OPEC+ agrees to gradually increase output, putting downward pressure on crude prices. Positive for airlines and transport.",
+      "summary_cn": "OPEC+同意逐步增产，对原油价格形成下行压力。利好航空和运输业。"
+    },
+    {
+      "title": "European Central Bank Holds Rates Steady",
+      "title_cn": "欧洲央行维持利率不变",
+      "source": "Reuters",
+      "date": "2026-03-05",
+      "category": "monetary_policy",
+      "sentiment": "neutral",
+      "impact": "low",
+      "summary": "ECB maintains current rates as eurozone inflation remains above target, limited direct US market impact.",
+      "summary_cn": "欧洲央行维持当前利率不变，欧元区通胀仍高于目标，对美国市场影响有限。"
+    },
+    {
+      "title": "US Infrastructure Bill Passes Senate Committee",
+      "title_cn": "美国基建法案通过参议院委员会",
+      "source": "AP",
+      "date": "2026-03-05",
+      "category": "fiscal_policy",
+      "sentiment": "positive",
+      "impact": "medium",
+      "summary": "Bipartisan $200B infrastructure package advances, boosting materials, industrials, and construction sectors.",
+      "summary_cn": "两党2000亿美元基建方案推进，提振原材料、工业和建筑板块。"
+    },
+    {
+      "title": "Cybersecurity Threats Drive Enterprise Spending Higher",
+      "title_cn": "网络安全威胁推动企业支出上升",
+      "source": "TechCrunch",
+      "date": "2026-03-04",
+      "category": "technology",
+      "sentiment": "positive",
+      "impact": "low",
+      "summary": "Enterprise cybersecurity budgets increase 25% amid rising ransomware attacks.",
+      "summary_cn": "随着勒索软件攻击增加，企业网络安全预算增长25%。"
+    }
+  ]
+}
