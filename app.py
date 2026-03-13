@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
 # ---------------------------------------------------------------------------
@@ -3290,6 +3290,73 @@ def create_app():
             },
             "error": None,
             "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    # ------------------------------------------------------------------
+    # Live Trading Monitor
+    # ------------------------------------------------------------------
+
+    _monitor_engine = None
+
+    def _get_monitor():
+        nonlocal _monitor_engine
+        if _monitor_engine is None:
+            from monitor import MonitorEngine
+            _monitor_engine = MonitorEngine()
+            _monitor_engine.start()
+            logger.info("Monitor engine started")
+        return _monitor_engine
+
+    @app.route("/monitor")
+    def monitor_page():
+        """Serve the live trading monitor page."""
+        return render_template("monitor.html")
+
+    @app.route("/api/monitor/stream")
+    def monitor_stream():
+        """SSE stream of real-time stock updates."""
+        engine = _get_monitor()
+
+        def generate():
+            for event in engine.stream_updates():
+                yield event
+
+        return Response(
+            generate(),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
+
+    @app.route("/api/monitor/states")
+    def monitor_states():
+        """Return current state of all monitored stocks."""
+        engine = _get_monitor()
+        return jsonify({
+            "data": engine.get_states(),
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/monitor/config", methods=["GET", "POST"])
+    def monitor_config():
+        """Get or update the watchlist."""
+        engine = _get_monitor()
+        if request.method == "POST":
+            body = request.get_json(silent=True) or {}
+            tickers = body.get("tickers", [])
+            if tickers and isinstance(tickers, list):
+                engine.set_watchlist([t.upper().strip() for t in tickers[:12]])
+            return jsonify({
+                "data": {"watchlist": engine.watchlist},
+                "error": None,
+            })
+        return jsonify({
+            "data": {"watchlist": engine.watchlist},
+            "error": None,
         })
 
     return app
