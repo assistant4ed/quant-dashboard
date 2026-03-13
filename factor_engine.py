@@ -1,16 +1,19 @@
 """
-Venture Fund-Grade Multi-Factor Analysis Engine v2.
+Venture Fund-Grade Multi-Factor Analysis Engine v3.
 
-Computes 9 factor category exposures (each -5 to +5 scale):
-  1. Momentum   - Price trend 1m/3m/6m/12m + RSI + MACD
-  2. Value      - P/E, P/B, EV/EBITDA, P/S, Dividend Yield (sector-adjusted)
-  3. Quality    - ROE, ROA, Gross Margin, Op Margin, Debt/Equity, Current Ratio
-  4. Growth     - Revenue growth, EPS growth, Forward EPS, Analyst Rating
-  5. Volatility - Beta, 30D Realized Vol, Max Drawdown, ATR (inverted scoring)
-  6. Sentiment  - Short Interest, Institutional Hold, Insider Activity, Consensus
-  7. Macro      - S&P Correlation, Relative Strength, 52-Week Position
-  8. Economic   - CPI, GDP, Consumer Sentiment, Yield Curve, PMI, Housing
-  9. Industry   - Sector ETF momentum, relative strength vs market, rotation
+Computes 12 factor category exposures (each -5 to +5 scale):
+  1. Momentum           - Price trend 1m/3m/6m/12m + RSI + MACD
+  2. Value              - P/E, P/B, EV/EBITDA, P/S, Dividend Yield (sector-adjusted)
+  3. Quality            - ROE, ROA, Gross Margin, Op Margin, Debt/Equity, Current Ratio
+  4. Growth             - Revenue growth, EPS growth, Forward EPS, Analyst Rating
+  5. Volatility         - Beta, 30D Realized Vol, Max Drawdown, ATR (inverted scoring)
+  6. Sentiment          - Short Interest, Institutional Hold, Insider Activity, Consensus
+  7. Macro              - S&P Correlation, Relative Strength, 52-Week Position
+  8. Economic           - CPI, GDP, Consumer Sentiment, Yield Curve, PMI, Housing
+  9. Industry           - Sector ETF momentum, relative strength vs market, rotation
+ 10. Risk-Adjusted      - Sharpe, Sortino, Information, Calmar, Treynor, Risk-Reward
+ 11. Historical Analogy - Macro fingerprint vs historical regimes, forward return est.
+ 12. ML Adaptive        - Ridge regression meta-factor, factor alignment, signal consistency
 
 Adds market regime detection, dynamic factor weights, industry-specific
 thresholds, multi-horizon scoring, risk-to-return, and bottom detection.
@@ -36,42 +39,49 @@ _CACHE_TTL = 1800  # 30-minute TTL
 
 REGIME_WEIGHTS = {
     "PANIC": {
-        "momentum": 0.08, "value": 0.25, "quality": 0.25, "growth": 0.08,
-        "volatility": 0.10, "sentiment": 0.06, "macro": 0.08,
-        "economic": 0.05, "industry": 0.05,
+        "momentum": 0.064, "value": 0.200, "quality": 0.200, "growth": 0.064,
+        "volatility": 0.080, "sentiment": 0.048, "macro": 0.064,
+        "economic": 0.040, "industry": 0.040,
+        "risk_adjusted": 0.080, "historical": 0.080, "ml_adaptive": 0.040,
     },
     "BEAR": {
-        "momentum": 0.12, "value": 0.22, "quality": 0.22, "growth": 0.10,
-        "volatility": 0.10, "sentiment": 0.08, "macro": 0.08,
-        "economic": 0.04, "industry": 0.04,
+        "momentum": 0.098, "value": 0.180, "quality": 0.180, "growth": 0.082,
+        "volatility": 0.082, "sentiment": 0.066, "macro": 0.066,
+        "economic": 0.033, "industry": 0.033,
+        "risk_adjusted": 0.070, "historical": 0.070, "ml_adaptive": 0.040,
     },
     "RECOVERY": {
-        "momentum": 0.20, "value": 0.18, "quality": 0.18, "growth": 0.18,
-        "volatility": 0.08, "sentiment": 0.08, "macro": 0.05,
-        "economic": 0.03, "industry": 0.02,
+        "momentum": 0.167, "value": 0.149, "quality": 0.149, "growth": 0.149,
+        "volatility": 0.066, "sentiment": 0.066, "macro": 0.042,
+        "economic": 0.025, "industry": 0.017,
+        "risk_adjusted": 0.060, "historical": 0.060, "ml_adaptive": 0.050,
     },
     "BULL": {
-        "momentum": 0.25, "value": 0.10, "quality": 0.15, "growth": 0.25,
-        "volatility": 0.05, "sentiment": 0.10, "macro": 0.05,
-        "economic": 0.03, "industry": 0.02,
+        "momentum": 0.212, "value": 0.085, "quality": 0.128, "growth": 0.212,
+        "volatility": 0.043, "sentiment": 0.085, "macro": 0.043,
+        "economic": 0.025, "industry": 0.017,
+        "risk_adjusted": 0.050, "historical": 0.050, "ml_adaptive": 0.050,
     },
     "EUPHORIA": {
-        "momentum": 0.15, "value": 0.08, "quality": 0.12, "growth": 0.30,
-        "volatility": 0.05, "sentiment": 0.12, "macro": 0.08,
-        "economic": 0.05, "industry": 0.05,
+        "momentum": 0.124, "value": 0.066, "quality": 0.100, "growth": 0.248,
+        "volatility": 0.042, "sentiment": 0.100, "macro": 0.066,
+        "economic": 0.042, "industry": 0.042,
+        "risk_adjusted": 0.060, "historical": 0.060, "ml_adaptive": 0.050,
     },
 }
 
 SHORT_TERM_WEIGHTS = {
-    "momentum": 0.30, "value": 0.05, "quality": 0.05, "growth": 0.10,
-    "volatility": 0.10, "sentiment": 0.20, "macro": 0.10,
-    "economic": 0.05, "industry": 0.05,
+    "momentum": 0.240, "value": 0.040, "quality": 0.040, "growth": 0.080,
+    "volatility": 0.080, "sentiment": 0.160, "macro": 0.080,
+    "economic": 0.040, "industry": 0.040,
+    "risk_adjusted": 0.050, "historical": 0.050, "ml_adaptive": 0.100,
 }
 
 LONG_TERM_WEIGHTS = {
-    "momentum": 0.05, "value": 0.25, "quality": 0.25, "growth": 0.20,
-    "volatility": 0.05, "sentiment": 0.02, "macro": 0.03,
-    "economic": 0.05, "industry": 0.10,
+    "momentum": 0.041, "value": 0.205, "quality": 0.205, "growth": 0.164,
+    "volatility": 0.041, "sentiment": 0.016, "macro": 0.025,
+    "economic": 0.041, "industry": 0.082,
+    "risk_adjusted": 0.080, "historical": 0.080, "ml_adaptive": 0.020,
 }
 
 
@@ -189,6 +199,8 @@ def get_factor_analysis(ticker: str) -> dict:
         macro = _compute_macro(hist)
         economic = _compute_economic()
         industry = _compute_industry_outlook(sector)
+        risk_adjusted = _compute_risk_adjusted_return(hist, info)
+        historical = _compute_historical_analogy(hist, info)
 
         groups = {
             "momentum": momentum,
@@ -200,7 +212,12 @@ def get_factor_analysis(ticker: str) -> dict:
             "macro": macro,
             "economic": economic,
             "industry": industry,
+            "risk_adjusted": risk_adjusted,
+            "historical": historical,
         }
+
+        ml_adaptive = _compute_ml_adaptive(groups, ticker, hist)
+        groups["ml_adaptive"] = ml_adaptive
 
         weights = REGIME_WEIGHTS.get(regime, REGIME_WEIGHTS["BULL"])
         composite = _clamp(
@@ -1385,6 +1402,588 @@ def _compute_industry_outlook(sector):
     }
     _CACHE[cache_key] = {"data": result, "ts": now}
     return result
+
+
+# ---------------------------------------------------------------------------
+# 10. Risk-Adjusted Return Factor
+# ---------------------------------------------------------------------------
+
+def _get_risk_free_rate():
+    """Fetch annualized risk-free rate from ^TNX (10Y Treasury), cached."""
+    now = datetime.now(timezone.utc)
+    cached = _CACHE.get("risk_free_rate")
+    if cached and (now - cached["ts"]).seconds < _CACHE_TTL:
+        return cached["data"]
+    rate = 0.04  # fallback 4%
+    try:
+        tnx = _safe_yf_close("^TNX")
+        if tnx is not None:
+            rate = tnx / 100.0  # ^TNX reports yield as percentage
+    except Exception:
+        pass
+    _CACHE["risk_free_rate"] = {"data": rate, "ts": now}
+    return rate
+
+
+def _get_spy_returns(period_days):
+    """Fetch SPY daily log returns for the given lookback period."""
+    cache_key = f"spy_returns_{period_days}"
+    now = datetime.now(timezone.utc)
+    cached = _CACHE.get(cache_key)
+    if cached and (now - cached["ts"]).seconds < _CACHE_TTL:
+        return cached["data"]
+    result = None
+    try:
+        spy_hist = yf.Ticker("SPY").history(period="2y")
+        if not spy_hist.empty:
+            spy_closes = spy_hist["Close"].values.astype(float)
+            n = min(len(spy_closes), period_days + 1)
+            if n > 20:
+                result = np.diff(np.log(spy_closes[-n:]))
+    except Exception:
+        pass
+    _CACHE[cache_key] = {"data": result, "ts": now}
+    return result
+
+
+def _compute_risk_adjusted_return(hist, info):
+    """Score risk-adjusted return metrics as a factor (-5 to +5)."""
+    try:
+        closes = hist["Close"].values.astype(float)
+        n = len(closes)
+        if n < 60:
+            return {
+                "composite": 0.0, "label": "Risk-Adjusted",
+                "label_cn": "风险调整回报", "factors": [],
+            }
+
+        sub = []
+        rf = _get_risk_free_rate()
+        daily_rf = rf / 252.0
+
+        # Daily log returns for the stock
+        daily_returns = np.diff(np.log(closes))
+        ann_return = float(np.mean(daily_returns) * 252)
+        ann_std = float(np.std(daily_returns) * np.sqrt(252))
+
+        # 1. Sharpe Ratio
+        sharpe = (ann_return - rf) / ann_std if ann_std > 0 else 0.0
+        sharpe_score = _thresh(
+            sharpe,
+            [(0, -5), (0.5, -2), (1.0, 0), (1.5, 2), (2.0, 3), (9999, 5)],
+        )
+        sub.append({
+            "name": "Sharpe Ratio", "name_cn": "夏普比率",
+            "value": _fmt(sharpe, 2), "score": sharpe_score, "unit": "",
+        })
+
+        # 2. Sortino Ratio (downside deviation only)
+        downside_returns = daily_returns[daily_returns < daily_rf]
+        if len(downside_returns) > 5:
+            downside_std = float(np.std(downside_returns) * np.sqrt(252))
+            sortino = (ann_return - rf) / downside_std if downside_std > 0 else 0.0
+        else:
+            sortino = sharpe * 1.4  # approximate if insufficient downside data
+        sortino_score = _thresh(
+            sortino,
+            [(0, -5), (0.5, -2), (1.0, 1), (1.5, 2), (2.0, 3), (9999, 5)],
+        )
+        sub.append({
+            "name": "Sortino Ratio", "name_cn": "索提诺比率",
+            "value": _fmt(sortino, 2), "score": sortino_score, "unit": "",
+        })
+
+        # 3. Information Ratio vs SPY
+        spy_returns = _get_spy_returns(n)
+        ir_score = 0.0
+        ir_val = None
+        if spy_returns is not None:
+            min_len = min(len(daily_returns), len(spy_returns))
+            if min_len > 30:
+                excess = daily_returns[-min_len:] - spy_returns[-min_len:]
+                tracking_error = float(np.std(excess) * np.sqrt(252))
+                if tracking_error > 0:
+                    ir_val = float(np.mean(excess) * 252) / tracking_error
+                    ir_score = _thresh(
+                        ir_val,
+                        [(-0.5, -4), (0, -2), (0.5, 1), (1.0, 3), (9999, 5)],
+                    )
+        sub.append({
+            "name": "Information Ratio", "name_cn": "信息比率",
+            "value": _fmt(ir_val, 2), "score": ir_score, "unit": "",
+        })
+
+        # 4. Calmar Ratio: annualized return / max drawdown
+        rolling_max = np.maximum.accumulate(closes)
+        drawdowns = (closes / rolling_max - 1)
+        max_dd = abs(float(drawdowns.min()))
+        calmar = ann_return / max_dd if max_dd > 0.001 else 0.0
+        calmar_score = _thresh(
+            calmar,
+            [(0.5, -3), (1.0, 0), (2.0, 2), (9999, 4)],
+        )
+        sub.append({
+            "name": "Calmar Ratio", "name_cn": "卡玛比率",
+            "value": _fmt(calmar, 2), "score": calmar_score, "unit": "",
+        })
+
+        # 5. Treynor Ratio: (return - rf) / beta
+        beta = info.get("beta")
+        treynor_val = None
+        treynor_score = 0.0
+        if beta and abs(beta) > 0.01:
+            treynor_val = (ann_return - rf) / beta
+            # Market Treynor is roughly (market_return - rf), ~7-10% range
+            treynor_score = _thresh(
+                treynor_val,
+                [(-0.05, -4), (0, -2), (0.05, 0), (0.10, 2), (0.15, 4), (9999, 5)],
+            )
+        sub.append({
+            "name": "Treynor Ratio", "name_cn": "特雷诺比率",
+            "value": _fmt(treynor_val, 4), "score": treynor_score, "unit": "",
+        })
+
+        # 6. Risk-Reward Scoring: upside potential vs realized downside
+        target_price = info.get("targetMeanPrice")
+        current_price = float(closes[-1])
+        rr_val = None
+        rr_score = 0.0
+        if target_price and target_price > 0 and max_dd > 0.001:
+            upside = (target_price / current_price - 1)
+            rr_val = upside / max_dd
+            rr_score = _thresh(
+                rr_val,
+                [(0.5, -4), (1.0, -1), (1.5, 1), (2.0, 3), (3.0, 4), (9999, 5)],
+            )
+        sub.append({
+            "name": "Risk-Reward Score", "name_cn": "风险回报评分",
+            "value": _fmt(rr_val, 2), "score": rr_score, "unit": "x",
+        })
+
+        composite = _clamp(_safe_mean([s["score"] for s in sub]))
+        return {
+            "composite": round(composite, 2),
+            "label": "Risk-Adjusted", "label_cn": "风险调整回报", "factors": sub,
+        }
+
+    except Exception as exc:
+        logger.warning("Risk-adjusted factor failed: %s", exc)
+        return {
+            "composite": 0.0, "label": "Risk-Adjusted",
+            "label_cn": "风险调整回报", "factors": [],
+        }
+
+
+# ---------------------------------------------------------------------------
+# 11. Historical Regime Analogy Factor
+# ---------------------------------------------------------------------------
+
+# Reference periods: (name, name_cn, vix, pe, yield_curve, dd_pct, fwd_12m_return)
+_HISTORICAL_REGIMES = [
+    ("Dot-com Bottom (2002-10)", "互联网泡沫底部",
+     35.0, 18.0, 2.5, -49.0, 28.0),
+    ("Pre-GFC Peak (2007-10)", "金融危机前高点",
+     16.0, 17.0, -0.1, 0.0, -38.0),
+    ("GFC Bottom (2009-03)", "金融危机底部",
+     46.0, 12.0, 2.5, -57.0, 65.0),
+    ("EU Crisis (2011-10)", "欧债危机",
+     30.0, 13.0, 1.8, -19.0, 20.0),
+    ("Pre-COVID Peak (2020-02)", "新冠前高点",
+     14.0, 22.0, 0.1, 0.0, 17.0),
+    ("COVID Bottom (2020-03)", "新冠底部",
+     66.0, 18.0, 0.5, -34.0, 75.0),
+    ("2022 Bear (2022-10)", "2022年熊市",
+     31.0, 17.0, -0.5, -25.0, 22.0),
+    ("AI Bull (2024-07)", "AI牛市",
+     12.0, 23.0, -0.3, 0.0, 10.0),
+]
+
+# Normalization ranges for each dimension (for Euclidean distance)
+_FINGERPRINT_RANGES = {
+    "vix": (10.0, 70.0),
+    "pe": (10.0, 30.0),
+    "yield_curve": (-1.0, 3.0),
+    "drawdown": (-60.0, 0.0),
+    "momentum_12m": (-50.0, 50.0),
+}
+
+
+def _compute_historical_analogy(hist, info):
+    """Compare current macro fingerprint to historical regimes."""
+    try:
+        sub = []
+
+        # Build current fingerprint
+        vix_now = _safe_yf_close("^VIX")
+        if vix_now is None:
+            vix_now = 20.0
+
+        # SPY P/E from info or fallback
+        pe_now = info.get("trailingPE") or info.get("forwardPE")
+        if pe_now is None or (isinstance(pe_now, float) and np.isnan(pe_now)):
+            # Try SPY P/E as market proxy
+            try:
+                spy_info = yf.Ticker("SPY").info
+                pe_now = spy_info.get("trailingPE", 20.0)
+            except Exception:
+                pe_now = 20.0
+
+        # Yield curve from economic cache or live fetch
+        yc_spread = None
+        eco_cached = _CACHE.get("economic_factor")
+        if eco_cached:
+            for f in eco_cached["data"].get("factors", []):
+                if f.get("name") == "Yield Curve Spread":
+                    yc_spread = f.get("value")
+                    break
+        if yc_spread is None:
+            tnx = _safe_yf_close("^TNX")
+            fvx = _safe_yf_close("^FVX")
+            if tnx is not None and fvx is not None:
+                yc_spread = tnx - fvx
+            else:
+                yc_spread = 0.0
+
+        # S&P 500 drawdown from high
+        sp_data = _fetch_regime_series("^GSPC")
+        dd_now = sp_data.get("drawdown_pct", 0.0) or 0.0
+
+        # 12-month momentum of the stock
+        closes = hist["Close"].values.astype(float)
+        n = len(closes)
+        mom_12m = 0.0
+        if n >= 252:
+            mom_12m = (closes[-1] / closes[-252] - 1) * 100
+
+        current_fp = [vix_now, pe_now, yc_spread, dd_now, mom_12m]
+
+        # Normalize current fingerprint
+        dims = ["vix", "pe", "yield_curve", "drawdown", "momentum_12m"]
+        ranges = [_FINGERPRINT_RANGES[d] for d in dims]
+
+        def normalize(val, rng):
+            lo, hi = rng
+            span = hi - lo
+            if span == 0:
+                return 0.0
+            return (val - lo) / span
+
+        current_norm = [normalize(v, r) for v, r in zip(current_fp, ranges)]
+
+        # Compute distance to each historical regime
+        distances = []
+        for name, name_cn, h_vix, h_pe, h_yc, h_dd, h_fwd in _HISTORICAL_REGIMES:
+            hist_norm = [
+                normalize(h_vix, _FINGERPRINT_RANGES["vix"]),
+                normalize(h_pe, _FINGERPRINT_RANGES["pe"]),
+                normalize(h_yc, _FINGERPRINT_RANGES["yield_curve"]),
+                normalize(h_dd, _FINGERPRINT_RANGES["drawdown"]),
+                normalize(mom_12m, _FINGERPRINT_RANGES["momentum_12m"]),
+            ]
+            dist = math.sqrt(sum((a - b) ** 2 for a, b in zip(current_norm, hist_norm)))
+            distances.append((dist, name, name_cn, h_fwd))
+
+        distances.sort(key=lambda x: x[0])
+
+        # Top-3 closest analogues, weighted by inverse distance
+        top_3 = distances[:3]
+        inv_weights = []
+        for dist, _, _, _ in top_3:
+            inv_weights.append(1.0 / (dist + 0.01))  # avoid div by zero
+        weight_sum = sum(inv_weights)
+        norm_weights = [w / weight_sum for w in inv_weights]
+
+        predicted_return = sum(w * fwd for w, (_, _, _, fwd) in zip(norm_weights, top_3))
+
+        # Closest analogue similarity percentage
+        max_possible_dist = math.sqrt(len(dims))  # max Euclidean distance in unit cube
+        closest_similarity = max(0.0, (1.0 - top_3[0][0] / max_possible_dist) * 100)
+
+        sub.append({
+            "name": "Closest Historical Analogue",
+            "name_cn": "最近历史类比",
+            "value": f"{top_3[0][1]} ({closest_similarity:.0f}%)",
+            "score": _thresh(
+                predicted_return,
+                [(-15, -5), (-5, -3), (0, -1), (5, 1), (15, 3), (9999, 5)],
+            ),
+            "unit": "",
+        })
+
+        sub.append({
+            "name": "Predicted Forward Return",
+            "name_cn": "预测远期回报",
+            "value": _fmt(predicted_return, 1),
+            "score": _thresh(
+                predicted_return,
+                [(-15, -5), (-5, -3), (0, -1), (5, 1), (15, 3), (9999, 5)],
+            ),
+            "unit": "%",
+        })
+
+        # VIX percentile in historical distribution
+        hist_vix_vals = [r[2] for r in _HISTORICAL_REGIMES]
+        vix_below = sum(1 for v in hist_vix_vals if v <= vix_now)
+        vix_pctile = (vix_below / len(hist_vix_vals)) * 100
+        vix_pctile_score = _thresh(
+            vix_pctile,
+            [(20, 3), (40, 1), (60, 0), (80, -2), (9999, -4)],
+        )
+        sub.append({
+            "name": "VIX Percentile vs History",
+            "name_cn": "VIX历史百分位",
+            "value": _fmt(vix_pctile, 0),
+            "score": vix_pctile_score,
+            "unit": "%ile",
+        })
+
+        # Valuation percentile
+        hist_pe_vals = [r[3] for r in _HISTORICAL_REGIMES]
+        pe_below = sum(1 for v in hist_pe_vals if v <= pe_now)
+        pe_pctile = (pe_below / len(hist_pe_vals)) * 100
+        pe_pctile_score = _thresh(
+            pe_pctile,
+            [(20, 4), (40, 2), (60, 0), (80, -2), (9999, -4)],
+        )
+        sub.append({
+            "name": "Valuation Percentile vs History",
+            "name_cn": "估值历史百分位",
+            "value": _fmt(pe_pctile, 0),
+            "score": pe_pctile_score,
+            "unit": "%ile",
+        })
+
+        composite = _clamp(_safe_mean([s["score"] for s in sub]))
+        return {
+            "composite": round(composite, 2),
+            "label": "Historical Analogy", "label_cn": "历史周期类比",
+            "factors": sub,
+        }
+
+    except Exception as exc:
+        logger.warning("Historical analogy factor failed: %s", exc)
+        return {
+            "composite": 0.0, "label": "Historical Analogy",
+            "label_cn": "历史周期类比", "factors": [],
+        }
+
+
+# ---------------------------------------------------------------------------
+# 12. ML Adaptive Meta-Factor
+# ---------------------------------------------------------------------------
+
+def _compute_ml_adaptive(groups, ticker, hist):
+    """Ridge regression meta-factor using rolling features and factor alignment."""
+    try:
+        from sklearn.linear_model import Ridge
+        from sklearn.model_selection import TimeSeriesSplit
+
+        closes = hist["Close"].values.astype(float)
+        volumes = hist["Volume"].values.astype(float)
+        n = len(closes)
+
+        if n < 120:
+            return {
+                "composite": 0.0, "label": "ML Adaptive",
+                "label_cn": "机器学习自适应", "factors": [],
+            }
+
+        sub = []
+
+        # Build rolling features at each historical point
+        features = []
+        targets = []
+        target_horizon = 20  # 20-day forward return
+
+        for i in range(60, n - target_horizon):
+            window = closes[:i + 1]
+            vol_window = volumes[:i + 1]
+
+            # Feature 1: 20-day momentum
+            mom_20 = (window[-1] / window[-20] - 1) * 100 if len(window) >= 20 else 0.0
+
+            # Feature 2: 60-day momentum
+            mom_60 = (window[-1] / window[-60] - 1) * 100 if len(window) >= 60 else 0.0
+
+            # Feature 3: RSI
+            rsi = _calc_rsi(np.array(window[-30:]), 14)
+            if rsi is None:
+                rsi = 50.0
+
+            # Feature 4: Realized volatility (20-day)
+            if len(window) >= 21:
+                rets_20 = np.diff(np.log(window[-21:]))
+                vol_20 = float(np.std(rets_20) * np.sqrt(252) * 100)
+            else:
+                vol_20 = 20.0
+
+            # Feature 5: Volume ratio (5-day vs 20-day average)
+            if len(vol_window) >= 20:
+                vol_5 = float(np.mean(vol_window[-5:]))
+                vol_20_avg = float(np.mean(vol_window[-20:]))
+                vol_ratio = vol_5 / vol_20_avg if vol_20_avg > 0 else 1.0
+            else:
+                vol_ratio = 1.0
+
+            features.append([mom_20, mom_60, rsi, vol_20, vol_ratio])
+
+            # Target: 20-day forward return
+            fwd_ret = (closes[i + target_horizon] / closes[i] - 1) * 100
+            targets.append(fwd_ret)
+
+        if len(features) < 40:
+            return {
+                "composite": 0.0, "label": "ML Adaptive",
+                "label_cn": "机器学习自适应", "factors": [],
+            }
+
+        x_arr = np.array(features)
+        y_arr = np.array(targets)
+
+        # Train/validation split using time series split
+        split_idx = int(len(x_arr) * 0.8)
+        x_train, x_val = x_arr[:split_idx], x_arr[split_idx:]
+        y_train, y_val = y_arr[:split_idx], y_arr[split_idx:]
+
+        # Standardize features
+        x_mean = x_train.mean(axis=0)
+        x_std = x_train.std(axis=0)
+        x_std[x_std == 0] = 1.0
+        x_train_norm = (x_train - x_mean) / x_std
+        x_val_norm = (x_val - x_mean) / x_std
+
+        model = Ridge(alpha=1.0)
+        model.fit(x_train_norm, y_train)
+
+        # Validation R-squared
+        r2 = model.score(x_val_norm, y_val)
+        r2 = max(0.0, min(1.0, r2))  # clamp to [0, 1]
+
+        # Current prediction
+        current_window = closes
+        current_vol_window = volumes
+        mom_20_now = (current_window[-1] / current_window[-20] - 1) * 100
+        mom_60_now = (current_window[-1] / current_window[-60] - 1) * 100
+        rsi_now = _calc_rsi(np.array(current_window[-30:]), 14) or 50.0
+        rets_20_now = np.diff(np.log(current_window[-21:]))
+        vol_20_now = float(np.std(rets_20_now) * np.sqrt(252) * 100)
+        vol_5_now = float(np.mean(current_vol_window[-5:]))
+        vol_20_avg_now = float(np.mean(current_vol_window[-20:]))
+        vol_ratio_now = vol_5_now / vol_20_avg_now if vol_20_avg_now > 0 else 1.0
+
+        current_features = np.array([[mom_20_now, mom_60_now, rsi_now, vol_20_now, vol_ratio_now]])
+        current_norm = (current_features - x_mean) / x_std
+        predicted_return = float(model.predict(current_norm)[0])
+
+        # Confidence-weighted prediction score
+        confidence_weight = 0.3 + 0.7 * r2  # minimum 30% weight even with low R2
+        pred_score = _thresh(
+            predicted_return,
+            [(-10, -5), (-5, -3), (-2, -1), (2, 1), (5, 3), (9999, 5)],
+        )
+        weighted_pred_score = pred_score * confidence_weight
+
+        sub.append({
+            "name": "ML Predicted Return",
+            "name_cn": "ML预测回报",
+            "value": _fmt(predicted_return, 2),
+            "score": weighted_pred_score,
+            "unit": "%",
+        })
+
+        # Model confidence
+        confidence_score = _thresh(
+            r2 * 100,
+            [(5, -3), (10, -1), (20, 1), (30, 3), (9999, 5)],
+        )
+        sub.append({
+            "name": "Model Confidence",
+            "name_cn": "模型置信度",
+            "value": _fmt(r2 * 100, 1),
+            "score": confidence_score,
+            "unit": "%",
+        })
+
+        # Factor alignment: how many of the other factors agree in direction
+        # Exclude ml_adaptive itself (it's not in groups yet when called)
+        factor_directions = []
+        for k, g in groups.items():
+            comp = g.get("composite", 0)
+            if comp > 0.5:
+                factor_directions.append(1)
+            elif comp < -0.5:
+                factor_directions.append(-1)
+            else:
+                factor_directions.append(0)
+
+        if factor_directions:
+            bullish_count = sum(1 for d in factor_directions if d == 1)
+            bearish_count = sum(1 for d in factor_directions if d == -1)
+            total_factors = len(factor_directions)
+            dominant = max(bullish_count, bearish_count)
+            alignment_pct = (dominant / total_factors) * 100
+
+            if bullish_count > bearish_count:
+                alignment_score = _thresh(
+                    alignment_pct,
+                    [(30, -1), (50, 1), (70, 3), (9999, 5)],
+                )
+            elif bearish_count > bullish_count:
+                alignment_score = _thresh(
+                    alignment_pct,
+                    [(30, 1), (50, -1), (70, -3), (9999, -5)],
+                )
+            else:
+                alignment_score = 0.0
+
+            sub.append({
+                "name": "Factor Alignment",
+                "name_cn": "因子一致性",
+                "value": f"{dominant}/{total_factors} ({alignment_pct:.0f}%)",
+                "score": alignment_score,
+                "unit": "",
+            })
+
+        # Signal consistency: current vs 5-day average signal direction
+        # Compare current 20-day momentum direction vs 5-day rolling average
+        if n >= 25:
+            signals_5d = []
+            for offset in range(5):
+                idx = -(offset + 1)
+                if abs(idx) + 20 <= n:
+                    m20 = (closes[idx] / closes[idx - 20] - 1) * 100
+                    signals_5d.append(1 if m20 > 0 else -1)
+            current_signal = 1 if mom_20_now > 0 else -1
+            if signals_5d:
+                avg_signal = np.mean(signals_5d)
+                consistent = (current_signal > 0 and avg_signal > 0) or \
+                             (current_signal < 0 and avg_signal < 0)
+                consistency_score = 3.0 if consistent else -2.0
+            else:
+                consistency_score = 0.0
+        else:
+            consistency_score = 0.0
+
+        sub.append({
+            "name": "Signal Consistency",
+            "name_cn": "信号一致性",
+            "value": "Consistent" if consistency_score > 0 else "Divergent",
+            "score": consistency_score,
+            "unit": "",
+        })
+
+        composite = _clamp(_safe_mean([s["score"] for s in sub]))
+        return {
+            "composite": round(composite, 2),
+            "label": "ML Adaptive", "label_cn": "机器学习自适应", "factors": sub,
+        }
+
+    except Exception as exc:
+        logger.warning("ML adaptive factor failed: %s", exc)
+        return {
+            "composite": 0.0, "label": "ML Adaptive",
+            "label_cn": "机器学习自适应", "factors": [],
+        }
 
 
 # ---------------------------------------------------------------------------

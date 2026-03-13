@@ -33,6 +33,7 @@ POLL_INTERVAL_MARKET_OPEN = 2
 POLL_INTERVAL_MARKET_CLOSED = 30
 SIGNAL_REFRESH_INTERVAL = 30
 FACTOR_REFRESH_INTERVAL = 60
+ML_RETRAIN_INTERVAL = 1800  # 30 minutes
 SSE_YIELD_INTERVAL = 1
 
 MIN_STOP_LOSS_PCT = 0.015  # 1.5% minimum below entry
@@ -156,11 +157,11 @@ def _compute_vwap_estimate(closes: np.ndarray, volumes: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 
 def compute_trading_decision(state: dict) -> dict:
-    """Core function: evaluate all factors and produce a trading decision.
+    """12-factor quantitative trading decision engine.
 
-    Considers trend, momentum, volatility, volume, support/resistance,
-    factor score, and market regime to output action, confidence, reason,
-    entry/target/stop levels, and risk-reward ratio.
+    Combines technical signals, 12-factor composite scores, risk-adjusted
+    returns, historical regime analogy, and ML predictions to produce
+    institutional-grade trading decisions with confidence scoring.
     """
     price = state.get("price", 0)
     if price <= 0:
@@ -174,6 +175,7 @@ def compute_trading_decision(state: dict) -> dict:
             "risk_reward": 0.0,
         }
 
+    # --- Extract state variables ---
     rsi = state.get("rsi", 50)
     atr = state.get("atr", 0)
     sma_20 = state.get("sma_20", price)
@@ -192,166 +194,176 @@ def compute_trading_decision(state: dict) -> dict:
     factor_composite = state.get("factor_composite", 0.0)
     regime = state.get("regime", "BULL")
 
+    # 12-factor group scores
+    factor_scores = state.get("factor_scores", {})
+    risk_adj_score = factor_scores.get("risk_adjusted", 0.0)
+    historical_score = factor_scores.get("historical", 0.0)
+    ml_score = factor_scores.get("ml_adaptive", 0.0)
+    momentum_score = factor_scores.get("momentum", 0.0)
+    value_score = factor_scores.get("value", 0.0)
+    quality_score = factor_scores.get("quality", 0.0)
+    growth_score = factor_scores.get("growth", 0.0)
+
+    # Risk-reward detail from factor engine
+    rr_detail = state.get("risk_reward_detail", {})
+    rr_ratio_factor = rr_detail.get("risk_reward_ratio", 0)
+    kelly_pct = rr_detail.get("kelly_position_pct", 0)
+
     volume_ratio = volume / avg_volume if avg_volume > 0 else 1.0
     is_volume_surge = volume_ratio > STRONG_BUY_VOLUME_SURGE
-    is_volume_spike = volume_ratio > VOLUME_SPIKE_ALERT_THRESHOLD
     gap_pct = (price - prev_close) / prev_close if prev_close > 0 else 0
-
-    atr_pct = (atr / price * 100) if price > 0 else 0
     price_distance_sma20 = (price - sma_20) / sma_20 if sma_20 > 0 else 0
 
-    # Count bullish and bearish signals for confidence scoring
-    bullish_count = 0
-    bearish_count = 0
+    # --- Multi-layer signal scoring ---
+    # Layer 1: Technical signals (weight 0.30)
+    tech_score = 0.0
+    tech_reasons = []
 
     if rsi < RSI_OVERSOLD:
-        bullish_count += 2  # oversold is strong bullish contrarian
-    elif rsi < 45:
-        bullish_count += 1
+        tech_score += 3.0
+        tech_reasons.append(f"RSI oversold {rsi:.0f}")
+    elif rsi < 40:
+        tech_score += 1.0
     elif rsi > RSI_EXTREME_OVERBOUGHT:
-        bearish_count += 2
+        tech_score -= 3.0
+        tech_reasons.append(f"RSI extreme {rsi:.0f}")
     elif rsi > RSI_OVERBOUGHT:
-        bearish_count += 1
+        tech_score -= 2.0
 
     if macd_signal == "bullish":
-        bullish_count += 1
+        tech_score += 1.5
     else:
-        bearish_count += 1
+        tech_score -= 1.0
 
-    if above_sma200:
-        bullish_count += 1
+    sma_alignment = sum([above_sma20, above_sma50, above_sma200])
+    if sma_alignment == 3:
+        tech_score += 2.0
+        tech_reasons.append("Above all SMAs")
+    elif sma_alignment == 0:
+        tech_score -= 2.0
+        tech_reasons.append("Below all SMAs")
     else:
-        bearish_count += 1
-
-    if above_sma50:
-        bullish_count += 1
-    else:
-        bearish_count += 1
-
-    if above_sma20:
-        bullish_count += 1
-    else:
-        bearish_count += 1
-
-    if is_volume_surge:
-        bullish_count += 1
-
-    if factor_signal in ("BUY", "STRONG_BUY"):
-        bullish_count += 2
-    elif factor_signal in ("SELL", "STRONG_SELL"):
-        bearish_count += 2
+        tech_score += (sma_alignment - 1.5) * 0.8
 
     if bollinger_position == "lower":
-        bullish_count += 1
+        tech_score += 1.5
     elif bollinger_position == "upper":
-        bearish_count += 1
+        tech_score -= 1.0
 
-    # --- Decision matrix ---
+    if is_volume_surge:
+        if tech_score > 0:
+            tech_score += 1.5
+            tech_reasons.append(f"Volume surge {volume_ratio:.1f}x")
+        else:
+            tech_score -= 1.0
+
+    # Layer 2: Factor engine composite (weight 0.35)
+    factor_score_normalized = factor_composite * 2  # scale -5..+5 to -10..+10
+
+    # Layer 3: Risk-adjusted quality (weight 0.15)
+    risk_quality = (risk_adj_score + quality_score + value_score) / 3 * 2
+
+    # Layer 4: Forward-looking signals (weight 0.20)
+    forward_score = 0.0
+    if historical_score > 1:
+        forward_score += 2.0
+        tech_reasons.append("Historical analogue bullish")
+    elif historical_score < -1:
+        forward_score -= 2.0
+        tech_reasons.append("Historical analogue bearish")
+
+    if ml_score > 1:
+        forward_score += 1.5
+    elif ml_score < -1:
+        forward_score -= 1.5
+
+    if growth_score > 2:
+        forward_score += 1.5
+    elif growth_score < -2:
+        forward_score -= 1.5
+
+    if rr_ratio_factor and rr_ratio_factor > 2:
+        forward_score += 1.5
+        tech_reasons.append(f"R:R {rr_ratio_factor:.1f}:1")
+    elif rr_ratio_factor and rr_ratio_factor < 0.5:
+        forward_score -= 1.5
+
+    # --- Weighted composite decision score ---
+    decision_score = (
+        tech_score * 0.30
+        + factor_score_normalized * 0.35
+        + risk_quality * 0.15
+        + forward_score * 0.20
+    )
+
+    # --- Regime adjustment ---
+    if regime == "PANIC":
+        decision_score *= 0.5  # Dampen in panic — don't chase
+        if decision_score > 0 and rsi < RSI_OVERSOLD:
+            decision_score *= 1.8  # But amplify contrarian oversold
+    elif regime == "EUPHORIA":
+        if decision_score > 0:
+            decision_score *= 0.7  # Cautious in euphoria
+
+    # --- CUT_LOSS override: immediate danger ---
     action = "HOLD"
     reason_parts = []
 
-    # CUT_LOSS: immediate danger signals
     existing_stop = state.get("stop_loss")
     if existing_stop and price < existing_stop:
         action = "CUT_LOSS"
-        reason_parts.append(f"Price {price:.2f} below stop loss {existing_stop:.2f}")
-    elif not above_sma200 and is_volume_surge:
+        reason_parts.append(f"Price {price:.2f} below stop {existing_stop:.2f}")
+    elif gap_pct < -CUT_LOSS_GAP_PCT and not above_sma200:
+        action = "CUT_LOSS"
+        reason_parts.append(f"Gap down {gap_pct * 100:.1f}% below SMA200")
+    elif not above_sma200 and is_volume_surge and decision_score < -3:
         action = "CUT_LOSS"
         reason_parts.append(
-            f"Price broke below SMA200 ({sma_200:.2f}) with volume surge {volume_ratio:.1f}x"
+            f"SMA200 break with volume surge, score {decision_score:.1f}"
         )
-    elif gap_pct < -CUT_LOSS_GAP_PCT:
-        action = "CUT_LOSS"
-        reason_parts.append(
-            f"Gap down {gap_pct * 100:.1f}% from previous close"
-        )
-
-    # STRONG_BUY
-    elif (rsi < RSI_OVERSOLD and _near_level(price, sma_200)
-          and is_volume_surge and factor_signal in ("BUY", "STRONG_BUY")):
-        action = "STRONG_BUY"
-        reason_parts.append(
-            f"RSI oversold at {rsi:.1f}, price near SMA200 support "
-            f"({sma_200:.2f}), volume surge {volume_ratio:.1f}x, "
-            f"factor signal {factor_signal}"
-        )
-    elif (above_sma50 and not state.get("_prev_above_sma50", True)
-          and is_volume_surge and macd_signal == "bullish"):
-        action = "STRONG_BUY"
-        reason_parts.append(
-            f"Price breaking above SMA50 ({sma_50:.2f}) with volume surge "
-            f"and MACD turning bullish"
-        )
-
-    # BUY
-    elif (RSI_OVERSOLD <= rsi <= 45 and (above_sma200 or above_sma50)
-          and factor_signal in ("BUY", "STRONG_BUY")):
-        action = "BUY"
-        reason_parts.append(
-            f"RSI at {rsi:.1f}, holding above key SMA, "
-            f"factor signal {factor_signal}"
-        )
-    elif (_near_level(price, sma_50) and above_sma50
-          and volume_ratio > 1.0):
-        action = "BUY"
-        reason_parts.append(
-            f"Price bouncing off SMA50 support ({sma_50:.2f}) "
-            f"with volume {volume_ratio:.1f}x average"
-        )
-
-    # STRONG_SELL
-    elif (rsi > RSI_EXTREME_OVERBOUGHT
-          and price_distance_sma20 > 0 and atr > 0
-          and (price - sma_20) > 2 * atr):
-        action = "STRONG_SELL"
-        reason_parts.append(
-            f"RSI extreme at {rsi:.1f}, price extended "
-            f"{(price - sma_20):.2f} above SMA20 (> 2 ATR)"
-        )
-    elif (factor_signal in ("SELL", "STRONG_SELL")
-          and not above_sma50 and is_volume_surge):
-        action = "STRONG_SELL"
-        reason_parts.append(
-            f"Factor signal {factor_signal}, breaking below SMA50 "
-            f"with volume surge"
-        )
-
-    # SELL
-    elif (rsi > RSI_OVERBOUGHT and bollinger_position == "upper"
-          and volume_ratio < 0.8):
-        action = "SELL"
-        reason_parts.append(
-            f"RSI overbought at {rsi:.1f}, at upper Bollinger, "
-            f"declining volume ({volume_ratio:.1f}x)"
-        )
-    elif not above_sma50 and is_volume_surge:
-        action = "SELL"
-        reason_parts.append(
-            f"Price breaking below SMA50 ({sma_50:.2f}) with volume"
-        )
-
-    # Default HOLD
     else:
-        action = "HOLD"
-        if bullish_count > bearish_count:
-            reason_parts.append("Lean bullish but no clear trigger")
-        elif bearish_count > bullish_count:
-            reason_parts.append("Lean bearish but no clear trigger")
+        # Score-based decision thresholds
+        if decision_score >= 5.0:
+            action = "STRONG_BUY"
+        elif decision_score >= 2.5:
+            action = "BUY"
+        elif decision_score <= -5.0:
+            action = "STRONG_SELL"
+        elif decision_score <= -2.5:
+            action = "SELL"
         else:
-            reason_parts.append("Conflicting signals, no clear direction")
+            action = "HOLD"
 
-    # --- Confidence 1-10 based on signal agreement ---
-    net_signal = abs(bullish_count - bearish_count)
-    total_signals = bullish_count + bearish_count
-    confidence = min(10, max(1, round(net_signal / max(total_signals, 1) * 10)))
+        # Build reason from strongest signals
+        if tech_reasons:
+            reason_parts.extend(tech_reasons[:3])
+        if factor_signal != "HOLD":
+            reason_parts.append(f"12F: {factor_signal}")
+        if regime != "BULL":
+            reason_parts.append(f"Regime: {regime}")
+        if not reason_parts:
+            if decision_score > 0.5:
+                reason_parts.append("Lean bullish, awaiting confirmation")
+            elif decision_score < -0.5:
+                reason_parts.append("Lean bearish, monitoring closely")
+            else:
+                reason_parts.append("Neutral signals across 12 factors")
 
-    # Boost confidence for extreme actions
+    # --- Confidence 1-10 ---
+    abs_score = abs(decision_score)
+    confidence = min(10, max(1, round(abs_score * 1.2)))
+
+    # Boost for extreme actions
     if action in ("STRONG_BUY", "STRONG_SELL", "CUT_LOSS"):
         confidence = max(confidence, 7)
 
     # --- Price levels ---
-    entry_price = _compute_entry_price(price, sma_20, sma_50, sma_200, bollinger, action)
-    target_price = _compute_target_price(entry_price, atr, sma_20, sma_50, bollinger)
+    entry_price = _compute_entry_price(
+        price, sma_20, sma_50, sma_200, bollinger, action,
+    )
+    target_price = _compute_target_price(
+        entry_price, atr, sma_20, sma_50, bollinger,
+    )
     stop_loss = _compute_stop_loss(entry_price, atr, sma_200, sma_50)
 
     risk_reward = 0.0
@@ -371,6 +383,8 @@ def compute_trading_decision(state: dict) -> dict:
         "target_price": round(target_price, 2) if target_price else None,
         "stop_loss": round(stop_loss, 2) if stop_loss else None,
         "risk_reward": risk_reward,
+        "decision_score": round(decision_score, 2),
+        "kelly_pct": kelly_pct,
     }
 
 
@@ -715,6 +729,10 @@ class MonitorEngine:
         self._history_cache: dict[str, dict] = {}
         self._history_cache_ts: dict[str, float] = {}
         self._pending_alerts: list[dict] = []
+        self._ml_training_data: dict[str, list] = {}  # ticker → [(timestamp, factors, price)]
+        self._ml_last_retrain: float = 0
+        self._ml_model: object = None  # sklearn model
+        self._ml_r2: float = 0.0
 
     # --- Public API ---
 
@@ -793,6 +811,8 @@ class MonitorEngine:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "regime": self._regime.get("regime") if self._regime else None,
                 "bottom_score": self._get_bottom_score(),
+                "ml_r2": self._ml_r2,
+                "factor_count": 12,
                 "stocks": {
                     t: self._sanitize_state(s)
                     for t, s in self._states.items()
@@ -816,6 +836,8 @@ class MonitorEngine:
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "regime": self._regime.get("regime") if self._regime else None,
                     "bottom_score": self._get_bottom_score(),
+                    "ml_r2": self._ml_r2,
+                    "factor_count": 12,
                     "stocks": {
                         t: self._sanitize_state(s)
                         for t, s in self._states.items()
@@ -864,6 +886,9 @@ class MonitorEngine:
 
                 # Step 5: Compute trading decisions and check alerts
                 self._compute_decisions_and_alerts(current_watchlist)
+
+                # Step 6: ML model retraining (every 30 min)
+                self._retrain_ml_model(now)
 
             except Exception:
                 logger.error("Poll loop error", exc_info=True)
@@ -959,7 +984,7 @@ class MonitorEngine:
             self._signals_updated[ticker] = now
 
     def _update_factors(self, tickers: list[str], now: float):
-        """Refresh factor engine scores for tickers due for refresh."""
+        """Refresh 12-factor engine scores for tickers due for refresh."""
         for ticker in tickers:
             last_update = self._factors_updated.get(ticker, 0)
             if now - last_update < FACTOR_REFRESH_INTERVAL:
@@ -971,6 +996,9 @@ class MonitorEngine:
                 signal = analysis.get("signal", "HOLD")
                 regime_data = analysis.get("regime", {})
                 regime_label = regime_data.get("regime", "BULL") if regime_data else "BULL"
+                group_scores = analysis.get("group_scores", {})
+                ratings = analysis.get("ratings", {})
+                risk_reward = analysis.get("risk_reward", {})
 
                 with self._lock:
                     state = self._states.get(ticker)
@@ -978,6 +1006,27 @@ class MonitorEngine:
                         state["factor_composite"] = composite
                         state["factor_signal"] = signal
                         state["regime"] = regime_label
+                        state["factor_scores"] = group_scores
+                        state["ratings"] = ratings
+                        state["risk_reward_detail"] = risk_reward
+
+                # Accumulate ML training data point
+                price = 0
+                with self._lock:
+                    s = self._states.get(ticker)
+                    if s:
+                        price = s.get("price", 0)
+                if group_scores and price > 0:
+                    entry = self._ml_training_data.setdefault(ticker, [])
+                    entry.append({
+                        "ts": now,
+                        "scores": group_scores,
+                        "price": price,
+                    })
+                    # Keep last 500 data points per ticker
+                    if len(entry) > 500:
+                        self._ml_training_data[ticker] = entry[-500:]
+
             except Exception:
                 logger.debug("Factor refresh failed for %s", ticker, exc_info=True)
 
@@ -995,6 +1044,78 @@ class MonitorEngine:
         except Exception:
             logger.debug("Regime detection failed", exc_info=True)
 
+    def _retrain_ml_model(self, now: float):
+        """Retrain the cross-sectional ML model on accumulated factor→return data.
+
+        Uses Ridge regression to learn which factor score combinations
+        predict forward price changes. Retrains every ML_RETRAIN_INTERVAL.
+        """
+        if now - self._ml_last_retrain < ML_RETRAIN_INTERVAL:
+            return
+
+        try:
+            from sklearn.linear_model import Ridge
+            from sklearn.preprocessing import StandardScaler
+
+            factor_names = [
+                "momentum", "value", "quality", "growth", "volatility",
+                "sentiment", "macro", "economic", "industry",
+                "risk_adjusted", "historical", "ml_adaptive",
+            ]
+
+            features = []
+            targets = []
+
+            for ticker, data_points in self._ml_training_data.items():
+                if len(data_points) < 3:
+                    continue
+                for i in range(len(data_points) - 1):
+                    curr = data_points[i]
+                    nxt = data_points[i + 1]
+                    scores = curr["scores"]
+                    price_now = curr["price"]
+                    price_next = nxt["price"]
+                    if price_now <= 0:
+                        continue
+
+                    fwd_return = (price_next / price_now - 1) * 100
+                    row = [scores.get(f, 0.0) for f in factor_names]
+                    features.append(row)
+                    targets.append(fwd_return)
+
+            if len(features) < 10:
+                self._ml_last_retrain = now
+                return
+
+            x = np.array(features)
+            y = np.array(targets)
+
+            scaler = StandardScaler()
+            x_scaled = scaler.fit_transform(x)
+
+            model = Ridge(alpha=1.0)
+            model.fit(x_scaled, y)
+
+            # Compute R² on training data (simple validation)
+            y_pred = model.predict(x_scaled)
+            ss_res = np.sum((y - y_pred) ** 2)
+            ss_tot = np.sum((y - np.mean(y)) ** 2)
+            r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
+
+            with self._lock:
+                self._ml_model = {"model": model, "scaler": scaler, "factor_names": factor_names}
+                self._ml_r2 = round(max(0, r2), 3)
+
+            logger.info(
+                "ML model retrained: %d samples, R²=%.3f, coefficients=%s",
+                len(features), r2,
+                {f: round(c, 3) for f, c in zip(factor_names, model.coef_)},
+            )
+        except Exception:
+            logger.debug("ML retrain failed", exc_info=True)
+
+        self._ml_last_retrain = now
+
     def _compute_decisions_and_alerts(self, tickers: list[str]):
         """Compute trading decisions and check for alert conditions."""
         with self._lock:
@@ -1005,7 +1126,7 @@ class MonitorEngine:
 
                 prev_state = self._prev_states.get(ticker)
 
-                # Compute trading decision
+                # Compute trading decision using 12-factor engine
                 decision = compute_trading_decision(state)
                 state.update({
                     "action": decision["action"],
@@ -1015,6 +1136,8 @@ class MonitorEngine:
                     "target_price": decision["target_price"],
                     "stop_loss": decision["stop_loss"],
                     "risk_reward": decision["risk_reward"],
+                    "decision_score": decision.get("decision_score", 0),
+                    "kelly_pct": decision.get("kelly_pct", 0),
                 })
 
                 # Check alerts

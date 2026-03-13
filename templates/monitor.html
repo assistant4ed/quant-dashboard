@@ -804,6 +804,37 @@ body {
 .signal-value.strong-buy { color: var(--color-strong-buy); }
 .signal-value.strong-sell { color: var(--color-strong-sell); }
 
+/* --- Factor Breakdown Grid --- */
+.card-factor-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  padding: 4px 0;
+  border-top: 1px solid rgba(30, 30, 58, 0.3);
+  margin-top: 4px;
+}
+
+.factor-mini {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+.card-meta-row {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0 1px;
+  border-top: 1px solid rgba(30, 30, 58, 0.3);
+  margin-top: 2px;
+}
+
+.meta-tag {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
 /* ============================================================
    Alert History Panel
    ============================================================ */
@@ -1112,8 +1143,16 @@ body {
         <span class="regime-badge bear" id="regime-badge">BEAR</span>
       </div>
       <div class="header-stat">
-        <span class="header-stat-label">Bottom Score:</span>
+        <span class="header-stat-label">Bottom:</span>
         <span class="header-stat-value" id="bottom-score">--/100</span>
+      </div>
+      <div class="header-stat">
+        <span class="header-stat-label">Factors:</span>
+        <span class="header-stat-value" id="factor-count" style="color:var(--color-buy)">12</span>
+      </div>
+      <div class="header-stat">
+        <span class="header-stat-label">ML R&sup2;:</span>
+        <span class="header-stat-value" id="ml-r2">--</span>
       </div>
       <div class="header-stat">
         <span class="header-stat-label">Update:</span>
@@ -1257,6 +1296,8 @@ body {
   var elStatusText = document.getElementById("status-text");
   var elRegimeBadge = document.getElementById("regime-badge");
   var elBottomScore = document.getElementById("bottom-score");
+  var elFactorCount = document.getElementById("factor-count");
+  var elMlR2 = document.getElementById("ml-r2");
   var elLastUpdate = document.getElementById("last-update");
   var elStockGrid = document.getElementById("stock-grid");
   var elAlertBanner = document.getElementById("alert-banner");
@@ -1517,17 +1558,61 @@ body {
     html += '<div class="tech-item"><span class="tech-label">ATR:</span><span class="tech-value">' + (atr != null ? formatNumber(atr, 2) + "%" : "--") + '</span></div>';
     html += '</div>';
 
-    /* Signals */
+    /* 12-Factor Scores */
+    var fs = stock.factor_scores || {};
+    var ratings = stock.ratings || {};
+    var shortRating = ratings.short_term || {};
+    var longRating = ratings.long_term || {};
+    var rrDetail = stock.risk_reward_detail || {};
+    var dscore = stock.decision_score;
+    var kellyPct = stock.kelly_pct;
+
     html += '<div class="card-signals">';
-    html += '<div class="signal-item"><span class="signal-label">Factor:</span> ';
+    html += '<div class="signal-item"><span class="signal-label">12F Score:</span> ';
     html += '<span class="signal-value ' + signalClass(factorSignal) + '">';
-    html += (factorScore != null ? formatNumber(factorScore, 1) + " " : "");
+    html += (factorScore != null ? formatNumber(factorScore, 2) + " " : "");
     html += (factorSignal || "--") + '</span></div>';
     html += '<div class="signal-item"><span class="signal-label">Short:</span> ';
-    html += '<span class="signal-value ' + signalClass(shortSignal) + '">' + (shortSignal || "--") + '</span></div>';
+    html += '<span class="signal-value ' + signalClass(shortRating.signal) + '">' + (shortRating.signal || "--") + '</span></div>';
     html += '<div class="signal-item"><span class="signal-label">Long:</span> ';
-    html += '<span class="signal-value ' + signalClass(longSignal) + '">' + (longSignal || "--") + '</span></div>';
+    html += '<span class="signal-value ' + signalClass(longRating.signal) + '">' + (longRating.signal || "--") + '</span></div>';
     html += '</div>';
+
+    /* Factor Breakdown Mini-Chart */
+    html += '<div class="card-factor-grid">';
+    var factorList = [
+      {key: "momentum", label: "Mom"}, {key: "value", label: "Val"},
+      {key: "quality", label: "Qual"}, {key: "growth", label: "Grw"},
+      {key: "volatility", label: "Vol"}, {key: "sentiment", label: "Snt"},
+      {key: "risk_adjusted", label: "R/A"}, {key: "historical", label: "Hist"},
+      {key: "ml_adaptive", label: "ML"},
+    ];
+    for (var fi = 0; fi < factorList.length; fi++) {
+      var fk = factorList[fi].key;
+      var fv = fs[fk];
+      var fcolor = fv > 1 ? "var(--color-buy)" : (fv < -1 ? "var(--color-negative)" : "var(--text-muted)");
+      html += '<span class="factor-mini" style="color:' + fcolor + '" title="' + fk + ': ' + formatNumber(fv, 1) + '">';
+      html += factorList[fi].label + ' ' + (fv != null ? formatNumber(fv, 1) : "--");
+      html += '</span>';
+    }
+    html += '</div>';
+
+    /* Kelly & Decision Score */
+    if (dscore != null || kellyPct != null) {
+      html += '<div class="card-meta-row">';
+      if (dscore != null) {
+        var dsColor = dscore > 2 ? "var(--color-buy)" : (dscore < -2 ? "var(--color-negative)" : "var(--text-secondary)");
+        html += '<span class="meta-tag" style="color:' + dsColor + '">DS:' + formatNumber(dscore, 1) + '</span>';
+      }
+      if (kellyPct != null && kellyPct > 0) {
+        html += '<span class="meta-tag" style="color:var(--text-secondary)">Kelly:' + formatNumber(kellyPct, 0) + '%</span>';
+      }
+      if (rrDetail.risk_reward_ratio != null) {
+        var rrColor = rrDetail.risk_reward_ratio > 1.5 ? "var(--color-buy)" : (rrDetail.risk_reward_ratio < 0.8 ? "var(--color-negative)" : "var(--text-secondary)");
+        html += '<span class="meta-tag" style="color:' + rrColor + '">R:R ' + formatNumber(rrDetail.risk_reward_ratio, 1) + '</span>';
+      }
+      html += '</div>';
+    }
 
     html += '</article>';
     return html;
@@ -1591,6 +1676,14 @@ body {
     if (data.regime) updateRegime(data.regime);
     if (data.bottom_score != null) {
       elBottomScore.textContent = formatNumber(data.bottom_score, 1) + "/100";
+    }
+    if (data.factor_count) {
+      elFactorCount.textContent = data.factor_count;
+    }
+    if (data.ml_r2 != null) {
+      var r2val = data.ml_r2;
+      elMlR2.textContent = r2val > 0 ? formatNumber(r2val * 100, 1) + "%" : "Training...";
+      elMlR2.style.color = r2val > 0.3 ? "var(--color-buy)" : (r2val > 0 ? "var(--text-secondary)" : "var(--text-muted)");
     }
     elLastUpdate.textContent = formatTime(data.timestamp) || nowTimeStr();
   }
