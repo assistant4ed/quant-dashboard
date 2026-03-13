@@ -2480,7 +2480,9 @@ function renderFactorGroupBars(data) {
   var groups = data.group_scores || {};
   var labels = {
     momentum: 'Momentum 动量', value: 'Value 估值', quality: 'Quality 质量',
-    growth: 'Growth 成长', volatility: 'Volatility 波动', sentiment: 'Sentiment 情绪', macro: 'Macro 宏观'
+    growth: 'Growth 成长', volatility: 'Volatility 波动', sentiment: 'Sentiment 情绪',
+    macro: 'Macro 宏观', economic: 'Economic 经济周期', industry: 'Industry 行业前景',
+    risk_adjusted: 'Risk-Adj 风险调整', historical: 'Historical 历史类比', ml_adaptive: 'ML Adaptive 机器学习'
   };
   var html = '';
   Object.keys(labels).forEach(function(k) {
@@ -2503,7 +2505,7 @@ function renderFactorGroupBars(data) {
 function renderFactorDetailGrid(data) {
   var el = document.getElementById('factor-detail-grid');
   if (!el) return;
-  var groupOrder = ['momentum', 'value', 'quality', 'growth', 'volatility', 'sentiment', 'macro'];
+  var groupOrder = ['momentum', 'value', 'quality', 'growth', 'volatility', 'sentiment', 'macro', 'economic', 'industry', 'risk_adjusted', 'historical', 'ml_adaptive'];
   var groups = data.groups || {};
   var html = '';
   groupOrder.forEach(function(gKey) {
@@ -2537,7 +2539,7 @@ function renderFactorRadarChart(data) {
   var canvas = document.getElementById('factor-radar-chart');
   if (!canvas) return;
   var scores = data.group_scores || {};
-  var labels = ['Momentum\n动量', 'Value\n估值', 'Quality\n质量', 'Growth\n成长', 'Volatility\n波动', 'Sentiment\n情绪', 'Macro\n宏观'];
+  var labels = ['Momentum\n动量', 'Value\n估值', 'Quality\n质量', 'Growth\n成长', 'Volatility\n波动', 'Sentiment\n情绪', 'Macro\n宏观', 'Economic\n经济', 'Industry\n行业', 'Risk-Adj\n风险调整', 'Historical\n历史类比', 'ML\n机器学习'];
   var values = [
     (scores.momentum || 0) + 5,
     (scores.value || 0) + 5,
@@ -2546,6 +2548,11 @@ function renderFactorRadarChart(data) {
     (scores.volatility || 0) + 5,
     (scores.sentiment || 0) + 5,
     (scores.macro || 0) + 5,
+    (scores.economic || 0) + 5,
+    (scores.industry || 0) + 5,
+    (scores.risk_adjusted || 0) + 5,
+    (scores.historical || 0) + 5,
+    (scores.ml_adaptive || 0) + 5,
   ];
   if (window._factorRadarChart) { window._factorRadarChart.destroy(); }
   window._factorRadarChart = new Chart(canvas, {
@@ -2583,8 +2590,8 @@ function renderFactorAttributionChart(data) {
   if (!canvas) return;
   var scores = data.group_scores || {};
   var weights = data.weights || {};
-  var labels = ['Momentum', 'Value', 'Quality', 'Growth', 'Volatility', 'Sentiment', 'Macro'];
-  var keys = ['momentum', 'value', 'quality', 'growth', 'volatility', 'sentiment', 'macro'];
+  var labels = ['Momentum', 'Value', 'Quality', 'Growth', 'Volatility', 'Sentiment', 'Macro', 'Economic', 'Industry', 'Risk-Adj', 'Historical', 'ML Adaptive'];
+  var keys = ['momentum', 'value', 'quality', 'growth', 'volatility', 'sentiment', 'macro', 'economic', 'industry', 'risk_adjusted', 'historical', 'ml_adaptive'];
   var contributions = keys.map(function(k) {
     return parseFloat(((scores[k] || 0) * (weights[k] || 0)).toFixed(3));
   });
