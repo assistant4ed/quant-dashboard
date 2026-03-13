@@ -2956,7 +2956,11 @@ def create_app():
 
     @app.route("/api/factors/<ticker>")
     def api_factor_analysis(ticker):
-        """Return multi-factor analysis for a ticker (7 factor groups, venture fund grade)."""
+        """Return multi-factor analysis for a ticker (9 factor groups, venture fund grade).
+
+        Includes dynamic regime-adjusted weights, short/medium/long term ratings,
+        risk-reward ratio, and market bottom assessment.
+        """
         try:
             from factor_engine import get_factor_analysis
             data = get_factor_analysis(ticker.upper().strip())
@@ -2964,6 +2968,36 @@ def create_app():
         except Exception as exc:
             logger.error("Factor analysis failed for %s: %s", ticker, exc)
             return _error_response(str(exc), "FACTOR_ERROR", 500)
+
+    @app.route("/api/market-regime")
+    def api_market_regime():
+        """Return current market regime (PANIC/BEAR/RECOVERY/BULL/EUPHORIA)."""
+        try:
+            from factor_engine import detect_market_regime
+            data = detect_market_regime()
+            return jsonify({
+                "data": data,
+                "error": None,
+                "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+            })
+        except Exception as exc:
+            logger.error("Market regime detection failed: %s", exc)
+            return _error_response(str(exc), "REGIME_ERROR", 500)
+
+    @app.route("/api/market-bottom")
+    def api_market_bottom():
+        """Assess whether the market is near a bottom (buying opportunity score 0-100)."""
+        try:
+            from factor_engine import assess_market_bottom
+            data = assess_market_bottom()
+            return jsonify({
+                "data": data,
+                "error": None,
+                "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+            })
+        except Exception as exc:
+            logger.error("Market bottom assessment failed: %s", exc)
+            return _error_response(str(exc), "BOTTOM_ERROR", 500)
 
     @app.route("/api/predict-chart/<ticker>")
     def api_predict_chart(ticker):
