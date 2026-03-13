@@ -424,14 +424,14 @@ function renderMarketLiveBar(data) {
 
   var items = [
     { key: 'SP500',       label: 'S&P 500',   icon: '📈' },
-    { key: 'NASDAQ',      label: 'NASDAQ',    icon: '💻' },
-    { key: 'DOW',         label: 'DOW',       icon: '🏛' },
-    { key: 'RUSSELL2000', label: 'RUT',       icon: '📊' },
-    { key: 'VIX',         label: 'VIX',       icon: '⚡' },
-    { key: 'GOLD',        label: 'Gold',      icon: '🥇' },
-    { key: 'OIL',         label: 'Oil',       icon: '🛢' },
-    { key: 'TREASURY10Y', label: '10Y Yield', icon: '🏦' },
-    { key: 'BTC',         label: 'Bitcoin',   icon: '₿' },
+    { key: 'NASDAQ',      label: 'NASDAQ',     icon: '💻' },
+    { key: 'DOW',         label: 'DOW',        icon: '🏛' },
+    { key: 'RUSSELL2000', label: 'RUT',        icon: '📊' },
+    { key: 'VIX',         label: 'VIX',        icon: '⚡' },
+    { key: 'GOLD',        label: 'Gold',       icon: '🥇' },
+    { key: 'OIL',         label: 'Oil',        icon: '🛢' },
+    { key: 'TREASURY10Y', label: '10Y Yield',  icon: '🏦' },
+    { key: 'BTC',         label: 'Bitcoin',    icon: '₿' },
   ];
 
   var html = '<div class="market-live-grid">';
@@ -446,15 +446,21 @@ function renderMarketLiveBar(data) {
     var dir = d.direction || (d.change_pct != null && d.change_pct >= 0 ? 'up' : 'down');
     var color = dir === 'up' ? 'var(--accent-green)' : 'var(--accent-red)';
     var arrow = dir === 'up' ? '▲' : '▼';
+    var dirClass = dir === 'up' ? 'market-live-card--up' : 'market-live-card--down';
     html +=
-      '<div class="market-live-card">' +
-        '<div class="market-live-icon">' + item.icon + '</div>' +
-        '<div class="market-live-label">' + item.label + '</div>' +
+      '<div class="market-live-card ' + dirClass + '">' +
+        '<div class="market-live-header">' +
+          '<span class="market-live-icon">' + item.icon + '</span>' +
+          '<span class="market-live-label">' + item.label + '</span>' +
+        '</div>' +
         '<div class="market-live-price">' + price + '</div>' +
         '<div class="market-live-change" style="color:' + color + '">' + arrow + ' ' + chg + '</div>' +
       '</div>';
   });
   html += '</div>';
+
+  var ts = document.getElementById('overview-timestamp');
+  if (ts) ts.textContent = 'Updated: ' + new Date().toLocaleTimeString();
   el.innerHTML = html;
 }
 
@@ -485,7 +491,7 @@ function renderOverviewNews(articles) {
   var html = '';
   articles.slice(0, 12).forEach(function (a) {
     var title = escapeHtml(a.title || 'No title');
-    var summary = escapeHtml((a.summary || '').substring(0, 140));
+    var summary = escapeHtml((a.summary || '').substring(0, 200));
     var source = escapeHtml(a.source || '');
     var url = a.url || '#';
     var pubDate = '';
@@ -1894,10 +1900,13 @@ function renderCalendarGrid(data) {
     return;
   }
 
+  // Show top 8 events in overview, with link to Market Data tab for full list
+  var displayEvents = events.slice(0, 8);
+
   var html = '<div class="calendar-table">';
   html += '<div class="calendar-row calendar-header"><span>Date</span><span>Time</span><span>Event</span><span>Importance</span><span>Previous</span><span>Forecast</span></div>';
 
-  events.forEach(function(evt) {
+  displayEvents.forEach(function(evt) {
     var impClass = evt.importance === 'high' ? 'cal-imp-high' : evt.importance === 'medium' ? 'cal-imp-medium' : 'cal-imp-low';
     var today = new Date().toISOString().slice(0, 10);
     var isToday = evt.date === today;
@@ -1914,6 +1923,20 @@ function renderCalendarGrid(data) {
   });
 
   html += '</div>';
+
+  // Link banner to Market Data tab for full released data
+  if (events.length > 8) {
+    html += '<div class="calendar-link-banner" onclick="switchTab(\'market\')" role="button" tabindex="0">';
+    html += '<span class="calendar-link-text"><strong>' + events.length + ' total events</strong> — View full economic calendar and released data on the Market Data tab</span>';
+    html += '<span class="calendar-link-arrow">&rarr;</span>';
+    html += '</div>';
+  } else {
+    html += '<div class="calendar-link-banner" onclick="switchTab(\'market\')" role="button" tabindex="0">';
+    html += '<span class="calendar-link-text">View released data and full economic indicators on the <strong>Market Data</strong> tab</span>';
+    html += '<span class="calendar-link-arrow">&rarr;</span>';
+    html += '</div>';
+  }
+
   el.innerHTML = html;
 }
 
