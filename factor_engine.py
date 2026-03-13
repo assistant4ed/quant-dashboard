@@ -639,24 +639,28 @@ def _compute_momentum(hist, info):
         "value": _fmt(ret(21), 1),
         "score": score_ret(ret(21), [(-8, -4), (-3, -2), (0, 0), (5, 2), (10, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance history(2y) Close",
     })
     sub.append({
         "name": "3M Momentum", "name_cn": "3月动量",
         "value": _fmt(ret(63), 1),
         "score": score_ret(ret(63), [(-15, -4), (-5, -2), (0, 0), (8, 2), (20, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance history(2y) Close",
     })
     sub.append({
         "name": "6M Momentum", "name_cn": "6月动量",
         "value": _fmt(ret(126), 1),
         "score": score_ret(ret(126), [(-20, -4), (-8, -2), (0, 0), (12, 2), (30, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance history(2y) Close",
     })
     sub.append({
         "name": "12M Momentum", "name_cn": "12月动量",
         "value": _fmt(ret(252), 1),
         "score": score_ret(ret(252), [(-25, -4), (-10, -2), (0, 0), (15, 2), (40, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance history(2y) Close",
     })
 
     rsi = _calc_rsi(closes, 14)
@@ -675,6 +679,7 @@ def _compute_momentum(hist, info):
     sub.append({
         "name": "RSI (14)", "name_cn": "RSI指标",
         "value": _fmt(rsi, 1), "score": rsi_score, "unit": "",
+        "source": "yfinance history(2y) Close, RSI-14",
     })
 
     macd_score = 0.0
@@ -695,12 +700,14 @@ def _compute_momentum(hist, info):
     sub.append({
         "name": "MACD Signal", "name_cn": "MACD信号",
         "value": None, "score": macd_score, "unit": "",
+        "source": "yfinance history(2y) Close, EMA12/26",
     })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]))
     return {
         "composite": round(composite, 2),
         "label": "Momentum", "label_cn": "动量", "factors": sub,
+        "data_source_summary": "yfinance 2-year price history",
     }
 
 
@@ -719,6 +726,7 @@ def _compute_value(info, profile=None):
     sub.append({
         "name": "P/E Ratio", "name_cn": "市盈率",
         "value": _fmt(pe, 1), "score": pe_score, "unit": "x",
+        "source": "yfinance info.trailingPE",
     })
 
     pb_lo, pb_hi = profile["pb_range"]
@@ -727,6 +735,7 @@ def _compute_value(info, profile=None):
     sub.append({
         "name": "P/B Ratio", "name_cn": "市净率",
         "value": _fmt(pb, 2), "score": pb_score, "unit": "x",
+        "source": "yfinance info.priceToBook",
     })
 
     ev_lo, ev_hi = profile["ev_ebitda_range"]
@@ -735,6 +744,7 @@ def _compute_value(info, profile=None):
     sub.append({
         "name": "EV/EBITDA", "name_cn": "企业价值倍数",
         "value": _fmt(ev_ebitda, 1), "score": ev_score, "unit": "x",
+        "source": "yfinance info.enterpriseToEbitda",
     })
 
     ps = info.get("priceToSalesTrailing12Months")
@@ -743,6 +753,7 @@ def _compute_value(info, profile=None):
         "value": _fmt(ps, 2),
         "score": _thresh(ps, [(1, 5), (3, 3), (6, 1), (10, -1), (20, -3), (9999, -5)]),
         "unit": "x",
+        "source": "yfinance info.priceToSalesTrailing12Months",
     })
 
     dy = info.get("dividendYield")
@@ -760,12 +771,14 @@ def _compute_value(info, profile=None):
     sub.append({
         "name": "Dividend Yield", "name_cn": "股息率",
         "value": _fmt(dy_pct, 2), "score": dy_score, "unit": "%",
+        "source": "yfinance info.dividendYield",
     })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]))
     return {
         "composite": round(composite, 2),
         "label": "Value", "label_cn": "估值", "factors": sub,
+        "data_source_summary": "yfinance real-time fundamentals (quarterly reported)",
     }
 
 
@@ -801,6 +814,7 @@ def _compute_quality(info):
         "value": _fmt(roe_pct, 1),
         "score": _thresh(roe_pct, [(-5, -5), (0, -3), (8, -1), (15, 2), (25, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance info.returnOnEquity",
     })
 
     roa = info.get("returnOnAssets")
@@ -810,6 +824,7 @@ def _compute_quality(info):
         "value": _fmt(roa_pct, 1),
         "score": _thresh(roa_pct, [(-2, -5), (0, -3), (3, -1), (7, 2), (12, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance info.returnOnAssets",
     })
 
     gm = info.get("grossMargins")
@@ -819,6 +834,7 @@ def _compute_quality(info):
         "value": _fmt(gm_pct, 1),
         "score": _thresh(gm_pct, [(10, -3), (20, -1), (35, 1), (50, 3), (65, 4), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance info.grossMargins",
     })
 
     om = info.get("operatingMargins")
@@ -828,6 +844,7 @@ def _compute_quality(info):
         "value": _fmt(om_pct, 1),
         "score": _thresh(om_pct, [(-5, -5), (0, -3), (5, -1), (12, 1), (20, 3), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance info.operatingMargins",
     })
 
     de = info.get("debtToEquity")
@@ -836,6 +853,7 @@ def _compute_quality(info):
         "value": _fmt(de, 1),
         "score": _thresh(de, [(20, 5), (50, 3), (100, 1), (150, -1), (200, -3), (9999, -5)]),
         "unit": "%",
+        "source": "yfinance info.debtToEquity",
     })
 
     cr = info.get("currentRatio")
@@ -844,12 +862,14 @@ def _compute_quality(info):
         "value": _fmt(cr, 2),
         "score": _thresh(cr, [(0.5, -5), (1.0, -2), (1.5, 1), (2.5, 4), (9999, 5)]),
         "unit": "x",
+        "source": "yfinance info.currentRatio",
     })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]))
     return {
         "composite": round(composite, 2),
         "label": "Quality", "label_cn": "质量", "factors": sub,
+        "data_source_summary": "yfinance real-time fundamentals (quarterly reported)",
     }
 
 
@@ -867,6 +887,7 @@ def _compute_growth(info):
         "value": _fmt(rg_pct, 1),
         "score": _thresh(rg_pct, [(-10, -5), (-3, -3), (0, -1), (5, 1), (15, 3), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance info.revenueGrowth",
     })
 
     eg = info.get("earningsGrowth")
@@ -876,6 +897,7 @@ def _compute_growth(info):
         "value": _fmt(eg_pct, 1),
         "score": _thresh(eg_pct, [(-20, -5), (-5, -3), (0, -1), (8, 1), (20, 3), (9999, 5)]),
         "unit": "%",
+        "source": "yfinance info.earningsGrowth",
     })
 
     fwd_eps = info.get("forwardEps")
@@ -890,6 +912,7 @@ def _compute_growth(info):
     sub.append({
         "name": "Fwd EPS Growth", "name_cn": "预期EPS增长",
         "value": _fmt(fwd_growth, 1), "score": fwd_score, "unit": "%",
+        "source": "yfinance info.forwardEps / trailingEps",
     })
 
     rc = info.get("recommendationMean")
@@ -908,12 +931,14 @@ def _compute_growth(info):
     sub.append({
         "name": "Analyst Rating", "name_cn": "分析师评级",
         "value": _fmt(rc, 2), "score": rc_score, "unit": "/5",
+        "source": "yfinance info.recommendationMean",
     })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]))
     return {
         "composite": round(composite, 2),
         "label": "Growth", "label_cn": "成长", "factors": sub,
+        "data_source_summary": "yfinance real-time fundamentals + analyst estimates",
     }
 
 
@@ -944,6 +969,7 @@ def _compute_volatility(hist, info):
     sub.append({
         "name": "Beta", "name_cn": "贝塔系数",
         "value": _fmt(beta, 2), "score": beta_score, "unit": "",
+        "source": "yfinance info.beta",
     })
 
     if n >= 30:
@@ -954,6 +980,7 @@ def _compute_volatility(hist, info):
             "value": _fmt(rv, 1),
             "score": _thresh(rv, [(15, 5), (25, 3), (35, 1), (50, -1), (70, -3), (9999, -5)]),
             "unit": "%",
+            "source": "yfinance history(2y) Close, 30d log returns",
         })
 
     if n >= 50:
@@ -966,6 +993,7 @@ def _compute_volatility(hist, info):
             "value": _fmt(max_dd, 1),
             "score": _thresh(max_dd, [(-50, -5), (-30, -3), (-20, -1), (-10, 1), (-5, 3), (0, 4)]),
             "unit": "%",
+            "source": "yfinance history(2y) Close, rolling max",
         })
 
     if n >= 15:
@@ -982,12 +1010,14 @@ def _compute_volatility(hist, info):
             "value": _fmt(atr_pct, 2),
             "score": _thresh(atr_pct, [(0.5, 5), (1.0, 3), (2.0, 1), (3.5, -1), (5.0, -3), (9999, -5)]),
             "unit": "%",
+            "source": "yfinance history(2y) High/Low/Close",
         })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]))
     return {
         "composite": round(composite, 2),
         "label": "Volatility", "label_cn": "波动性", "factors": sub,
+        "data_source_summary": "yfinance price history + fundamentals",
     }
 
 
@@ -1006,6 +1036,7 @@ def _compute_sentiment(stock, info):
             "value": _fmt(sp_pct, 1),
             "score": _thresh(sp_pct, [(2, 4), (5, 2), (10, -1), (20, -3), (9999, -5)]),
             "unit": "%",
+            "source": "yfinance info.shortPercentOfFloat",
         })
 
     inst = info.get("heldPercentInstitutions")
@@ -1016,6 +1047,7 @@ def _compute_sentiment(stock, info):
             "value": _fmt(ip, 1),
             "score": _thresh(ip, [(20, -3), (40, 0), (60, 2), (80, 4), (9999, 4)]),
             "unit": "%",
+            "source": "yfinance info.heldPercentInstitutions",
         })
 
     ins_score = 0.0
@@ -1047,6 +1079,7 @@ def _compute_sentiment(stock, info):
     sub.append({
         "name": "Insider Activity", "name_cn": "内部人员活动",
         "value": None, "score": ins_score, "unit": "",
+        "source": "yfinance insider_transactions",
     })
 
     rc = info.get("recommendationMean")
@@ -1055,12 +1088,14 @@ def _compute_sentiment(stock, info):
         sub.append({
             "name": "Analyst Consensus", "name_cn": "分析师共识",
             "value": _fmt(rc, 2), "score": rc_score, "unit": "/5",
+            "source": "yfinance info.recommendationMean",
         })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]) if sub else 0.0)
     return {
         "composite": round(composite, 2),
         "label": "Sentiment", "label_cn": "情绪", "factors": sub,
+        "data_source_summary": "yfinance fundamentals + insider transactions",
     }
 
 
@@ -1083,6 +1118,7 @@ def _compute_macro(hist):
             sub.append({
                 "name": "Market Correlation", "name_cn": "市场相关性",
                 "value": _fmt(corr, 2), "score": _clamp(-corr * 3.0), "unit": "",
+                "source": "yfinance SPY + stock history(1y)",
             })
             if min_len >= 252:
                 stock_ret = (closes[-1] / closes[-252] - 1) * 100
@@ -1093,6 +1129,7 @@ def _compute_macro(hist):
                     "value": _fmt(rs, 1),
                     "score": _thresh(rs, [(-20, -5), (-10, -3), (-3, -1), (3, 1), (10, 3), (9999, 5)]),
                     "unit": "%",
+                    "source": "yfinance SPY + stock history(1y)",
                 })
     except Exception:
         pass
@@ -1108,12 +1145,14 @@ def _compute_macro(hist):
                 "value": _fmt(pos, 1),
                 "score": _thresh(pos, [(10, -4), (25, -2), (40, 0), (60, 1), (75, 3), (9999, 4)]),
                 "unit": "%",
+                "source": "yfinance stock history(1y)",
             })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]) if sub else 0.0)
     return {
         "composite": round(composite, 2),
         "label": "Macro", "label_cn": "宏观", "factors": sub,
+        "data_source_summary": "yfinance SPY benchmark + stock price history",
     }
 
 
@@ -1182,6 +1221,7 @@ def _compute_economic():
         sub.append({
             "name": "CPI Inflation", "name_cn": "消费者物价指数",
             "value": _fmt(cpi, 1), "score": cpi_score, "unit": "%",
+            "source": "FRED CPI-YoY / yfinance ^TNX implied",
         })
 
     # GDP growth direction
@@ -1193,6 +1233,7 @@ def _compute_economic():
         sub.append({
             "name": "GDP Growth", "name_cn": "GDP增长率",
             "value": _fmt(gdp, 1), "score": gdp_score, "unit": "%",
+            "source": "FRED GDP growth rate",
         })
 
     # Consumer sentiment (FRED or proxy from XLY/XLP relative performance)
@@ -1204,6 +1245,7 @@ def _compute_economic():
         sub.append({
             "name": "Consumer Sentiment", "name_cn": "消费者信心指数",
             "value": _fmt(cs, 1), "score": cs_score, "unit": "",
+            "source": "FRED consumer sentiment index",
         })
     elif ind.get("_consumer_proxy") is not None:
         cp = ind["_consumer_proxy"]
@@ -1213,6 +1255,7 @@ def _compute_economic():
         sub.append({
             "name": "Consumer Confidence Proxy", "name_cn": "消费信心代理指标",
             "value": _fmt(cp, 1), "score": cp_score, "unit": "%",
+            "source": "yfinance XLY/XLP relative performance",
         })
 
     # Unemployment rate
@@ -1224,6 +1267,7 @@ def _compute_economic():
         sub.append({
             "name": "Unemployment Rate", "name_cn": "失业率",
             "value": _fmt(unemp, 1), "score": unemp_score, "unit": "%",
+            "source": "FRED unemployment rate",
         })
 
     # Yield curve shape
@@ -1242,6 +1286,7 @@ def _compute_economic():
             "name": "Yield Curve Spread", "name_cn": "收益率曲线利差",
             "value": _fmt(yc_spread, 2), "score": yc_score,
             "unit": "bps" if abs(yc_spread) < 1 else "%",
+            "source": "FRED / yfinance ^TNX, ^FVX",
         })
 
     # ISM Manufacturing proxy
@@ -1253,6 +1298,7 @@ def _compute_economic():
         sub.append({
             "name": "ISM Manufacturing", "name_cn": "ISM制造业指数",
             "value": _fmt(ism, 1), "score": ism_score, "unit": "",
+            "source": "FRED ISM manufacturing index",
         })
 
     # Retail sales
@@ -1264,6 +1310,7 @@ def _compute_economic():
         sub.append({
             "name": "Retail Sales", "name_cn": "零售销售额",
             "value": _fmt(retail, 1), "score": retail_score, "unit": "B$",
+            "source": "FRED retail sales",
         })
 
     # Real interest rate
@@ -1275,6 +1322,7 @@ def _compute_economic():
         sub.append({
             "name": "Real Interest Rate", "name_cn": "实际利率",
             "value": _fmt(real_rate, 2), "score": rr_score, "unit": "%",
+            "source": "FRED real interest rate",
         })
 
     # Housing starts
@@ -1286,12 +1334,14 @@ def _compute_economic():
         sub.append({
             "name": "Housing Starts", "name_cn": "新屋开工数",
             "value": _fmt(housing, 0), "score": hs_score, "unit": "K",
+            "source": "FRED housing starts",
         })
 
     composite = _clamp(_safe_mean([s["score"] for s in sub]) if sub else 0.0)
     result = {
         "composite": round(composite, 2),
         "label": "Economic", "label_cn": "经济周期", "factors": sub,
+        "data_source_summary": "FRED economic indicators (with yfinance fallback)",
     }
     _CACHE["economic_factor"] = {"data": result, "ts": now}
     return result
@@ -1330,6 +1380,7 @@ def _compute_industry_outlook(sector):
                     "value": _fmt(week_ret, 2),
                     "score": _thresh(week_ret, [(-5, -4), (-2, -2), (0, 0), (2, 2), (5, 4), (9999, 5)]),
                     "unit": "%",
+                    "source": f"yfinance {etf_symbol} history(6mo)",
                 })
 
             # 1-month return
@@ -1340,6 +1391,7 @@ def _compute_industry_outlook(sector):
                     "value": _fmt(month_ret, 2),
                     "score": _thresh(month_ret, [(-8, -4), (-3, -2), (0, 0), (3, 2), (8, 4), (9999, 5)]),
                     "unit": "%",
+                    "source": f"yfinance {etf_symbol} history(6mo)",
                 })
 
             # 3-month return
@@ -1350,6 +1402,7 @@ def _compute_industry_outlook(sector):
                     "value": _fmt(q_ret, 2),
                     "score": _thresh(q_ret, [(-12, -4), (-5, -2), (0, 0), (5, 2), (12, 4), (9999, 5)]),
                     "unit": "%",
+                    "source": f"yfinance {etf_symbol} history(6mo)",
                 })
 
             # Relative strength vs S&P 500 (1 month)
@@ -1363,6 +1416,7 @@ def _compute_industry_outlook(sector):
                     "value": _fmt(rel_str, 2),
                     "score": _thresh(rel_str, [(-5, -4), (-2, -2), (0, 0), (2, 2), (5, 4), (9999, 5)]),
                     "unit": "%",
+                    "source": f"yfinance {etf_symbol} vs SPY history(6mo)",
                 })
 
             # Sector rotation signal: compare recent volume trend
@@ -1388,6 +1442,7 @@ def _compute_industry_outlook(sector):
                     sub.append({
                         "name": "Rotation Signal", "name_cn": "板块轮动信号",
                         "value": rotation_label, "score": rotation_score, "unit": "",
+                        "source": f"yfinance {etf_symbol} volume + price history",
                     })
 
     except Exception as exc:
@@ -1397,6 +1452,7 @@ def _compute_industry_outlook(sector):
     result = {
         "composite": round(composite, 2),
         "label": "Industry", "label_cn": "行业前景",
+        "data_source_summary": f"yfinance sector ETF ({etf_symbol}) + SPY",
         "sector_etf": etf_symbol,
         "factors": sub,
     }
@@ -1455,6 +1511,7 @@ def _compute_risk_adjusted_return(hist, info):
             return {
                 "composite": 0.0, "label": "Risk-Adjusted",
                 "label_cn": "风险调整回报", "factors": [],
+                "data_source_summary": "yfinance price history + ^TNX + SPY benchmark",
             }
 
         sub = []
@@ -1475,6 +1532,7 @@ def _compute_risk_adjusted_return(hist, info):
         sub.append({
             "name": "Sharpe Ratio", "name_cn": "夏普比率",
             "value": _fmt(sharpe, 2), "score": sharpe_score, "unit": "",
+            "source": "yfinance stock history + ^TNX risk-free rate",
         })
 
         # 2. Sortino Ratio (downside deviation only)
@@ -1491,6 +1549,7 @@ def _compute_risk_adjusted_return(hist, info):
         sub.append({
             "name": "Sortino Ratio", "name_cn": "索提诺比率",
             "value": _fmt(sortino, 2), "score": sortino_score, "unit": "",
+            "source": "yfinance stock history + ^TNX risk-free rate",
         })
 
         # 3. Information Ratio vs SPY
@@ -1511,6 +1570,7 @@ def _compute_risk_adjusted_return(hist, info):
         sub.append({
             "name": "Information Ratio", "name_cn": "信息比率",
             "value": _fmt(ir_val, 2), "score": ir_score, "unit": "",
+            "source": "yfinance stock + SPY history",
         })
 
         # 4. Calmar Ratio: annualized return / max drawdown
@@ -1525,6 +1585,7 @@ def _compute_risk_adjusted_return(hist, info):
         sub.append({
             "name": "Calmar Ratio", "name_cn": "卡玛比率",
             "value": _fmt(calmar, 2), "score": calmar_score, "unit": "",
+            "source": "yfinance stock history, max drawdown",
         })
 
         # 5. Treynor Ratio: (return - rf) / beta
@@ -1541,6 +1602,7 @@ def _compute_risk_adjusted_return(hist, info):
         sub.append({
             "name": "Treynor Ratio", "name_cn": "特雷诺比率",
             "value": _fmt(treynor_val, 4), "score": treynor_score, "unit": "",
+            "source": "yfinance stock history + info.beta + ^TNX",
         })
 
         # 6. Risk-Reward Scoring: upside potential vs realized downside
@@ -1558,12 +1620,14 @@ def _compute_risk_adjusted_return(hist, info):
         sub.append({
             "name": "Risk-Reward Score", "name_cn": "风险回报评分",
             "value": _fmt(rr_val, 2), "score": rr_score, "unit": "x",
+            "source": "yfinance info.targetMeanPrice + history",
         })
 
         composite = _clamp(_safe_mean([s["score"] for s in sub]))
         return {
             "composite": round(composite, 2),
             "label": "Risk-Adjusted", "label_cn": "风险调整回报", "factors": sub,
+            "data_source_summary": "yfinance price history + ^TNX + SPY benchmark",
         }
 
     except Exception as exc:
@@ -1571,6 +1635,7 @@ def _compute_risk_adjusted_return(hist, info):
         return {
             "composite": 0.0, "label": "Risk-Adjusted",
             "label_cn": "风险调整回报", "factors": [],
+            "data_source_summary": "yfinance price history + ^TNX + SPY benchmark",
         }
 
 
@@ -1708,6 +1773,7 @@ def _compute_historical_analogy(hist, info):
                 [(-15, -5), (-5, -3), (0, -1), (5, 1), (15, 3), (9999, 5)],
             ),
             "unit": "",
+            "source": "^VIX, info.trailingPE, ^TNX/^FVX, ^GSPC, stock history",
         })
 
         sub.append({
@@ -1719,6 +1785,7 @@ def _compute_historical_analogy(hist, info):
                 [(-15, -5), (-5, -3), (0, -1), (5, 1), (15, 3), (9999, 5)],
             ),
             "unit": "%",
+            "source": "weighted historical regime forward returns",
         })
 
         # VIX percentile in historical distribution
@@ -1735,6 +1802,7 @@ def _compute_historical_analogy(hist, info):
             "value": _fmt(vix_pctile, 0),
             "score": vix_pctile_score,
             "unit": "%ile",
+            "source": "yfinance ^VIX vs 8 reference periods",
         })
 
         # Valuation percentile
@@ -1751,6 +1819,7 @@ def _compute_historical_analogy(hist, info):
             "value": _fmt(pe_pctile, 0),
             "score": pe_pctile_score,
             "unit": "%ile",
+            "source": "yfinance info.trailingPE vs 8 reference periods",
         })
 
         composite = _clamp(_safe_mean([s["score"] for s in sub]))
@@ -1758,6 +1827,7 @@ def _compute_historical_analogy(hist, info):
             "composite": round(composite, 2),
             "label": "Historical Analogy", "label_cn": "历史周期类比",
             "factors": sub,
+            "data_source_summary": "yfinance ^VIX, ^GSPC, ^TNX + 8 historical reference periods",
         }
 
     except Exception as exc:
@@ -1765,6 +1835,7 @@ def _compute_historical_analogy(hist, info):
         return {
             "composite": 0.0, "label": "Historical Analogy",
             "label_cn": "历史周期类比", "factors": [],
+            "data_source_summary": "yfinance ^VIX, ^GSPC, ^TNX + 8 historical reference periods",
         }
 
 
@@ -1786,6 +1857,7 @@ def _compute_ml_adaptive(groups, ticker, hist):
             return {
                 "composite": 0.0, "label": "ML Adaptive",
                 "label_cn": "机器学习自适应", "factors": [],
+                "data_source_summary": "sklearn Ridge regression on yfinance 2Y features",
             }
 
         sub = []
@@ -1835,6 +1907,7 @@ def _compute_ml_adaptive(groups, ticker, hist):
             return {
                 "composite": 0.0, "label": "ML Adaptive",
                 "label_cn": "机器学习自适应", "factors": [],
+                "data_source_summary": "sklearn Ridge regression on yfinance 2Y features",
             }
 
         x_arr = np.array(features)
@@ -1889,6 +1962,7 @@ def _compute_ml_adaptive(groups, ticker, hist):
             "value": _fmt(predicted_return, 2),
             "score": weighted_pred_score,
             "unit": "%",
+            "source": "sklearn Ridge on yfinance 2Y price/volume features",
         })
 
         # Model confidence
@@ -1902,6 +1976,7 @@ def _compute_ml_adaptive(groups, ticker, hist):
             "value": _fmt(r2 * 100, 1),
             "score": confidence_score,
             "unit": "%",
+            "source": "sklearn Ridge R² on time-series validation split",
         })
 
         # Factor alignment: how many of the other factors agree in direction
@@ -1942,6 +2017,7 @@ def _compute_ml_adaptive(groups, ticker, hist):
                 "value": f"{dominant}/{total_factors} ({alignment_pct:.0f}%)",
                 "score": alignment_score,
                 "unit": "",
+                "source": "computed from factors 1-11 composite scores",
             })
 
         # Signal consistency: current vs 5-day average signal direction
@@ -1970,12 +2046,14 @@ def _compute_ml_adaptive(groups, ticker, hist):
             "value": "Consistent" if consistency_score > 0 else "Divergent",
             "score": consistency_score,
             "unit": "",
+            "source": "yfinance history, 5-day rolling 20D momentum",
         })
 
         composite = _clamp(_safe_mean([s["score"] for s in sub]))
         return {
             "composite": round(composite, 2),
             "label": "ML Adaptive", "label_cn": "机器学习自适应", "factors": sub,
+            "data_source_summary": "sklearn Ridge regression on yfinance 2Y features",
         }
 
     except Exception as exc:
@@ -1983,6 +2061,7 @@ def _compute_ml_adaptive(groups, ticker, hist):
         return {
             "composite": 0.0, "label": "ML Adaptive",
             "label_cn": "机器学习自适应", "factors": [],
+            "data_source_summary": "sklearn Ridge regression on yfinance 2Y features",
         }
 
 

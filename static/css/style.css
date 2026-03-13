@@ -4699,6 +4699,36 @@ a:hover {
   text-align: right;
 }
 
+.factor-table-source {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  max-width: 200px;
+  word-break: break-word;
+}
+
+.factor-data-timestamp {
+  background: rgba(59, 92, 255, 0.08);
+  border: 1px solid rgba(59, 92, 255, 0.2);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  grid-column: 1 / -1;
+}
+
+.factor-data-timestamp strong {
+  color: var(--text-primary);
+}
+
+.factor-source-summary {
+  padding: 4px 12px 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+  font-style: italic;
+}
+
 /* Attribution Chart */
 .factor-attribution-box {
   background: var(--bg-secondary);

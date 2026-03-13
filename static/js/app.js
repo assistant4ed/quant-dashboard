@@ -2464,7 +2464,7 @@ function renderFactorCompositeHeader(data) {
       '<div class="factor-composite-left">' +
         '<div class="factor-composite-ticker">' + escapeHtml(data.ticker) + '</div>' +
         '<div class="factor-composite-signal" style="color:' + color + '">' + signal.replace('_', ' ') + '</div>' +
-        '<div class="factor-composite-desc">7-Factor Composite Score</div>' +
+        '<div class="factor-composite-desc">12-Factor Composite Score</div>' +
       '</div>' +
       '<div class="factor-composite-right">' +
         '<div class="factor-composite-score" style="color:' + color + '">' + score.toFixed(2) + '</div>' +
@@ -2507,27 +2507,51 @@ function renderFactorDetailGrid(data) {
   if (!el) return;
   var groupOrder = ['momentum', 'value', 'quality', 'growth', 'volatility', 'sentiment', 'macro', 'economic', 'industry', 'risk_adjusted', 'historical', 'ml_adaptive'];
   var groups = data.groups || {};
+  var generatedAt = data.generated_at || '';
   var html = '';
+
+  /* Data retrieval timestamp banner */
+  if (generatedAt) {
+    var dt = new Date(generatedAt);
+    var timeStr = dt.toLocaleString('en-HK', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false, timeZoneName: 'short'
+    });
+    html += '<div class="factor-data-timestamp">';
+    html += 'Data Retrieved: <strong>' + escapeHtml(timeStr) + '</strong>';
+    html += ' &middot; Cache TTL: 30 min &middot; Source: yfinance + FRED API';
+    html += '</div>';
+  }
+
   groupOrder.forEach(function(gKey) {
     var g = groups[gKey];
     if (!g) return;
     var label = (g.label || gKey) + ' ' + (g.label_cn || '');
     var composite = g.composite || 0;
     var color = composite >= 1 ? '#22c55e' : composite >= -1 ? '#f59e0b' : '#ef4444';
+    var srcSummary = g.data_source_summary || '';
     html += '<div class="factor-detail-card">';
     html += '<div class="factor-detail-card-header">';
     html += '<span class="factor-detail-card-title">' + escapeHtml(label) + '</span>';
     html += '<span class="factor-detail-card-score" style="color:' + color + '">' + (composite >= 0 ? '+' : '') + composite.toFixed(2) + '</span>';
     html += '</div>';
-    html += '<table class="factor-table"><thead><tr><th>Factor 因子</th><th>Value 数值</th><th>Score 评分</th></tr></thead><tbody>';
+    if (srcSummary) {
+      html += '<div class="factor-source-summary">' + escapeHtml(srcSummary) + '</div>';
+    }
+    html += '<table class="factor-table"><thead><tr>';
+    html += '<th>Factor 因子</th><th>Value 数值</th><th>Score 评分</th><th>Source 数据来源</th>';
+    html += '</tr></thead><tbody>';
     (g.factors || []).forEach(function(f) {
       var sc = f.score || 0;
       var scColor = sc >= 1 ? '#22c55e' : sc >= -1 ? '#f59e0b' : '#ef4444';
       var valStr = f.value != null ? (f.value + (f.unit || '')) : 'N/A';
+      var src = f.source || '';
       html += '<tr>';
       html += '<td><span title="' + escapeHtml(f.name_cn || '') + '">' + escapeHtml(f.name || '') + '</span></td>';
       html += '<td class="factor-table-val">' + escapeHtml(String(valStr)) + '</td>';
       html += '<td class="factor-table-score" style="color:' + scColor + '">' + (sc >= 0 ? '+' : '') + sc.toFixed(1) + '</td>';
+      html += '<td class="factor-table-source">' + escapeHtml(src) + '</td>';
       html += '</tr>';
     });
     html += '</tbody></table></div>';
