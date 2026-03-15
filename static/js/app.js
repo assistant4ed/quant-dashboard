@@ -923,18 +923,18 @@ function initAiAnalysis() {
 
   analyzeBtn.addEventListener('click', function() {
     var ticker = getSelectedTicker();
-    if (ticker) runAiAnalysis(ticker, false);
+    if (ticker) runFullAnalysisSuite(ticker, false);
   });
 
   quickBtn.addEventListener('click', function() {
     var ticker = getSelectedTicker();
-    if (ticker) runAiAnalysis(ticker, true);
+    if (ticker) runFullAnalysisSuite(ticker, true);
   });
 
   input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       var ticker = getSelectedTicker();
-      if (ticker) runAiAnalysis(ticker, false);
+      if (ticker) runFullAnalysisSuite(ticker, false);
     }
   });
 
@@ -948,6 +948,13 @@ function initAiAnalysis() {
   input.addEventListener('input', function() {
     if (select && input.value.trim()) select.value = '';
   });
+}
+
+function runFullAnalysisSuite(ticker, isQuick) {
+  /* Run all 3 sections in parallel: AI analysis, Factor analysis, Stock chart */
+  runAiAnalysis(ticker, isQuick);
+  if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
+  if (typeof loadChart === 'function') loadChart(ticker, typeof selectedPeriod !== 'undefined' ? selectedPeriod : '1y');
 }
 
 async function runAiAnalysis(ticker, isQuick) {
@@ -966,7 +973,11 @@ async function runAiAnalysis(ticker, isQuick) {
     : '/api/ai-analyze/' + ticker;
 
   try {
-    var response = await fetch(endpoint, { method: 'POST' });
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 90000);
+
+    var response = await fetch(endpoint, { method: 'POST', signal: controller.signal });
+    clearTimeout(timeoutId);
     var result = await response.json();
 
     loading.classList.add('hidden');
@@ -991,7 +1002,10 @@ async function runAiAnalysis(ticker, isQuick) {
     analyzeBtn.disabled = false;
     quickBtn.disabled = false;
     results.classList.remove('hidden');
-    results.innerHTML = '<div class="ai-error">Failed to connect to AI service: ' + escapeHtml(err.message) + '</div>';
+    var msg = err.name === 'AbortError'
+      ? 'AI analysis timed out. Please try again.'
+      : 'Failed to connect to AI service: ' + escapeHtml(err.message);
+    results.innerHTML = '<div class="ai-error">' + msg + '</div>';
   }
 }
 
@@ -1834,31 +1848,8 @@ function renderStudyProgress(data) {
    ============================================================ */
 
 function initFactorAnalysis() {
-  var analyzeBtn = document.getElementById('factors-analyze-btn');
-  var tickerInput = document.getElementById('factors-ticker-input');
-  var quickBtns = document.querySelectorAll('.factor-quick-btn');
-
-  if (analyzeBtn) {
-    analyzeBtn.addEventListener('click', function() {
-      var ticker = (tickerInput ? tickerInput.value : '').toUpperCase().trim();
-      if (ticker) runFactorAnalysis(ticker);
-    });
-  }
-  if (tickerInput) {
-    tickerInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        var ticker = tickerInput.value.toUpperCase().trim();
-        if (ticker) runFactorAnalysis(ticker);
-      }
-    });
-  }
-  quickBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var ticker = btn.dataset.ticker;
-      if (tickerInput) tickerInput.value = ticker;
-      runFactorAnalysis(ticker);
-    });
-  });
+  /* Factor analysis is now triggered by the AI Analysis input via runFullAnalysisSuite.
+     No separate input controls needed. */
 }
 
 function runFactorAnalysis(ticker) {

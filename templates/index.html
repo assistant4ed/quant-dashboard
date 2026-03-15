@@ -198,21 +198,6 @@
           </div>
         </div>
 
-        <div class="factors-input-row">
-          <input type="text" id="factors-ticker-input" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL)" maxlength="10" aria-label="Stock ticker for factor analysis">
-          <button type="button" class="btn btn-primary" id="factors-analyze-btn">Analyze Factors</button>
-          <div class="factors-quick-tickers" id="factors-quick-tickers">
-            <button type="button" class="factor-quick-btn" data-ticker="AAPL">AAPL</button>
-            <button type="button" class="factor-quick-btn" data-ticker="MSFT">MSFT</button>
-            <button type="button" class="factor-quick-btn" data-ticker="NVDA">NVDA</button>
-            <button type="button" class="factor-quick-btn" data-ticker="AMZN">AMZN</button>
-            <button type="button" class="factor-quick-btn" data-ticker="META">META</button>
-            <button type="button" class="factor-quick-btn" data-ticker="TSLA">TSLA</button>
-            <button type="button" class="factor-quick-btn" data-ticker="JPM">JPM</button>
-            <button type="button" class="factor-quick-btn" data-ticker="GOOGL">GOOGL</button>
-          </div>
-        </div>
-
         <div class="factors-loading hidden" id="factors-loading">
           <div class="ai-spinner"></div>
           <span>Computing factor exposures across 7 categories...</span>
@@ -270,9 +255,6 @@
           </div>
         </div>
         <div class="chart-controls">
-          <select id="chart-ticker-select" class="chart-select" aria-label="Select stock">
-            <option value="">Select a stock...</option>
-          </select>
           <div class="chart-period-group" role="tablist" aria-label="Time period">
             <button type="button" class="toggle-btn active" data-period="1m">1M</button>
             <button type="button" class="toggle-btn" data-period="3m">3M</button>
