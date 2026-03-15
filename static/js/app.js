@@ -87,6 +87,11 @@ function cacheDom() {
     newsLabel: document.getElementById('news-label'),
     newsFeed: document.getElementById('news-feed'),
     chartLabel: document.getElementById('chart-label'),
+
+    altDataGrid: document.getElementById('alt-data-grid'),
+    altDataTicker: document.getElementById('alt-data-ticker'),
+    altDataLoadBtn: document.getElementById('alt-data-load-btn'),
+    providersGrid: document.getElementById('providers-grid'),
   };
 }
 
@@ -455,6 +460,7 @@ function renderMarketLiveBar(data) {
         '</div>' +
         '<div class="market-live-price">' + price + '</div>' +
         '<div class="market-live-change" style="color:' + color + '">' + arrow + ' ' + chg + '</div>' +
+        '<div class="market-live-source">' + escapeHtml(d.source || 'Yahoo Finance') + '</div>' +
       '</div>';
   });
   html += '</div>';
@@ -501,10 +507,19 @@ function renderOverviewNews(articles) {
         pubDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       } catch (e) {}
     }
+    var sentimentDot = '';
+    if (a.sentiment === 'positive') {
+      sentimentDot = '<span class="news-sentiment-dot news-sentiment-dot--positive" title="Positive sentiment" aria-label="Positive sentiment"></span>';
+    } else if (a.sentiment === 'negative') {
+      sentimentDot = '<span class="news-sentiment-dot news-sentiment-dot--negative" title="Negative sentiment" aria-label="Negative sentiment"></span>';
+    } else if (a.sentiment === 'neutral') {
+      sentimentDot = '<span class="news-sentiment-dot news-sentiment-dot--neutral" title="Neutral sentiment" aria-label="Neutral sentiment"></span>';
+    }
     html +=
       '<a class="overview-news-card" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' +
         '<div class="overview-news-meta">' +
           '<span class="overview-news-source">' + source + '</span>' +
+          sentimentDot +
           '<span class="overview-news-date">' + pubDate + '</span>' +
         '</div>' +
         '<div class="overview-news-title">' + title + '</div>' +
@@ -2702,6 +2717,255 @@ function renderFactorMacroGrid(data) {
 }
 
 /* ============================================================
+   DATA PROVIDER STATUS
+   ============================================================ */
+function fetchProviderStatus() {
+  fetch('/api/providers')
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      renderProviderStatus(resp.data || []);
+      updateSectionTimestamp('providers');
+    })
+    .catch(function() {});
+}
+
+function renderProviderStatus(providers) {
+  var el = document.getElementById('providers-grid');
+  if (!el) return;
+  var html = '<div class="provider-status-grid">';
+  providers.forEach(function(p) {
+    var statusClass = p.available ? 'provider-online' : 'provider-offline';
+    var statusText = p.available ? 'Online' : 'No API Key';
+    var dot = p.available ? '\u25CF' : '\u25CB';
+    html +=
+      '<div class="provider-card ' + statusClass + '">' +
+        '<div class="provider-dot">' + dot + '</div>' +
+        '<div class="provider-info">' +
+          '<div class="provider-name">' + escapeHtml(p.name) + '</div>' +
+          '<div class="provider-status-text">' + statusText + '</div>' +
+        '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ============================================================
+   ALTERNATIVE DATA (SHORT INTEREST, INSIDER, CONGRESSIONAL, DARK POOL)
+   ============================================================ */
+function initAltData() {
+  var btn = document.getElementById('alt-data-load-btn');
+  var input = document.getElementById('alt-data-ticker');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      var ticker = (input && input.value || '').trim().toUpperCase();
+      if (ticker) fetchAltData(ticker);
+    });
+  }
+  if (input) {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        var ticker = input.value.trim().toUpperCase();
+        if (ticker) fetchAltData(ticker);
+      }
+    });
+  }
+}
+
+async function fetchAltData(ticker) {
+  var grid = document.getElementById('alt-data-grid');
+  if (!grid) return;
+  grid.innerHTML = '<div class="alt-data-loading"><div class="ai-spinner"></div><span>Loading alternative data for ' + escapeHtml(ticker) + '...</span></div>';
+
+  try {
+    var resp = await fetch('/api/alt-data/' + encodeURIComponent(ticker));
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var result = await resp.json();
+    renderAltData(result.data, ticker);
+    updateSectionTimestamp('alt-data');
+  } catch (err) {
+    grid.innerHTML = '<p style="color:var(--accent-red);font-size:0.875rem;">Failed to load alt data: ' + escapeHtml(err.message) + '</p>';
+  }
+}
+
+function renderAltData(data, ticker) {
+  var grid = document.getElementById('alt-data-grid');
+  if (!grid || !data) return;
+  var html = '<div class="alt-data-ticker-header">' + escapeHtml(ticker) + ' \u2014 Alternative Data Signals</div>';
+  html += '<div class="alt-data-cards">';
+
+  // Short Interest Card
+  var si = data.short_interest;
+  if (si && si.data && si.data.length) {
+    var latest = si.data[0];
+    var ratio = latest.shortVolumeRatio != null ? (latest.shortVolumeRatio * 100).toFixed(1) + '%' : 'N/A';
+    var svol = latest.shortVolume != null ? formatNumber(latest.shortVolume) : 'N/A';
+    var tvol = latest.totalVolume != null ? formatNumber(latest.totalVolume) : 'N/A';
+    html +=
+      '<div class="alt-card alt-card--short">' +
+        '<div class="alt-card-header">' +
+          '<span class="alt-card-icon" aria-hidden="true">&#x1F4C9;</span>' +
+          '<span class="alt-card-title">Short Interest</span>' +
+          '<span class="alt-card-source">Fintel</span>' +
+        '</div>' +
+        '<div class="alt-card-metric">' +
+          '<span class="alt-card-value">' + ratio + '</span>' +
+          '<span class="alt-card-label">Short Volume Ratio</span>' +
+        '</div>' +
+        '<div class="alt-card-details">' +
+          '<div class="alt-detail"><span>Short Volume</span><span>' + svol + '</span></div>' +
+          '<div class="alt-detail"><span>Total Volume</span><span>' + tvol + '</span></div>' +
+          '<div class="alt-detail"><span>Date</span><span>' + escapeHtml(latest.marketDate || '') + '</span></div>' +
+        '</div>' +
+        renderShortInterestChart(si.data) +
+      '</div>';
+  }
+
+  // Insider Trades Card
+  var ins = data.insider_trades;
+  if (ins) {
+    var ownership = ins.insiderOwnershipPercentFloat != null ? (ins.insiderOwnershipPercentFloat * 100).toFixed(2) + '%' : 'N/A';
+    var insiders = ins.insiders || [];
+    var buys = insiders.filter(function(i) { return i.code === 'Purchase' || i.code === 'P'; }).length;
+    var sells = insiders.filter(function(i) { return i.code === 'Sale' || i.code === 'S'; }).length;
+    var gifts = insiders.filter(function(i) { return i.code === 'Gift'; }).length;
+    html +=
+      '<div class="alt-card alt-card--insider">' +
+        '<div class="alt-card-header">' +
+          '<span class="alt-card-icon" aria-hidden="true">&#x1F464;</span>' +
+          '<span class="alt-card-title">Insider Activity</span>' +
+          '<span class="alt-card-source">Fintel</span>' +
+        '</div>' +
+        '<div class="alt-card-metric">' +
+          '<span class="alt-card-value">' + ownership + '</span>' +
+          '<span class="alt-card-label">Insider Ownership</span>' +
+        '</div>' +
+        '<div class="alt-card-details">' +
+          '<div class="alt-detail"><span>Purchases</span><span class="alt-buy">' + buys + '</span></div>' +
+          '<div class="alt-detail"><span>Sales</span><span class="alt-sell">' + sells + '</span></div>' +
+          '<div class="alt-detail"><span>Gifts</span><span>' + gifts + '</span></div>' +
+          '<div class="alt-detail"><span>Total Transactions</span><span>' + insiders.length + '</span></div>' +
+        '</div>' +
+        renderInsiderTimeline(insiders.slice(0, 8)) +
+      '</div>';
+  }
+
+  // Congressional Trades Card
+  var congress = data.congressional_trades;
+  if (congress && congress.length) {
+    var cBuys = congress.filter(function(c) { return c.Transaction === 'Purchase'; }).length;
+    var cSells = congress.filter(function(c) { return c.Transaction === 'Sale'; }).length;
+    html +=
+      '<div class="alt-card alt-card--congress">' +
+        '<div class="alt-card-header">' +
+          '<span class="alt-card-icon" aria-hidden="true">&#x1F3DB;</span>' +
+          '<span class="alt-card-title">Congressional Trading</span>' +
+          '<span class="alt-card-source">Quiver Quant</span>' +
+        '</div>' +
+        '<div class="alt-card-metric">' +
+          '<span class="alt-card-value">' + congress.length + '</span>' +
+          '<span class="alt-card-label">Total Trades</span>' +
+        '</div>' +
+        '<div class="alt-card-details">' +
+          '<div class="alt-detail"><span>Purchases</span><span class="alt-buy">' + cBuys + '</span></div>' +
+          '<div class="alt-detail"><span>Sales</span><span class="alt-sell">' + cSells + '</span></div>' +
+        '</div>' +
+        renderCongressionalTable(congress.slice(0, 6)) +
+      '</div>';
+  }
+
+  // Dark Pool Card
+  var dp = data.dark_pool;
+  if (dp && dp.length) {
+    var latestDp = dp[0];
+    html +=
+      '<div class="alt-card alt-card--darkpool">' +
+        '<div class="alt-card-header">' +
+          '<span class="alt-card-icon" aria-hidden="true">&#x1F311;</span>' +
+          '<span class="alt-card-title">Dark Pool Activity</span>' +
+          '<span class="alt-card-source">Quiver Quant</span>' +
+        '</div>' +
+        '<div class="alt-card-metric">' +
+          '<span class="alt-card-value">' + (latestDp.ShortVolume ? formatNumber(latestDp.ShortVolume) : formatNumber(latestDp.Volume || 0)) + '</span>' +
+          '<span class="alt-card-label">Latest Dark Pool Volume</span>' +
+        '</div>' +
+        '<div class="alt-card-details">' +
+          '<div class="alt-detail"><span>Date</span><span>' + escapeHtml(latestDp.Date || latestDp.date || '') + '</span></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  html += '</div>';
+
+  // No data message
+  if (!si && !ins && !congress && !dp) {
+    html += '<p style="color:var(--text-muted);font-size:0.875rem;">No alternative data available for ' + escapeHtml(ticker) + '.</p>';
+  }
+
+  grid.innerHTML = html;
+}
+
+function renderShortInterestChart(data) {
+  if (!data || data.length < 2) return '';
+  var reversed = data.slice().reverse();
+  var maxRatio = Math.max.apply(null, reversed.map(function(d) { return d.shortVolumeRatio || 0; }));
+  if (maxRatio === 0) maxRatio = 1;
+  var bars = reversed.map(function(d) {
+    var h = Math.round((d.shortVolumeRatio / maxRatio) * 40);
+    var color = d.shortVolumeRatio > 0.3 ? 'var(--accent-red)' : d.shortVolumeRatio > 0.15 ? 'var(--accent-gold)' : 'var(--accent-blue)';
+    return '<div class="si-bar" style="height:' + h + 'px;background:' + color + ';" title="' + d.marketDate + ': ' + (d.shortVolumeRatio * 100).toFixed(1) + '%"></div>';
+  }).join('');
+  return '<div class="si-chart" role="img" aria-label="10-day short volume trend chart"><div class="si-bars">' + bars + '</div><div class="si-chart-label">10-Day Short Volume Trend</div></div>';
+}
+
+function renderInsiderTimeline(insiders) {
+  if (!insiders || !insiders.length) return '';
+  var html = '<div class="insider-timeline" role="list" aria-label="Recent insider transactions">';
+  insiders.forEach(function(ins) {
+    var typeClass = (ins.code === 'Purchase' || ins.code === 'P') ? 'insider-buy' : (ins.code === 'Sale' || ins.code === 'S') ? 'insider-sell' : 'insider-other';
+    var val = ins.value ? '$' + formatNumber(ins.value) : '';
+    html +=
+      '<div class="insider-entry ' + typeClass + '" role="listitem">' +
+        '<span class="insider-date">' + escapeHtml(ins.transactionDate || ins.fileDate || '') + '</span>' +
+        '<span class="insider-name">' + escapeHtml(ins.name || '') + '</span>' +
+        '<span class="insider-action">' + escapeHtml(ins.code || '') + '</span>' +
+        '<span class="insider-shares">' + formatNumber(Math.abs(ins.shares || 0)) + ' shares</span>' +
+        (val ? '<span class="insider-value">' + val + '</span>' : '') +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderCongressionalTable(trades) {
+  if (!trades || !trades.length) return '';
+  var html = '<div class="congress-table" role="list" aria-label="Recent congressional trades">';
+  trades.forEach(function(t) {
+    var txnClass = t.Transaction === 'Purchase' ? 'alt-buy' : 'alt-sell';
+    html +=
+      '<div class="congress-row" role="listitem">' +
+        '<span class="congress-rep">' + escapeHtml(t.Representative || '') + '</span>' +
+        '<span class="congress-party">(' + escapeHtml(t.Party ? t.Party.charAt(0) : '') + ')</span>' +
+        '<span class="congress-txn ' + txnClass + '">' + escapeHtml(t.Transaction || '') + '</span>' +
+        '<span class="congress-range">' + escapeHtml(t.Range || '') + '</span>' +
+        '<span class="congress-date">' + escapeHtml(t.TransactionDate || '') + '</span>' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function formatNumber(num) {
+  if (num == null) return 'N/A';
+  if (typeof num !== 'number') num = parseFloat(num);
+  if (isNaN(num)) return 'N/A';
+  if (Math.abs(num) >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+  if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+  if (Math.abs(num) >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+  return num.toLocaleString();
+}
+
+/* ============================================================
    Initialization
    ============================================================ */
 document.addEventListener('DOMContentLoaded', function () {
@@ -2755,6 +3019,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* Fetch economic calendar */
   fetchEconomicCalendar();
+
+  /* Fetch data provider status */
+  fetchProviderStatus();
+
+  /* Initialize alternative data */
+  initAltData();
+  fetchAltData('AAPL');
 
   /* Initialize study cards */
   initStudyCards();

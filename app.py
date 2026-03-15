@@ -554,42 +554,76 @@ def create_app():
 
     @app.route("/api/news")
     def api_news():
-        """Return financial news from the last 7 days (fresh from yfinance + cached file)."""
+        """Return financial news from the last 7 days (Finnhub primary, yfinance fallback)."""
         from datetime import timedelta
         import yfinance as yf
 
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
         articles = []
+        news_source = "yfinance"
 
-        # Fetch live news from yfinance (SPY = market news, QQQ = tech news)
+        # Try Finnhub first as primary news source
         try:
-            for ticker_sym in ["SPY", "QQQ", "^VIX"]:
-                stock = yf.Ticker(ticker_sym)
-                news_items = stock.news or []
-                for item in news_items[:10]:
-                    pub_ts = item.get("providerPublishTime") or item.get("publishTime") or 0
-                    pub_dt = datetime.fromtimestamp(pub_ts, tz=timezone.utc) if pub_ts else None
-                    if pub_dt and pub_dt < seven_days_ago:
-                        continue
-                    content = item.get("content") or {}
-                    title = content.get("title") or item.get("title", "")
-                    link = ""
-                    clickthrough = content.get("clickThroughUrl") or {}
-                    if isinstance(clickthrough, dict):
-                        link = clickthrough.get("url", "")
-                    if not link:
-                        link = item.get("link", "")
-                    summary = content.get("summary") or item.get("summary", "")
+            from data_providers import get_provider
+            finnhub = get_provider('finnhub')
+            if finnhub and finnhub.is_available():
+                finnhub_articles = finnhub.get_news("", 30) or []
+                sentiment_cache = {}
+                for fa in finnhub_articles:
+                    ticker_tag = fa.get("related", "") or fa.get("ticker", "")
+                    sentiment = None
+                    if ticker_tag and ticker_tag not in sentiment_cache:
+                        try:
+                            sentiment_cache[ticker_tag] = finnhub.get_sentiment(ticker_tag)
+                        except Exception:
+                            sentiment_cache[ticker_tag] = None
+                    if ticker_tag:
+                        sentiment = sentiment_cache.get(ticker_tag)
                     articles.append({
-                        "title": title,
-                        "summary": summary,
-                        "url": link,
-                        "publishedAt": pub_dt.isoformat() if pub_dt else "",
-                        "source": item.get("publisher", ""),
+                        "title": fa.get("headline", fa.get("title", "")),
+                        "summary": fa.get("summary", ""),
+                        "url": fa.get("url", ""),
+                        "publishedAt": fa.get("datetime", fa.get("publishedAt", "")),
+                        "source": fa.get("source", "finnhub"),
+                        "sentiment": sentiment,
                         "affected_sectors": [],
                     })
+                if articles:
+                    news_source = "finnhub"
         except Exception as exc:
-            logger.warning("Live news fetch failed: %s", exc)
+            logger.warning("Finnhub news fetch failed, falling back to yfinance: %s", exc)
+
+        # Fall back to yfinance if Finnhub returned nothing
+        if not articles:
+            try:
+                for ticker_sym in ["SPY", "QQQ", "^VIX"]:
+                    stock = yf.Ticker(ticker_sym)
+                    news_items = stock.news or []
+                    for item in news_items[:10]:
+                        pub_ts = item.get("providerPublishTime") or item.get("publishTime") or 0
+                        pub_dt = datetime.fromtimestamp(pub_ts, tz=timezone.utc) if pub_ts else None
+                        if pub_dt and pub_dt < seven_days_ago:
+                            continue
+                        content = item.get("content") or {}
+                        title = content.get("title") or item.get("title", "")
+                        link = ""
+                        clickthrough = content.get("clickThroughUrl") or {}
+                        if isinstance(clickthrough, dict):
+                            link = clickthrough.get("url", "")
+                        if not link:
+                            link = item.get("link", "")
+                        summary = content.get("summary") or item.get("summary", "")
+                        articles.append({
+                            "title": title,
+                            "summary": summary,
+                            "url": link,
+                            "publishedAt": pub_dt.isoformat() if pub_dt else "",
+                            "source": item.get("publisher", ""),
+                            "sentiment": None,
+                            "affected_sectors": [],
+                        })
+            except Exception as exc:
+                logger.warning("Live news fetch failed: %s", exc)
 
         # Deduplicate by title
         seen_titles = set()
@@ -615,6 +649,8 @@ def create_app():
                     t = a.get("title", "")
                     if t and t not in seen_titles:
                         seen_titles.add(t)
+                        a["source"] = a.get("source", "cache")
+                        a["sentiment"] = None
                         unique_articles.append(a)
             except FileNotFoundError:
                 pass
@@ -631,7 +667,11 @@ def create_app():
         return jsonify({
             "data": {"articles": unique_articles[:30]},
             "error": None,
-            "meta": {"timestamp": datetime.now(timezone.utc).isoformat(), "days_filter": 7},
+            "meta": {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "days_filter": 7,
+                "source": news_source,
+            },
         })
 
     @app.route("/api/market-live")
@@ -3357,6 +3397,165 @@ def create_app():
         return jsonify({
             "data": {"watchlist": engine.watchlist},
             "error": None,
+        })
+
+    # ------------------------------------------------------------------
+    # Alt Data Routes (Fintel + Quiver + Finnhub)
+    # ------------------------------------------------------------------
+
+    @app.route("/api/alt-data/<ticker>")
+    def api_alt_data(ticker):
+        """Aggregated alternative data: short interest, insider, congressional, dark pool."""
+        from data_providers import get_alt_data
+        ticker = ticker.upper().strip()
+        if not TICKER_PATTERN.match(ticker):
+            return _error_response("Invalid ticker", "INVALID_TICKER", 400)
+        alt = get_alt_data(ticker)
+        if not alt:
+            return _error_response(f"No alt data for {ticker}", "DATA_NOT_FOUND", 404)
+        return jsonify({
+            "data": alt,
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/short-interest/<ticker>")
+    def api_short_interest(ticker):
+        """Short interest data from Fintel."""
+        from data_providers import get_short_interest
+        ticker = ticker.upper().strip()
+        if not TICKER_PATTERN.match(ticker):
+            return _error_response("Invalid ticker", "INVALID_TICKER", 400)
+        data = get_short_interest(ticker)
+        if not data:
+            return _error_response(f"No short interest data for {ticker}", "DATA_NOT_FOUND", 404)
+        return jsonify({
+            "data": data,
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/insider-trades/<ticker>")
+    def api_insider_trades(ticker):
+        """Insider trading data from Fintel."""
+        from data_providers import get_insider_trades
+        ticker = ticker.upper().strip()
+        if not TICKER_PATTERN.match(ticker):
+            return _error_response("Invalid ticker", "INVALID_TICKER", 400)
+        data = get_insider_trades(ticker)
+        if not data:
+            return _error_response(f"No insider data for {ticker}", "DATA_NOT_FOUND", 404)
+        return jsonify({
+            "data": data,
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/congressional/<ticker>")
+    def api_congressional(ticker):
+        """Congressional trading data from Quiver Quant."""
+        from data_providers import get_congressional_trades
+        ticker = ticker.upper().strip()
+        if not TICKER_PATTERN.match(ticker):
+            return _error_response("Invalid ticker", "INVALID_TICKER", 400)
+        data = get_congressional_trades(ticker)
+        if not data:
+            return _error_response(f"No congressional data for {ticker}", "DATA_NOT_FOUND", 404)
+        return jsonify({
+            "data": data,
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/dark-pool/<ticker>")
+    def api_dark_pool(ticker):
+        """Dark pool volume data from Quiver Quant."""
+        from data_providers import get_dark_pool
+        ticker = ticker.upper().strip()
+        if not TICKER_PATTERN.match(ticker):
+            return _error_response("Invalid ticker", "INVALID_TICKER", 400)
+        data = get_dark_pool(ticker)
+        if not data:
+            return _error_response(f"No dark pool data for {ticker}", "DATA_NOT_FOUND", 404)
+        return jsonify({
+            "data": data,
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/news-enhanced")
+    def api_news_enhanced():
+        """Enhanced news with Finnhub sentiment scores."""
+        from data_providers import get_provider
+        ticker = request.args.get('ticker', 'AAPL').upper().strip()
+        limit = min(int(request.args.get('limit', 30)), 100)
+
+        finnhub = get_provider('finnhub')
+        articles = []
+        if finnhub and finnhub.is_available():
+            articles = finnhub.get_news(ticker, limit) or []
+
+        # Get sentiment scores
+        sentiment_data = None
+        if finnhub and finnhub.is_available():
+            sentiment_data = finnhub.get_sentiment(ticker)
+
+        return jsonify({
+            "data": {
+                "articles": articles,
+                "sentiment": sentiment_data,
+                "ticker": ticker,
+            },
+            "error": None,
+            "meta": {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "source": "finnhub",
+                "count": len(articles),
+            },
+        })
+
+    @app.route("/api/economic-calendar-enhanced")
+    def api_economic_calendar_enhanced():
+        """Economic calendar from Finnhub (enhanced provider)."""
+        from data_providers import get_calendar
+        days = min(int(request.args.get('days', 7)), 30)
+        data = get_calendar(days)
+        return jsonify({
+            "data": data or [],
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    # ------------------------------------------------------------------
+    # Data Provider Status
+    # ------------------------------------------------------------------
+
+    @app.route("/api/providers")
+    def api_providers():
+        """Health check for all configured data providers."""
+        from data_providers import provider_status
+        return jsonify({
+            "data": provider_status(),
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
+        })
+
+    @app.route("/api/quote/<ticker>")
+    def api_quote(ticker):
+        """Get latest quote from best available provider."""
+        from data_providers import get_quote
+        ticker = ticker.upper().strip()
+        if not TICKER_PATTERN.match(ticker):
+            return _error_response("Invalid ticker", "INVALID_TICKER", 400)
+        quote = get_quote(ticker)
+        if not quote:
+            return _error_response(
+                f"No quote data for {ticker}", "DATA_NOT_FOUND", 404,
+            )
+        return jsonify({
+            "data": quote,
+            "error": None,
+            "meta": {"timestamp": datetime.now(timezone.utc).isoformat()},
         })
 
     return app

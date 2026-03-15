@@ -5102,3 +5102,361 @@ a:hover {
   color: var(--accent-blue);
   font-weight: 700;
 }
+
+/* ============================================================
+   Data Provider Status
+   ============================================================ */
+.provider-status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.provider-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  min-width: 160px;
+}
+
+.provider-card.provider-online .provider-dot {
+  color: var(--accent-green);
+}
+
+.provider-card.provider-offline .provider-dot {
+  color: var(--text-muted);
+}
+
+.provider-dot {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.provider-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.provider-status-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.provider-online .provider-status-text {
+  color: var(--accent-green);
+}
+
+/* ============================================================
+   Alternative Data Cards
+   ============================================================ */
+.alt-data-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.alt-data-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 30px;
+  color: var(--text-muted);
+}
+
+.alt-data-ticker-header {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.alt-data-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.alt-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: box-shadow var(--transition-normal);
+}
+
+.alt-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.alt-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.alt-card-icon {
+  font-size: 1.25rem;
+}
+
+.alt-card-title {
+  font-weight: 700;
+  font-size: 0.938rem;
+  flex: 1;
+}
+
+.alt-card-source {
+  font-size: 0.688rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--accent-blue-dim);
+  color: var(--accent-blue);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.alt-card-metric {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.alt-card-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.alt-card-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.alt-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.alt-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.813rem;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.alt-detail span:first-child {
+  color: var(--text-muted);
+}
+
+.alt-detail span:last-child {
+  font-weight: 600;
+}
+
+.alt-buy {
+  color: var(--accent-green) !important;
+}
+
+.alt-sell {
+  color: var(--accent-red) !important;
+}
+
+/* Short Interest Mini Chart */
+.si-chart {
+  margin-top: 8px;
+}
+
+.si-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 44px;
+}
+
+.si-bar {
+  flex: 1;
+  min-width: 4px;
+  border-radius: 2px 2px 0 0;
+  transition: opacity var(--transition-fast);
+  cursor: pointer;
+}
+
+.si-bar:hover {
+  opacity: 0.7;
+}
+
+.si-chart-label {
+  font-size: 0.688rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Insider Timeline */
+.insider-timeline {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.insider-entry {
+  display: grid;
+  grid-template-columns: 80px 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+
+.insider-buy {
+  border-left: 3px solid var(--accent-green);
+}
+
+.insider-sell {
+  border-left: 3px solid var(--accent-red);
+}
+
+.insider-other {
+  border-left: 3px solid var(--text-muted);
+}
+
+.insider-date {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.688rem;
+}
+
+.insider-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insider-action {
+  font-weight: 600;
+}
+
+.insider-shares {
+  color: var(--text-secondary);
+}
+
+.insider-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Congressional Trading Table */
+.congress-table {
+  margin-top: 8px;
+}
+
+.congress-row {
+  display: grid;
+  grid-template-columns: 1fr 30px auto auto 80px;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.75rem;
+  padding: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.congress-rep {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.congress-party {
+  color: var(--text-muted);
+  font-size: 0.688rem;
+}
+
+.congress-txn {
+  font-weight: 700;
+  font-size: 0.688rem;
+  text-transform: uppercase;
+}
+
+.congress-range {
+  color: var(--text-secondary);
+}
+
+.congress-date {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.688rem;
+}
+
+/* News Enhancement - Sentiment Dot Indicator (Overview) */
+.news-sentiment-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.news-sentiment-dot--positive {
+  background: var(--accent-green);
+}
+
+.news-sentiment-dot--negative {
+  background: var(--accent-red);
+}
+
+.news-sentiment-dot--neutral {
+  background: var(--text-muted);
+}
+
+/* Market Live Source Tag */
+.market-live-source {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 2px;
+  opacity: 0.6;
+}
+
+/* Responsive - Alternative Data */
+@media (max-width: 768px) {
+  .alt-data-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .insider-entry {
+    grid-template-columns: 60px 1fr auto;
+  }
+
+  .insider-shares,
+  .insider-value {
+    display: none;
+  }
+
+  .congress-row {
+    grid-template-columns: 1fr auto 70px;
+  }
+
+  .congress-party,
+  .congress-range {
+    display: none;
+  }
+}

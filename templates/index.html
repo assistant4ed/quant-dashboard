@@ -101,6 +101,36 @@
         <div class="overview-news-grid" id="overview-news-grid"></div>
       </section>
 
+      <!-- Alternative Data Signals -->
+      <section class="section" id="alt-data-section" aria-labelledby="alt-data-label">
+        <div class="section-header">
+          <span class="section-icon" aria-hidden="true">&#x1F50D;</span>
+          <h2 id="alt-data-label">Alternative Data Signals</h2>
+          <div class="section-meta">
+            <span class="section-timestamp" id="alt-data-timestamp"></span>
+          </div>
+        </div>
+        <div class="alt-data-controls">
+          <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL)" maxlength="10" value="AAPL" aria-label="Ticker symbol for alternative data lookup">
+          <button type="button" class="btn btn-primary btn-sm" id="alt-data-load-btn">Load Alt Data</button>
+        </div>
+        <div class="alt-data-grid" id="alt-data-grid" role="region" aria-live="polite">
+          <p style="color:var(--text-muted);font-size:0.875rem;">Enter a ticker and click Load to see alternative data signals.</p>
+        </div>
+      </section>
+
+      <!-- Data Sources Status -->
+      <section class="section" id="providers-section" aria-labelledby="providers-label">
+        <div class="section-header">
+          <span class="section-icon" aria-hidden="true">&#x1F4E1;</span>
+          <h2 id="providers-label">Data Sources</h2>
+          <div class="section-meta">
+            <span class="section-timestamp" id="providers-timestamp"></span>
+          </div>
+        </div>
+        <div class="providers-grid" id="providers-grid" role="status" aria-live="polite"></div>
+      </section>
+
       <!-- Sector Breakdown -->
       <section class="section" aria-labelledby="sector-label">
         <div class="section-header">
