@@ -22,6 +22,9 @@ let autoRefreshTimer = null;
 let isAutoRefreshEnabled = true;
 let activeTab = 'overview';
 let sectionTimestamps = {};
+let newsAutoRefreshTimer = null;
+let newsLastUpdated = null;
+let newsNextRefresh = null;
 
 /* ============================================================
    DOM References
@@ -472,9 +475,12 @@ function fetchOverviewNews() {
     .then(function (r) { return r.json(); })
     .then(function (resp) {
       var articles = (resp.data || {}).articles || [];
-      renderOverviewNews(articles);
+      var filtered = articles.filter(isFinanceNews);
+      renderOverviewNews(filtered);
+      newsLastUpdated = new Date();
+      updateNewsRefreshStatus();
       var ts = document.getElementById('overview-news-timestamp');
-      if (ts) ts.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      if (ts) ts.textContent = 'Updated: ' + formatTimeET(newsLastUpdated);
     })
     .catch(function () {});
 }
@@ -483,7 +489,7 @@ function renderOverviewNews(articles) {
   var el = document.getElementById('overview-news-grid');
   if (!el) return;
   if (!articles || !articles.length) {
-    el.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">No recent news available.</p>';
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">No recent finance news available.</p>';
     return;
   }
 
@@ -494,10 +500,21 @@ function renderOverviewNews(articles) {
     var source = escapeHtml(a.source || '');
     var url = a.url || '#';
     var pubDate = '';
+    var pubDateFull = '';
     if (a.publishedAt) {
       try {
         var d = new Date(a.publishedAt);
-        pubDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        pubDate = formatArticleDateET(d);
+        pubDateFull = d.toLocaleString('en-US', {
+          timeZone: 'America/New_York',
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }) + ' ET';
       } catch (e) {}
     }
     var sentimentDot = '';
@@ -513,8 +530,8 @@ function renderOverviewNews(articles) {
         '<div class="overview-news-meta">' +
           '<span class="overview-news-source">' + source + '</span>' +
           sentimentDot +
-          '<span class="overview-news-date">' + pubDate + '</span>' +
         '</div>' +
+        '<div class="overview-news-date-prominent" title="' + escapeHtml(pubDateFull) + '">' + pubDate + '</div>' +
         '<div class="overview-news-title">' + title + '</div>' +
         (summary ? '<div class="overview-news-summary">' + summary + '...</div>' : '') +
       '</a>';
@@ -529,12 +546,13 @@ function fetchMarketNewsFeed() {
     .then(function (r) { return r.json(); })
     .then(function (resp) {
       var articles = (resp.data || {}).articles || [];
-      if (!articles.length) {
-        feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">No recent news available.</p>';
+      var filtered = articles.filter(isFinanceNews);
+      if (!filtered.length) {
+        feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">No recent finance news available.</p>';
         return;
       }
       var html = '';
-      articles.slice(0, 20).forEach(function (a) {
+      filtered.slice(0, 20).forEach(function (a) {
         var title = escapeHtml(a.title || 'No title');
         var summary = escapeHtml((a.summary || '').substring(0, 180));
         var source = escapeHtml(a.source || '');
@@ -543,15 +561,15 @@ function fetchMarketNewsFeed() {
         if (a.publishedAt) {
           try {
             var d = new Date(a.publishedAt);
-            pubDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            pubDate = formatArticleDateET(d);
           } catch (e) {}
         }
         html +=
           '<a class="overview-news-card" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:0.75rem;">' +
             '<div class="overview-news-meta">' +
               '<span class="overview-news-source">' + source + '</span>' +
-              '<span class="overview-news-date">' + pubDate + '</span>' +
             '</div>' +
+            '<div class="overview-news-date-prominent">' + pubDate + '</div>' +
             '<div class="overview-news-title">' + title + '</div>' +
             (summary ? '<div class="overview-news-summary">' + summary + '...</div>' : '') +
           '</a>';
@@ -562,6 +580,129 @@ function fetchMarketNewsFeed() {
     .catch(function () {
       feed.innerHTML = '<p style="color:var(--text-muted);font-size:0.875rem;">Failed to load news.</p>';
     });
+}
+
+/* ============================================================
+   News Helpers: Finance Filter, Date Formatting, Auto-Refresh
+   ============================================================ */
+
+var FINANCE_KEYWORDS = [
+  'stock', 'market', 'trade', 'invest', 'earning', 'revenue', 'profit',
+  'loss', 'fed', 'rate', 'inflation', 'gdp', 'bond', 'treasury', 'sp500',
+  's&p', 'nasdaq', 'dow', 'ipo', 'merger', 'acquisition', 'dividend',
+  'buyback', 'forecast', 'outlook', 'bull', 'bear', 'rally', 'crash',
+  'sell-off', 'volatil', 'crypto', 'bitcoin', 'oil', 'gold', 'commodity',
+  'tech', 'bank', 'financ', 'economy', 'tariff', 'cpi', 'pce', 'jobs',
+  'employment', 'retail', 'housing', 'sec', 'regulation', 'wall street',
+  'hedge fund', 'etf', 'mutual fund', 'analyst', 'upgrade', 'downgrade',
+  'guidance', 'sector', 'index', 'futures', 'options', 'short', 'margin',
+];
+
+var FINANCE_SOURCES = [
+  'bloomberg', 'reuters', 'cnbc', 'wsj', 'ft', 'barron', 'marketwatch',
+  'seeking alpha', 'investopedia', 'yahoo finance', 'benzinga', 'thestreet',
+  'motley', 'zacks',
+];
+
+function isFinanceNews(article) {
+  var title = (article.title || '').toLowerCase();
+  var source = (article.source || '').toLowerCase();
+  for (var i = 0; i < FINANCE_SOURCES.length; i++) {
+    if (source.indexOf(FINANCE_SOURCES[i]) >= 0) return true;
+  }
+  for (var i = 0; i < FINANCE_KEYWORDS.length; i++) {
+    if (title.indexOf(FINANCE_KEYWORDS[i]) >= 0) return true;
+  }
+  return false;
+}
+
+function formatArticleDateET(date) {
+  try {
+    return date.toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }) + ' ET';
+  } catch (e) {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+}
+
+function formatTimeET(date) {
+  try {
+    return date.toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }) + ' ET';
+  } catch (e) {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+}
+
+function isUSTradingHours() {
+  var now = new Date();
+  var etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  var day = etNow.getDay();
+  if (day === 0 || day === 6) return false;
+  var timeMinutes = etNow.getHours() * 60 + etNow.getMinutes();
+  return timeMinutes >= 570 && timeMinutes < 960;
+}
+
+var NEWS_REFRESH_TRADING_MS = 300000;
+var NEWS_REFRESH_OFF_HOURS_MS = 900000;
+
+function startNewsAutoRefresh() {
+  if (newsAutoRefreshTimer) {
+    clearInterval(newsAutoRefreshTimer);
+    newsAutoRefreshTimer = null;
+  }
+  var interval = isUSTradingHours() ? NEWS_REFRESH_TRADING_MS : NEWS_REFRESH_OFF_HOURS_MS;
+  newsNextRefresh = new Date(Date.now() + interval);
+  updateNewsRefreshStatus();
+
+  newsAutoRefreshTimer = setInterval(function () {
+    fetchOverviewNews();
+    fetchMarketNewsFeed();
+    var nextInterval = isUSTradingHours() ? NEWS_REFRESH_TRADING_MS : NEWS_REFRESH_OFF_HOURS_MS;
+    if (nextInterval !== interval) {
+      startNewsAutoRefresh();
+    } else {
+      newsNextRefresh = new Date(Date.now() + nextInterval);
+      updateNewsRefreshStatus();
+    }
+  }, interval);
+}
+
+function updateNewsRefreshStatus() {
+  var el = document.getElementById('news-refresh-status');
+  if (!el) return;
+  var parts = [];
+  if (newsLastUpdated) {
+    parts.push('Last updated: ' + formatTimeET(newsLastUpdated));
+  }
+  if (newsNextRefresh) {
+    parts.push('Next: ' + formatTimeET(newsNextRefresh));
+  }
+  if (isUSTradingHours()) {
+    parts.push('(Trading hours - 5 min refresh)');
+  } else {
+    parts.push('(Off hours - 15 min refresh)');
+  }
+  el.textContent = parts.join(' | ');
 }
 
 function getActiveStocks() {
@@ -858,7 +999,7 @@ function startAutoRefresh() {
     fetchPredictions();
     fetchMarketSentiment();
     fetchMarketLive();
-    fetchOverviewNews();
+    /* News has its own trading-hours-aware refresh timer */
   }, AUTO_REFRESH_INTERVAL_MS);
   updateRefreshIndicator();
 }
@@ -2428,11 +2569,19 @@ document.addEventListener('DOMContentLoaded', function () {
   /* Start auto-refresh */
   startAutoRefresh();
 
+  /* Start news-specific auto-refresh (trading hours aware) */
+  startNewsAutoRefresh();
+
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) {
       stopAutoRefresh();
+      if (newsAutoRefreshTimer) {
+        clearInterval(newsAutoRefreshTimer);
+        newsAutoRefreshTimer = null;
+      }
     } else {
       startAutoRefresh();
+      startNewsAutoRefresh();
     }
   });
 

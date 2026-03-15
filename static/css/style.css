@@ -4588,6 +4588,24 @@ a:hover {
   font-family: var(--font-mono);
 }
 
+.overview-news-date-prominent {
+  font-size: 0.75rem;
+  color: var(--accent-blue);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  margin-bottom: 4px;
+  letter-spacing: 0.2px;
+}
+
+.news-refresh-status {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 6px 0 10px;
+  letter-spacing: 0.2px;
+}
+
 .overview-news-title {
   font-size: 0.875rem;
   font-weight: 600;

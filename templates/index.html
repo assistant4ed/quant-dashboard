@@ -95,6 +95,7 @@
             <button type="button" class="btn btn-sm btn-refresh" data-refresh="overview-news" aria-label="Refresh news">Refresh</button>
           </div>
         </div>
+        <div class="news-refresh-status" id="news-refresh-status" aria-live="polite"></div>
         <div class="overview-news-grid" id="overview-news-grid"></div>
       </section>
 
@@ -389,20 +390,20 @@
       </section>
     </div>
 
-    <!-- ====== TAB: Model 2 - Sentiment Agent ====== -->
+    <!-- ====== TAB: Sentiment Agent (Model 1 + Model 2) ====== -->
     <div class="tab-panel" id="tab-model2" role="tabpanel">
       <section class="section" id="model2-section">
         <div class="section-header">
           <span class="section-icon" aria-hidden="true">&#x1F9E0;</span>
-          <h2 id="model2-label">Model 2: Sentiment & Market Agent</h2>
-          <p class="section-subtitle" id="model2-subtitle">5-step prediction pipeline: Scan &rarr; Research &rarr; Predict &rarr; Risk &rarr; Post-Mortem</p>
+          <h2 id="model2-label">Dual Model Trading Intelligence</h2>
+          <p class="section-subtitle" id="model2-subtitle">Scans top 50 most traded stocks today. Model 1 (LightGBM Quant) + Model 2 (Sentiment Agent)</p>
         </div>
 
-        <!-- Scan Controls -->
+        <!-- Single Scan Button -->
         <div class="card" style="margin-bottom: 1.5rem;">
           <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" id="model2-scan-btn" onclick="runModel2Scan()">
-              Run Sentiment Scan
+            <button type="button" class="btn btn-primary" id="model2-scan-btn" onclick="runDualModelScan()">
+              Run Dual Model Scan
             </button>
             <span id="model2-scan-status" style="font-size: 0.85rem; color: var(--text-muted);"></span>
           </div>
@@ -416,18 +417,30 @@
           </div>
         </div>
 
-        <!-- Predictions Table -->
-        <div class="card">
-          <h3 style="margin-bottom: 1rem;">Active Trade Signals</h3>
-          <div id="model2-predictions-container">
-            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
-              Click "Run Sentiment Scan" to generate predictions, or loading cached results...
+        <!-- Model 1: LightGBM Quant Predictions (top section) -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h3 style="margin-bottom: 1rem;">Model 1: LightGBM Quant Signals</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">20-day consensus signals from quantitative factor model trained on S&P 500 data.</p>
+          <div id="model1-predictions-container">
+            <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">
+              Click "Run Dual Model Scan" to load Model 1 predictions.
             </p>
           </div>
         </div>
 
-        <!-- Model Comparison -->
-        <div class="card" style="margin-top: 1.5rem;">
+        <!-- Model 2: Sentiment Agent Predictions -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h3 style="margin-bottom: 1rem;">Model 2: Sentiment Agent Signals</h3>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">5-step pipeline: Scan &rarr; Research &rarr; Predict &rarr; Risk &rarr; Post-Mortem</p>
+          <div id="model2-predictions-container">
+            <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">
+              Click "Run Dual Model Scan" to generate predictions.
+            </p>
+          </div>
+        </div>
+
+        <!-- Model 1 vs Model 2 Comparison -->
+        <div class="card" style="margin-bottom: 1.5rem;">
           <h3 style="margin-bottom: 1rem;">Model 1 vs Model 2 Comparison</h3>
           <div id="model-compare-container">
             <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading comparison...</p>
@@ -435,7 +448,7 @@
         </div>
 
         <!-- Post-Mortem -->
-        <div class="card" style="margin-top: 1.5rem;">
+        <div class="card" style="margin-bottom: 1.5rem;">
           <h3 style="margin-bottom: 1rem;">Post-Mortem Analysis</h3>
           <div id="model2-postmortem">
             <p style="color: var(--text-muted); text-align: center; padding: 1rem;">No historical data yet. Run scans to build track record.</p>
