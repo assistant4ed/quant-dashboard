@@ -10,6 +10,6 @@ COPY . .
 ENV PYTHON_BIN=/usr/local/bin/python
 ENV PORT=8080
 
-EXPOSE 8080
+EXPOSE ${PORT}
 
-CMD ["gunicorn", "app:create_app()", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120"]
+CMD gunicorn "app:create_app()" --bind "0.0.0.0:${PORT}" --workers 2 --timeout 120
