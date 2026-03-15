@@ -42,9 +42,7 @@
   <nav class="tab-nav" role="tablist" aria-label="Dashboard sections">
     <div class="tab-nav-inner">
       <button type="button" class="tab-btn active" data-tab="overview" role="tab" aria-selected="true" aria-controls="tab-overview">Overview</button>
-      <button type="button" class="tab-btn" data-tab="charts" role="tab" aria-selected="false" aria-controls="tab-charts">Charts</button>
       <button type="button" class="tab-btn" data-tab="ai" role="tab" aria-selected="false" aria-controls="tab-ai">AI Analysis</button>
-      <button type="button" class="tab-btn" data-tab="factors" role="tab" aria-selected="false" aria-controls="tab-factors">Factors 因子</button>
       <button type="button" class="tab-btn" data-tab="market" role="tab" aria-selected="false" aria-controls="tab-market">Market Data</button>
       <button type="button" class="tab-btn" data-tab="model" role="tab" aria-selected="false" aria-controls="tab-model">Model</button>
       <button type="button" class="tab-btn" data-tab="model2" role="tab" aria-selected="false" aria-controls="tab-model2">Sentiment Agent</button>
@@ -140,91 +138,6 @@
       </section>
     </div>
 
-    <!-- ====== TAB: Charts ====== -->
-    <div class="tab-panel" id="tab-charts" role="tabpanel">
-
-      <!-- Stock History Chart -->
-      <section class="section" aria-labelledby="chart-label">
-        <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4C8;</span>
-          <h2 id="chart-label">Stock Analysis</h2>
-          <div class="section-meta">
-            <span class="section-timestamp" id="chart-timestamp"></span>
-          </div>
-        </div>
-        <div class="chart-controls">
-          <select id="chart-ticker-select" class="chart-select" aria-label="Select stock">
-            <option value="">Select a stock...</option>
-          </select>
-          <div class="chart-period-group" role="tablist" aria-label="Time period">
-            <button type="button" class="toggle-btn active" data-period="1m">1M</button>
-            <button type="button" class="toggle-btn" data-period="3m">3M</button>
-            <button type="button" class="toggle-btn" data-period="6m">6M</button>
-            <button type="button" class="toggle-btn" data-period="1y">1Y</button>
-            <button type="button" class="toggle-btn" data-period="5y">5Y</button>
-          </div>
-          <div class="chart-indicator-group">
-            <label class="chart-checkbox"><input type="checkbox" id="ind-sma20" checked> <span>SMA 20</span></label>
-            <label class="chart-checkbox"><input type="checkbox" id="ind-sma50"> <span>SMA 50</span></label>
-            <label class="chart-checkbox"><input type="checkbox" id="ind-ema12"> <span>EMA 12</span></label>
-            <label class="chart-checkbox"><input type="checkbox" id="ind-bollinger"> <span>Bollinger</span></label>
-            <label class="chart-checkbox"><input type="checkbox" id="ind-volume" checked> <span>Volume</span></label>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" id="chart-predict-btn" style="display:none">AI Predict</button>
-        </div>
-        <div id="tv-chart-wrapper" style="width:100%;background:#131722;border-radius:12px;overflow:hidden;margin-top:12px;">
-          <div id="tv-price-chart" style="width:100%;height:480px;"></div>
-          <div id="tv-volume-chart" style="width:100%;height:120px;border-top:1px solid #2a2e39;"></div>
-        </div>
-        <!-- Prediction zone (shown below TV chart) -->
-        <div class="prediction-zone hidden" id="chart-prediction-zone">
-          <div class="prediction-zone-header">
-            <h3 class="factor-group-title">AI Price Prediction 价格预测</h3>
-            <span class="prediction-zone-ticker" id="prediction-zone-ticker"></span>
-          </div>
-          <div id="tv-prediction-chart" style="width:100%;height:360px;background:#131722;border-radius:12px;"></div>
-          <div class="prediction-levels" id="prediction-levels"></div>
-        </div>
-      </section>
-
-      <!-- Real-Time Candle Chart -->
-      <section class="section" id="realtime-section" aria-labelledby="realtime-label">
-        <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F525;</span>
-          <h2 id="realtime-label">Real-Time Candle Chart</h2>
-          <div class="section-meta">
-            <span class="section-timestamp" id="realtime-timestamp"></span>
-          </div>
-        </div>
-        <div class="realtime-controls">
-          <select id="realtime-ticker" class="chart-select" aria-label="Select ticker">
-            <option value="">Select ticker...</option>
-          </select>
-          <div class="chart-period-group" role="tablist" id="realtime-bar-group">
-            <button type="button" class="toggle-btn" data-bar="1secs">1s</button>
-            <button type="button" class="toggle-btn" data-bar="5secs">5s</button>
-            <button type="button" class="toggle-btn active" data-bar="1min">1m</button>
-            <button type="button" class="toggle-btn" data-bar="5min">5m</button>
-            <button type="button" class="toggle-btn" data-bar="15min">15m</button>
-            <button type="button" class="toggle-btn" data-bar="1h">1H</button>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" id="realtime-start-btn">Start Live</button>
-          <button type="button" class="btn btn-sm" id="realtime-stop-btn" disabled>Stop</button>
-          <span class="realtime-status" id="realtime-status">Stopped</span>
-        </div>
-        <div class="chart-container" style="height:500px">
-          <canvas id="realtime-candle-chart" aria-label="Real-time candle chart"></canvas>
-        </div>
-        <div class="realtime-info-bar" id="realtime-info-bar"></div>
-      </section>
-    </div>
-
-          <div class="shortterm-indicators" id="shortterm-indicators"></div>
-        </div>
-      </section>
-
-    </div>
-
     <!-- ====== TAB: AI Analysis ====== -->
     <div class="tab-panel" id="tab-ai" role="tabpanel">
 
@@ -274,12 +187,8 @@
           <div class="ai-detailed" id="ai-detailed"></div>
         </div>
       </section>
-    </div>
 
-    <!-- ====== TAB: Factor Analysis 因子分析 ====== -->
-    <div class="tab-panel" id="tab-factors" role="tabpanel">
-
-      <!-- Factor Input -->
+      <!-- Factor Analysis 因子分析 (moved from separate tab) -->
       <section class="section" aria-labelledby="factors-label">
         <div class="section-header">
           <span class="section-icon" aria-hidden="true">&#x1F52C;</span>
@@ -350,6 +259,51 @@
 
         </div>
       </section>
+
+      <!-- Stock Analysis Chart (moved from Charts tab, placed at bottom) -->
+      <section class="section" aria-labelledby="chart-label">
+        <div class="section-header">
+          <span class="section-icon" aria-hidden="true">&#x1F4C8;</span>
+          <h2 id="chart-label">Stock Analysis</h2>
+          <div class="section-meta">
+            <span class="section-timestamp" id="chart-timestamp"></span>
+          </div>
+        </div>
+        <div class="chart-controls">
+          <select id="chart-ticker-select" class="chart-select" aria-label="Select stock">
+            <option value="">Select a stock...</option>
+          </select>
+          <div class="chart-period-group" role="tablist" aria-label="Time period">
+            <button type="button" class="toggle-btn active" data-period="1m">1M</button>
+            <button type="button" class="toggle-btn" data-period="3m">3M</button>
+            <button type="button" class="toggle-btn" data-period="6m">6M</button>
+            <button type="button" class="toggle-btn" data-period="1y">1Y</button>
+            <button type="button" class="toggle-btn" data-period="5y">5Y</button>
+          </div>
+          <div class="chart-indicator-group">
+            <label class="chart-checkbox"><input type="checkbox" id="ind-sma20" checked> <span>SMA 20</span></label>
+            <label class="chart-checkbox"><input type="checkbox" id="ind-sma50"> <span>SMA 50</span></label>
+            <label class="chart-checkbox"><input type="checkbox" id="ind-ema12"> <span>EMA 12</span></label>
+            <label class="chart-checkbox"><input type="checkbox" id="ind-bollinger"> <span>Bollinger</span></label>
+            <label class="chart-checkbox"><input type="checkbox" id="ind-volume" checked> <span>Volume</span></label>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="chart-predict-btn" style="display:none">AI Predict</button>
+        </div>
+        <div id="tv-chart-wrapper" style="width:100%;background:#131722;border-radius:12px;overflow:hidden;margin-top:12px;">
+          <div id="tv-price-chart" style="width:100%;height:480px;"></div>
+          <div id="tv-volume-chart" style="width:100%;height:120px;border-top:1px solid #2a2e39;"></div>
+        </div>
+        <!-- Prediction zone (shown below TV chart) -->
+        <div class="prediction-zone hidden" id="chart-prediction-zone">
+          <div class="prediction-zone-header">
+            <h3 class="factor-group-title">AI Price Prediction 价格预测</h3>
+            <span class="prediction-zone-ticker" id="prediction-zone-ticker"></span>
+          </div>
+          <div id="tv-prediction-chart" style="width:100%;height:360px;background:#131722;border-radius:12px;"></div>
+          <div class="prediction-levels" id="prediction-levels"></div>
+        </div>
+      </section>
+
     </div>
 
     <!-- ====== TAB: Market Data ====== -->

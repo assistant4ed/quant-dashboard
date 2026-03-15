@@ -165,8 +165,8 @@ function switchTab(tabId) {
     panel.classList.toggle('active', isActive);
   });
 
-  /* Trigger chart resize when switching to charts tab */
-  if (tabId === 'charts' && typeof Chart !== 'undefined') {
+  /* Trigger chart resize when switching to AI tab (contains charts) */
+  if (tabId === 'ai' && typeof Chart !== 'undefined') {
     setTimeout(function () {
       Chart.helpers.each(Chart.instances, function (instance) {
         instance.resize();
