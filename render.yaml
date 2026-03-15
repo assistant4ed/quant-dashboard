@@ -11,6 +11,8 @@ services:
         value: /opt/render/project/.venv/bin/python
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
       - key: FINNHUB_API_KEY
         sync: false
       - key: MARKETSTACK_API_KEY
@@ -20,4 +22,6 @@ services:
       - key: QUIVER_API_KEY
         sync: false
       - key: FRED_API_KEY
+        sync: false
+      - key: NEWSAPI_API_KEY
         sync: false

@@ -1353,20 +1353,28 @@ def create_app():
     def api_config_status():
         """Check which external API keys are configured.
 
-        Reads api_keys.json to determine which third-party data sources
-        are available. Never exposes the actual key values.
+        Reads api_keys.json and environment variables to determine
+        which third-party data sources are available.
+        Never exposes the actual key values.
         """
         keys = {}
         if API_KEYS_FILE.exists():
             with open(API_KEYS_FILE, "r", encoding="utf-8") as fh:
                 keys = json.load(fh)
 
+        def _has_key(json_name, env_name):
+            return bool(keys.get(json_name)) or bool(os.environ.get(env_name))
+
         return jsonify({
             "data": {
-                "anthropic": bool(keys.get("anthropic")) or bool(os.environ.get("ANTHROPIC_API_KEY")),
-                "finnhub": bool(keys.get("finnhub")),
-                "fred": bool(keys.get("fred")),
-                "newsapi": bool(keys.get("newsapi")),
+                "anthropic": _has_key("anthropic", "ANTHROPIC_API_KEY"),
+                "openrouter": _has_key("openrouter", "OPENROUTER_API_KEY"),
+                "finnhub": _has_key("finnhub", "FINNHUB_API_KEY"),
+                "fred": _has_key("fred", "FRED_API_KEY"),
+                "newsapi": _has_key("newsapi", "NEWSAPI_API_KEY"),
+                "marketstack": _has_key("marketstack", "MARKETSTACK_API_KEY"),
+                "fintel": _has_key("fintel", "FINTEL_API_KEY"),
+                "quiver": _has_key("quiver", "QUIVER_API_KEY"),
                 "yfinance": True,
             },
             "error": None,
