@@ -49,23 +49,30 @@ TOP_50_TICKERS = [
 ]
 
 # FRED series IDs for key economic indicators
+# Series that return index levels (need YoY% computation) are marked below.
 FRED_SERIES = {
     "fed_funds_rate": "FEDFUNDS",
     "treasury_10y": "DGS10",
     "treasury_2y": "DGS2",
     "treasury_3mo": "DTB3",
-    "cpi_yoy": "CPIAUCSL",
-    "core_cpi": "CPILFESL",
+    "cpi_yoy": "CPIAUCSL",        # Index level; compute YoY% change
+    "core_cpi": "CPILFESL",       # Index level; compute YoY% change
     "unemployment": "UNRATE",
     "gdp_growth": "A191RL1Q225SBEA",
-    "retail_sales": "RSAFS",
-    "industrial_production": "INDPRO",
+    "retail_sales": "RSAFS",      # Absolute level; compute YoY% change
     "consumer_sentiment": "UMCSENT",
     "housing_starts": "HOUST",
-    "pce_inflation": "PCEPI",
+    "pce_inflation": "PCEPI",     # Index level; compute YoY% change
     "m2_money_supply": "M2SL",
     "initial_claims": "ICSA",
-    "ism_manufacturing": "MANEMP",
+    "ism_manufacturing": "MANEMP",  # Manufacturing employment (proxy; ISM PMI not on FRED)
+    "industrial_production_yoy": "INDPRO",  # Industrial production index; compute YoY%
+}
+
+# Series that need YoY% change computation instead of raw latest value
+FRED_YOY_SERIES = {
+    "cpi_yoy", "core_cpi", "retail_sales", "pce_inflation",
+    "industrial_production_yoy",
 }
 
 TRADING_DAYS_PER_YEAR = 252
@@ -323,10 +330,13 @@ def get_macro_indicators():
 
     for name, series_id in FRED_SERIES.items():
         try:
-            value = _fetch_fred_latest(series_id, fred_key)
+            if name in FRED_YOY_SERIES:
+                value = _fetch_fred_yoy_change(series_id, fred_key)
+            else:
+                value = _fetch_fred_latest(series_id, fred_key)
             indicators[name] = value
         except Exception as exc:
-            logger.warning("FRED fetch failed for %s: %s", series_id, exc)
+            logger.warning("FRED fetch failed for %s (%s): %s", name, series_id, exc)
             indicators[name] = None
 
     # Yield curve spread (10Y - 2Y)
@@ -373,6 +383,50 @@ def _fetch_fred_latest(series_id, api_key):
         if val != ".":
             return float(val)
     return None
+
+
+def _fetch_fred_yoy_change(series_id, api_key):
+    """Fetch last 13 monthly observations and compute YoY percent change.
+
+    Returns (latest / 12_months_ago - 1) * 100, which gives the
+    year-over-year percentage change for index-level FRED series
+    like CPIAUCSL, CPILFESL, PCEPI, and RSAFS.
+    """
+    if not api_key:
+        return None
+
+    params = {
+        "series_id": series_id,
+        "api_key": api_key,
+        "file_type": "json",
+        "sort_order": "desc",
+        "limit": 13,
+    }
+    resp = requests.get(FRED_BASE, params=params, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+    observations = data.get("observations", [])
+
+    # Filter out missing values and collect valid floats
+    valid = []
+    for obs in observations:
+        val = obs.get("value", ".")
+        if val != ".":
+            valid.append(float(val))
+
+    # Need at least 12 months of separation for YoY
+    if len(valid) < 12:
+        return None
+
+    # Observations are desc-sorted: index 0 = latest, index 11 = ~12 months ago
+    latest = valid[0]
+    year_ago = valid[11]
+
+    if year_ago == 0:
+        return None
+
+    yoy_pct = (latest / year_ago - 1) * 100
+    return round(yoy_pct, 2)
 
 
 # ---------------------------------------------------------------------------

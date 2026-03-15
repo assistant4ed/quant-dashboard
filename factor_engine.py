@@ -196,8 +196,9 @@ def get_factor_analysis(ticker: str) -> dict:
         growth = _compute_growth(info)
         volatility = _compute_volatility(hist, info)
         sentiment = _compute_sentiment(stock, info)
-        macro = _compute_macro(hist)
-        economic = _compute_economic()
+        macro = _compute_macro(hist, ticker, sector, info)
+        country = info.get("country", "United States")
+        economic = _compute_economic(ticker, country, info)
         industry = _compute_industry_outlook(sector)
         risk_adjusted = _compute_risk_adjusted_return(hist, info)
         historical = _compute_historical_analogy(hist, info)
@@ -683,6 +684,7 @@ def _compute_momentum(hist, info):
     })
 
     macd_score = 0.0
+    macd_histogram_value = None
     if n >= 35:
         try:
             ema12 = _ema(closes, 12)
@@ -691,6 +693,7 @@ def _compute_momentum(hist, info):
             signal_vals = _ema(macd_vals, 9)
             macd_now = float(macd_vals[-1])
             sig_now = float(signal_vals[-1])
+            macd_histogram_value = round(macd_now - sig_now, 4)
             if macd_now > sig_now:
                 macd_score = 3.0 if macd_now > 0 else 1.0
             else:
@@ -699,7 +702,8 @@ def _compute_momentum(hist, info):
             pass
     sub.append({
         "name": "MACD Signal", "name_cn": "MACD信号",
-        "value": None, "score": macd_score, "unit": "",
+        "value": _fmt(macd_histogram_value, 2) if macd_histogram_value is not None else None,
+        "score": macd_score, "unit": "",
         "source": "yfinance history(2y) Close, EMA12/26",
     })
 
@@ -1103,17 +1107,18 @@ def _compute_sentiment(stock, info):
 # 7. Macro Factors
 # ---------------------------------------------------------------------------
 
-def _compute_macro(hist):
+def _compute_macro(hist, ticker="", sector="", info=None):
     sub = []
     closes = hist["Close"].values.astype(float)
     n = len(closes)
 
+    spy_hist_data = None
     try:
-        spy_hist = yf.Ticker("SPY").history(period="1y")["Close"].values.astype(float)
-        min_len = min(n, len(spy_hist))
+        spy_hist_data = yf.Ticker("SPY").history(period="1y")["Close"].values.astype(float)
+        min_len = min(n, len(spy_hist_data))
         if min_len > 60:
             r1 = np.diff(np.log(closes[-min_len:]))
-            r2 = np.diff(np.log(spy_hist[-min_len:]))
+            r2 = np.diff(np.log(spy_hist_data[-min_len:]))
             corr = float(np.corrcoef(r1, r2)[0, 1])
             sub.append({
                 "name": "Market Correlation", "name_cn": "市场相关性",
@@ -1122,7 +1127,7 @@ def _compute_macro(hist):
             })
             if min_len >= 252:
                 stock_ret = (closes[-1] / closes[-252] - 1) * 100
-                spy_ret = (spy_hist[-1] / spy_hist[-252] - 1) * 100
+                spy_ret = (spy_hist_data[-1] / spy_hist_data[-252] - 1) * 100
                 rs = stock_ret - spy_ret
                 sub.append({
                     "name": "Relative Strength (1Y)", "name_cn": "相对强度",
@@ -1148,11 +1153,96 @@ def _compute_macro(hist):
                 "source": "yfinance stock history(1y)",
             })
 
+    # Sector Momentum vs Market: compare sector ETF 3M return vs SPY 3M return
+    etf_symbol = SECTOR_ETF_MAP.get(sector, "SPY")
+    if etf_symbol != "SPY":
+        try:
+            etf_hist = yf.Ticker(etf_symbol).history(period="6mo")["Close"].values.astype(float)
+            if len(etf_hist) >= 63 and spy_hist_data is not None and len(spy_hist_data) >= 63:
+                etf_3m = (etf_hist[-1] / etf_hist[-63] - 1) * 100
+                spy_3m = (spy_hist_data[-1] / spy_hist_data[-63] - 1) * 100
+                sector_vs_mkt = etf_3m - spy_3m
+                sub.append({
+                    "name": "Sector vs Market (3M)", "name_cn": "板块相对大盘(3月)",
+                    "value": _fmt(sector_vs_mkt, 1),
+                    "score": _thresh(sector_vs_mkt, [(-8, -4), (-3, -2), (0, 0), (3, 2), (8, 4), (9999, 5)]),
+                    "unit": "%",
+                    "source": f"yfinance {etf_symbol} vs SPY 3M return",
+                })
+        except Exception:
+            pass
+
+    # Dollar Impact: USD strength via DXY proxy (DX-Y.NYB)
+    # Strong dollar is typically negative for international revenue companies
+    try:
+        dxy_hist = yf.Ticker("DX-Y.NYB").history(period="3mo")["Close"].values.astype(float)
+        if len(dxy_hist) >= 21:
+            dxy_1m_change = (dxy_hist[-1] / dxy_hist[-21] - 1) * 100
+            # Strong USD = negative for most equities (especially multinationals)
+            dxy_score = _thresh(
+                dxy_1m_change,
+                [(-3, 4), (-1, 2), (0, 1), (1, -1), (3, -3), (9999, -4)],
+            )
+            sub.append({
+                "name": "Dollar Impact (DXY 1M)", "name_cn": "美元影响(1月)",
+                "value": _fmt(dxy_1m_change, 1),
+                "score": dxy_score, "unit": "%",
+                "source": "yfinance DX-Y.NYB 1-month change",
+            })
+    except Exception:
+        pass
+
+    # Interest Rate Sensitivity: correlation of stock returns with 10Y yield changes
+    try:
+        tnx_hist = yf.Ticker("^TNX").history(period="1y")["Close"].values.astype(float)
+        min_ir_len = min(n, len(tnx_hist))
+        if min_ir_len > 60:
+            stock_rets = np.diff(np.log(closes[-min_ir_len:]))
+            yield_changes = np.diff(tnx_hist[-min_ir_len:])
+            ir_corr = float(np.corrcoef(stock_rets, yield_changes)[0, 1])
+            # Positive correlation with rising yields = rate-sensitive (negative score)
+            # Negative correlation = benefits from lower rates
+            ir_score = _thresh(
+                ir_corr,
+                [(-0.3, 3), (-0.1, 1), (0.1, 0), (0.3, -2), (9999, -4)],
+            )
+            sub.append({
+                "name": "Rate Sensitivity", "name_cn": "利率敏感度",
+                "value": _fmt(ir_corr, 2),
+                "score": ir_score, "unit": "",
+                "source": "yfinance stock vs ^TNX correlation (1Y)",
+            })
+    except Exception:
+        pass
+
+    # Gold/Risk Correlation: stock correlation with gold (GC=F)
+    try:
+        gold_hist = yf.Ticker("GC=F").history(period="1y")["Close"].values.astype(float)
+        min_gold_len = min(n, len(gold_hist))
+        if min_gold_len > 60:
+            stock_rets = np.diff(np.log(closes[-min_gold_len:]))
+            gold_rets = np.diff(np.log(gold_hist[-min_gold_len:]))
+            gold_corr = float(np.corrcoef(stock_rets, gold_rets)[0, 1])
+            # High gold correlation = safe-haven behavior = defensive
+            # Mildly positive = neutral, strongly negative = risk-on
+            gold_score = _thresh(
+                gold_corr,
+                [(-0.3, 2), (-0.1, 1), (0.1, 0), (0.3, -1), (9999, -3)],
+            )
+            sub.append({
+                "name": "Gold/Risk Correlation", "name_cn": "黄金避险相关性",
+                "value": _fmt(gold_corr, 2),
+                "score": gold_score, "unit": "",
+                "source": "yfinance stock vs GC=F correlation (1Y)",
+            })
+    except Exception:
+        pass
+
     composite = _clamp(_safe_mean([s["score"] for s in sub]) if sub else 0.0)
     return {
         "composite": round(composite, 2),
         "label": "Macro", "label_cn": "宏观", "factors": sub,
-        "data_source_summary": "yfinance SPY benchmark + stock price history",
+        "data_source_summary": "yfinance SPY benchmark + stock price history + DXY + ^TNX + GC=F",
     }
 
 
@@ -1160,59 +1250,73 @@ def _compute_macro(hist):
 # 8. Economic Cycle Factor
 # ---------------------------------------------------------------------------
 
-def _compute_economic():
-    """Score economic conditions for equity favorability using FRED macro data."""
-    now = datetime.now(timezone.utc)
-    cached = _CACHE.get("economic_factor")
-    if cached and (now - cached["ts"]).seconds < _CACHE_TTL:
-        return cached["data"]
+# Geographic revenue weights for major tickers (approximate annual report data)
+GEOGRAPHIC_REVENUE_WEIGHTS = {
+    "AAPL": {"US": 0.42, "Europe": 0.25, "China": 0.19, "Japan": 0.07, "Other": 0.07},
+    "MSFT": {"US": 0.50, "Europe": 0.25, "Other": 0.25},
+    "NVDA": {"US": 0.27, "China": 0.25, "Other": 0.48},
+    "AMZN": {"US": 0.60, "Europe": 0.25, "Other": 0.15},
+    "GOOGL": {"US": 0.47, "Europe": 0.30, "Other": 0.23},
+    "META": {"US": 0.42, "Europe": 0.24, "Other": 0.34},
+    "TSLA": {"US": 0.47, "China": 0.22, "Europe": 0.20, "Other": 0.11},
+    "AVGO": {"US": 0.35, "China": 0.30, "Other": 0.35},
+    "JPM": {"US": 0.75, "Europe": 0.15, "Other": 0.10},
+    "V": {"US": 0.45, "Europe": 0.25, "Other": 0.30},
+    "QCOM": {"US": 0.25, "China": 0.65, "Other": 0.10},
+    "AMD": {"US": 0.30, "China": 0.25, "Other": 0.45},
+    "INTC": {"US": 0.35, "China": 0.27, "Other": 0.38},
+    "NFLX": {"US": 0.45, "Europe": 0.30, "Other": 0.25},
+    "CRM": {"US": 0.65, "Europe": 0.20, "Other": 0.15},
+    "ADBE": {"US": 0.55, "Europe": 0.25, "Other": 0.20},
+    "ORCL": {"US": 0.55, "Europe": 0.25, "Other": 0.20},
+    "TXN": {"US": 0.30, "China": 0.35, "Other": 0.35},
+    "AMAT": {"US": 0.20, "China": 0.30, "Other": 0.50},
+    "CAT": {"US": 0.45, "Europe": 0.20, "China": 0.10, "Other": 0.25},
+}
 
+
+def _get_geographic_weights(ticker, country, info=None):
+    """Determine economic region weights for a stock.
+
+    Returns a dict like {"US": 0.42, "China": 0.19, "Europe": 0.25, ...}.
+    Falls back to single-country allocation when no data is available.
+    """
+    # Check hardcoded weights first
+    if ticker in GEOGRAPHIC_REVENUE_WEIGHTS:
+        return GEOGRAPHIC_REVENUE_WEIGHTS[ticker]
+
+    # Determine primary country/region
+    country = (country or "").strip()
+    exchange = ""
+    if info:
+        exchange = (info.get("exchange", "") or "").upper()
+
+    is_chinese = (
+        country in ("China", "Hong Kong")
+        or any(x in exchange for x in ("HK", "HKSE", "SHG", "SHE", "SZ"))
+        or ticker.endswith(".HK") or ticker.endswith(".SS") or ticker.endswith(".SZ")
+    )
+
+    is_european = country in (
+        "United Kingdom", "Germany", "France", "Switzerland", "Netherlands",
+        "Spain", "Italy", "Sweden", "Denmark", "Norway", "Finland",
+        "Belgium", "Ireland", "Austria", "Luxembourg", "Portugal",
+    )
+
+    if is_chinese:
+        return {"China": 0.80, "US": 0.10, "Other": 0.10}
+    if is_european:
+        return {"Europe": 0.70, "US": 0.20, "Other": 0.10}
+
+    # Default: US-dominant company
+    return {"US": 1.0}
+
+
+def _get_us_economic_factors(ind):
+    """Compute US economic factors from FRED macro indicator data."""
     sub = []
 
-    try:
-        macro = get_macro_indicators()
-        ind = macro.get("indicators", {})
-    except Exception:
-        ind = {}
-
-    # Fallback: if FRED data is all nulls, fetch key indicators from yfinance
-    all_null = all(v is None for v in ind.values()) if ind else True
-    if all_null:
-        try:
-            # Treasury yields from yfinance
-            tnx = yf.Ticker("^TNX").history(period="5d")
-            if not tnx.empty:
-                ind["treasury_10y"] = round(float(tnx["Close"].iloc[-1]), 2)
-            irx = yf.Ticker("^IRX").history(period="5d")
-            if not irx.empty:
-                ind["treasury_3mo"] = round(float(irx["Close"].iloc[-1]), 2)
-            fvx = yf.Ticker("^FVX").history(period="5d")
-            if not fvx.empty:
-                ind["treasury_2y"] = round(float(fvx["Close"].iloc[-1]), 2)
-            # Yield curve from available data
-            if ind.get("treasury_10y") and ind.get("treasury_2y"):
-                spread = ind["treasury_10y"] - ind["treasury_2y"]
-                ind["yield_curve_spread"] = round(spread, 2)
-                ind["yield_curve_inverted"] = spread < 0
-            # Consumer sentiment proxy from consumer discretionary vs staples
-            xly = yf.Ticker("XLY").history(period="1mo")
-            xlp = yf.Ticker("XLP").history(period="1mo")
-            if not xly.empty and not xlp.empty:
-                xly_ret = (float(xly["Close"].iloc[-1]) / float(xly["Close"].iloc[0]) - 1)
-                xlp_ret = (float(xlp["Close"].iloc[-1]) / float(xlp["Close"].iloc[0]) - 1)
-                # Discretionary outperforming staples = consumer confidence
-                consumer_proxy = (xly_ret - xlp_ret) * 100
-                ind["_consumer_proxy"] = round(consumer_proxy, 2)
-            # Fed funds proxy from 3-month treasury
-            if ind.get("treasury_3mo"):
-                ind["fed_funds_rate"] = ind["treasury_3mo"]
-                if ind.get("treasury_10y"):
-                    # Rough CPI proxy: 10Y yield - real rate assumption (~1.5%)
-                    ind["_implied_cpi"] = round(ind["treasury_10y"] - 1.5, 1)
-        except Exception as exc:
-            logger.warning("Economic yfinance fallback failed: %s", exc)
-
-    # CPI trend: rising inflation negative for growth, positive for value
+    # CPI trend: rising inflation negative for growth
     cpi = ind.get("cpi_yoy") or ind.get("_implied_cpi")
     if cpi is not None:
         cpi_score = _thresh(
@@ -1221,7 +1325,7 @@ def _compute_economic():
         sub.append({
             "name": "CPI Inflation", "name_cn": "消费者物价指数",
             "value": _fmt(cpi, 1), "score": cpi_score, "unit": "%",
-            "source": "FRED CPI-YoY / yfinance ^TNX implied",
+            "source": "FRED CPI YoY% change",
         })
 
     # GDP growth direction
@@ -1236,7 +1340,7 @@ def _compute_economic():
             "source": "FRED GDP growth rate",
         })
 
-    # Consumer sentiment (FRED or proxy from XLY/XLP relative performance)
+    # Consumer sentiment (FRED or proxy)
     cs = ind.get("consumer_sentiment")
     if cs is not None:
         cs_score = _thresh(
@@ -1289,28 +1393,28 @@ def _compute_economic():
             "source": "FRED / yfinance ^TNX, ^FVX",
         })
 
-    # ISM Manufacturing proxy
-    ism = ind.get("ism_manufacturing")
-    if ism is not None:
-        ism_score = _thresh(
-            ism, [(45, -5), (48, -3), (50, -1), (52, 1), (55, 3), (9999, 5)],
+    # Industrial Production YoY% (manufacturing activity proxy for ISM PMI)
+    ip_yoy = ind.get("industrial_production_yoy")
+    if ip_yoy is not None:
+        ip_score = _thresh(
+            ip_yoy, [(-5, -5), (-2, -3), (0, -1), (2, 1), (4, 3), (9999, 5)],
         )
         sub.append({
-            "name": "ISM Manufacturing", "name_cn": "ISM制造业指数",
-            "value": _fmt(ism, 1), "score": ism_score, "unit": "",
-            "source": "FRED ISM manufacturing index",
+            "name": "Industrial Production YoY", "name_cn": "工业生产同比",
+            "value": _fmt(ip_yoy, 1), "score": ip_score, "unit": "% YoY",
+            "source": "FRED INDPRO YoY% change",
         })
 
-    # Retail sales
+    # Retail sales YoY growth
     retail = ind.get("retail_sales")
     if retail is not None:
-        # Retail sales reported as level; we score relative to trend
-        # A positive value typically means consumer spending OK
-        retail_score = 1.0  # Neutral baseline since we only have level
+        retail_score = _thresh(
+            retail, [(-5, -5), (-2, -3), (0, -1), (3, 1), (6, 3), (9999, 5)],
+        )
         sub.append({
-            "name": "Retail Sales", "name_cn": "零售销售额",
-            "value": _fmt(retail, 1), "score": retail_score, "unit": "B$",
-            "source": "FRED retail sales",
+            "name": "Retail Sales Growth", "name_cn": "零售销售增长",
+            "value": _fmt(retail, 1), "score": retail_score, "unit": "% YoY",
+            "source": "FRED retail sales YoY% change",
         })
 
     # Real interest rate
@@ -1322,7 +1426,7 @@ def _compute_economic():
         sub.append({
             "name": "Real Interest Rate", "name_cn": "实际利率",
             "value": _fmt(real_rate, 2), "score": rr_score, "unit": "%",
-            "source": "FRED real interest rate",
+            "source": "FRED (fed funds rate - CPI YoY)",
         })
 
     # Housing starts
@@ -1337,13 +1441,254 @@ def _compute_economic():
             "source": "FRED housing starts",
         })
 
-    composite = _clamp(_safe_mean([s["score"] for s in sub]) if sub else 0.0)
+    return sub
+
+
+def _get_china_economic_factors():
+    """Compute Chinese economy factors using yfinance-accessible proxies.
+
+    Uses Hang Seng Index, USD/CNY exchange rate, and China Large-Cap ETF
+    as proxies for Chinese economic conditions.
+    """
+    sub = []
+
+    # Hang Seng Index 3M return (China/HK market momentum)
+    try:
+        hsi_hist = yf.Ticker("^HSI").history(period="6mo")["Close"].values.astype(float)
+        if len(hsi_hist) >= 63:
+            hsi_3m = (hsi_hist[-1] / hsi_hist[-63] - 1) * 100
+            hsi_score = _thresh(
+                hsi_3m, [(-15, -5), (-8, -3), (-2, -1), (2, 1), (8, 3), (9999, 5)],
+            )
+            sub.append({
+                "name": "HSI Momentum (3M)", "name_cn": "恒生指数动量(3月)",
+                "value": _fmt(hsi_3m, 1), "score": hsi_score, "unit": "%",
+                "source": "yfinance ^HSI 3-month return",
+            })
+    except Exception:
+        pass
+
+    # USD/CNY exchange rate trend (strong yuan = positive for Chinese economy)
+    try:
+        cny_hist = yf.Ticker("CNY=X").history(period="3mo")["Close"].values.astype(float)
+        if len(cny_hist) >= 21:
+            # CNY=X is USD/CNY: lower = stronger yuan
+            cny_1m_change = (cny_hist[-1] / cny_hist[-21] - 1) * 100
+            # Negative change (yuan strengthening) is positive
+            cny_score = _thresh(
+                cny_1m_change,
+                [(-2, 4), (-1, 2), (0, 0), (1, -2), (2, -4), (9999, -5)],
+            )
+            sub.append({
+                "name": "Yuan Strength (1M)", "name_cn": "人民币走势(1月)",
+                "value": _fmt(-cny_1m_change, 1),
+                "score": cny_score, "unit": "%",
+                "source": "yfinance CNY=X 1-month change (inverted)",
+            })
+    except Exception:
+        pass
+
+    # FXI (iShares China Large-Cap ETF) momentum
+    try:
+        fxi_hist = yf.Ticker("FXI").history(period="6mo")["Close"].values.astype(float)
+        if len(fxi_hist) >= 63:
+            fxi_3m = (fxi_hist[-1] / fxi_hist[-63] - 1) * 100
+            fxi_score = _thresh(
+                fxi_3m, [(-15, -5), (-8, -3), (-2, -1), (2, 1), (8, 3), (9999, 5)],
+            )
+            sub.append({
+                "name": "China ETF Momentum (3M)", "name_cn": "中国ETF动量(3月)",
+                "value": _fmt(fxi_3m, 1), "score": fxi_score, "unit": "%",
+                "source": "yfinance FXI (iShares China Large-Cap) 3-month return",
+            })
+    except Exception:
+        pass
+
+    # China vs US relative performance (FXI vs SPY)
+    try:
+        spy_hist = yf.Ticker("SPY").history(period="3mo")["Close"].values.astype(float)
+        fxi_hist_short = yf.Ticker("FXI").history(period="3mo")["Close"].values.astype(float)
+        min_len = min(len(spy_hist), len(fxi_hist_short))
+        if min_len >= 21:
+            fxi_ret = (fxi_hist_short[-1] / fxi_hist_short[-21] - 1) * 100
+            spy_ret = (spy_hist[-1] / spy_hist[-21] - 1) * 100
+            cn_vs_us = fxi_ret - spy_ret
+            cn_vs_score = _thresh(
+                cn_vs_us, [(-10, -4), (-5, -2), (0, 0), (5, 2), (10, 4), (9999, 5)],
+            )
+            sub.append({
+                "name": "China vs US (1M)", "name_cn": "中美市场对比(1月)",
+                "value": _fmt(cn_vs_us, 1), "score": cn_vs_score, "unit": "%",
+                "source": "yfinance FXI vs SPY 1-month relative return",
+            })
+    except Exception:
+        pass
+
+    return sub
+
+
+def _get_europe_economic_factors():
+    """Compute European economy factors using yfinance-accessible proxies.
+
+    Uses Euro Stoxx 50, EUR/USD exchange rate, and Eurozone ETF.
+    """
+    sub = []
+
+    # Euro Stoxx 50 3M return
+    try:
+        stoxx_hist = yf.Ticker("^STOXX50E").history(period="6mo")["Close"].values.astype(float)
+        if len(stoxx_hist) >= 63:
+            stoxx_3m = (stoxx_hist[-1] / stoxx_hist[-63] - 1) * 100
+            stoxx_score = _thresh(
+                stoxx_3m, [(-12, -5), (-6, -3), (-2, -1), (2, 1), (6, 3), (9999, 5)],
+            )
+            sub.append({
+                "name": "Euro Stoxx 50 (3M)", "name_cn": "欧洲斯托克50(3月)",
+                "value": _fmt(stoxx_3m, 1), "score": stoxx_score, "unit": "%",
+                "source": "yfinance ^STOXX50E 3-month return",
+            })
+    except Exception:
+        pass
+
+    # EUR/USD trend (strong euro = positive for European economy)
+    try:
+        eur_hist = yf.Ticker("EURUSD=X").history(period="3mo")["Close"].values.astype(float)
+        if len(eur_hist) >= 21:
+            eur_1m_change = (eur_hist[-1] / eur_hist[-21] - 1) * 100
+            eur_score = _thresh(
+                eur_1m_change,
+                [(-3, -4), (-1, -2), (0, 0), (1, 2), (3, 4), (9999, 5)],
+            )
+            sub.append({
+                "name": "EUR/USD Trend (1M)", "name_cn": "欧元走势(1月)",
+                "value": _fmt(eur_1m_change, 1),
+                "score": eur_score, "unit": "%",
+                "source": "yfinance EURUSD=X 1-month change",
+            })
+    except Exception:
+        pass
+
+    # EZU (iShares MSCI Eurozone ETF) vs SPY relative performance
+    try:
+        ezu_hist = yf.Ticker("EZU").history(period="3mo")["Close"].values.astype(float)
+        spy_hist = yf.Ticker("SPY").history(period="3mo")["Close"].values.astype(float)
+        min_len = min(len(ezu_hist), len(spy_hist))
+        if min_len >= 21:
+            ezu_ret = (ezu_hist[-1] / ezu_hist[-21] - 1) * 100
+            spy_ret = (spy_hist[-1] / spy_hist[-21] - 1) * 100
+            eu_vs_us = ezu_ret - spy_ret
+            eu_vs_score = _thresh(
+                eu_vs_us, [(-8, -4), (-3, -2), (0, 0), (3, 2), (8, 4), (9999, 5)],
+            )
+            sub.append({
+                "name": "Europe vs US (1M)", "name_cn": "欧美市场对比(1月)",
+                "value": _fmt(eu_vs_us, 1), "score": eu_vs_score, "unit": "%",
+                "source": "yfinance EZU vs SPY 1-month relative return",
+            })
+    except Exception:
+        pass
+
+    return sub
+
+
+def _compute_economic(ticker="", country="", info=None):
+    """Score economic conditions for equity favorability.
+
+    Country-aware: uses geographic revenue weights to blend US, China,
+    and Europe economic indicators for multinational companies.
+    For single-region companies, uses only that region's indicators.
+    """
+    now = datetime.now(timezone.utc)
+    cache_key = f"economic_{ticker or 'global'}"
+    cached = _CACHE.get(cache_key)
+    if cached and (now - cached["ts"]).seconds < _CACHE_TTL:
+        return cached["data"]
+
+    # Determine geographic weights for this stock
+    geo_weights = _get_geographic_weights(ticker, country, info)
+
+    # Fetch US FRED data (shared across all computations)
+    ind = {}
+    try:
+        macro = get_macro_indicators()
+        ind = macro.get("indicators", {})
+    except Exception:
+        pass
+
+    # Fallback: if FRED data is all nulls, fetch key indicators from yfinance
+    all_null = all(v is None for v in ind.values()) if ind else True
+    if all_null:
+        try:
+            tnx = yf.Ticker("^TNX").history(period="5d")
+            if not tnx.empty:
+                ind["treasury_10y"] = round(float(tnx["Close"].iloc[-1]), 2)
+            irx = yf.Ticker("^IRX").history(period="5d")
+            if not irx.empty:
+                ind["treasury_3mo"] = round(float(irx["Close"].iloc[-1]), 2)
+            fvx = yf.Ticker("^FVX").history(period="5d")
+            if not fvx.empty:
+                ind["treasury_2y"] = round(float(fvx["Close"].iloc[-1]), 2)
+            if ind.get("treasury_10y") and ind.get("treasury_2y"):
+                spread = ind["treasury_10y"] - ind["treasury_2y"]
+                ind["yield_curve_spread"] = round(spread, 2)
+                ind["yield_curve_inverted"] = spread < 0
+            xly = yf.Ticker("XLY").history(period="1mo")
+            xlp = yf.Ticker("XLP").history(period="1mo")
+            if not xly.empty and not xlp.empty:
+                xly_ret = (float(xly["Close"].iloc[-1]) / float(xly["Close"].iloc[0]) - 1)
+                xlp_ret = (float(xlp["Close"].iloc[-1]) / float(xlp["Close"].iloc[0]) - 1)
+                consumer_proxy = (xly_ret - xlp_ret) * 100
+                ind["_consumer_proxy"] = round(consumer_proxy, 2)
+            if ind.get("treasury_3mo"):
+                ind["fed_funds_rate"] = ind["treasury_3mo"]
+                if ind.get("treasury_10y"):
+                    ind["_implied_cpi"] = round(ind["treasury_10y"] - 1.5, 1)
+        except Exception as exc:
+            logger.warning("Economic yfinance fallback failed: %s", exc)
+
+    # Compute factors for each region and blend by weight
+    all_factors = []
+    weighted_scores = []
+    is_multi_region = len(geo_weights) > 1
+
+    for region, weight in geo_weights.items():
+        if region == "US":
+            region_factors = _get_us_economic_factors(ind)
+        elif region == "China":
+            region_factors = _get_china_economic_factors()
+        elif region == "Europe":
+            region_factors = _get_europe_economic_factors()
+        else:
+            # "Other" or unknown regions: skip (no reliable data source)
+            continue
+
+        # Label factors with region tag when multi-region
+        if is_multi_region and region_factors:
+            weight_pct = round(weight * 100)
+            for factor in region_factors:
+                factor["name"] = f"{factor['name']} ({region} {weight_pct}%)"
+                factor["name_cn"] = f"{factor['name_cn']}({region} {weight_pct}%)"
+
+        all_factors.extend(region_factors)
+
+        if region_factors:
+            region_score = _safe_mean([f["score"] for f in region_factors])
+            weighted_scores.append(region_score * weight)
+
+    composite = _clamp(sum(weighted_scores)) if weighted_scores else 0.0
+
+    # Build region summary for data source description
+    region_labels = [f"{r} {round(w * 100)}%" for r, w in geo_weights.items()]
+    region_summary = ", ".join(region_labels)
+
     result = {
         "composite": round(composite, 2),
-        "label": "Economic", "label_cn": "经济周期", "factors": sub,
-        "data_source_summary": "FRED economic indicators (with yfinance fallback)",
+        "label": "Economic", "label_cn": "经济周期",
+        "factors": all_factors,
+        "geographic_weights": geo_weights,
+        "data_source_summary": f"FRED + yfinance regional proxies ({region_summary})",
     }
-    _CACHE["economic_factor"] = {"data": result, "ts": now}
+    _CACHE[cache_key] = {"data": result, "ts": now}
     return result
 
 
