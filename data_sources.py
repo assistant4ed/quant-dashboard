@@ -55,11 +55,11 @@ _top50_cache_expiry: float = 0.0
 TOP_50_CACHE_TTL = 86400  # 24 hours
 
 
-def get_top_50_by_volume() -> list[str]:
-    """Fetch the 50 most traded US stocks this week by average daily volume.
+def get_top_50_by_volume(count: int = 100) -> list[str]:
+    """Fetch the most traded US stocks of the previous trading day.
 
     Uses a broad screening pool of ~120 large-cap US tickers and ranks
-    by trailing 5-day average volume. Falls back to the static list
+    by trailing 2-day average volume. Falls back to the static list
     on failure.
     """
     global _top50_cache, _top50_cache_expiry
@@ -110,15 +110,15 @@ def get_top_50_by_volume() -> list[str]:
             except Exception:
                 continue
 
-        if len(volume_data) >= 50:
+        if len(volume_data) >= count:
             volume_data.sort(key=lambda x: x[1], reverse=True)
-            _top50_cache = [t for t, _ in volume_data[:50]]
+            _top50_cache = [t for t, _ in volume_data[:count]]
             _top50_cache_expiry = now + TOP_50_CACHE_TTL
-            logger.info("Dynamic top-50 fetched: %s", _top50_cache[:10])
+            logger.info("Dynamic top-%d fetched: %s", count, _top50_cache[:10])
             return _top50_cache
 
     except Exception as exc:
-        logger.warning("Dynamic top-50 fetch failed, using fallback: %s", exc)
+        logger.warning("Dynamic top-%d fetch failed, using fallback: %s", count, exc)
 
     return _FALLBACK_TOP_50
 

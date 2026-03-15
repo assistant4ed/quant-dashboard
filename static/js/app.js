@@ -1098,6 +1098,17 @@ function runFullAnalysisSuite(ticker, isQuick) {
   if (typeof loadChart === 'function') loadChart(ticker, typeof selectedPeriod !== 'undefined' ? selectedPeriod : '1y');
 }
 
+function goAnalyze(ticker) {
+  /* Navigate to AI Analysis tab and run full analysis for the ticker */
+  switchTab('ai');
+  var input = document.getElementById('ai-ticker-input');
+  var select = document.getElementById('ai-ticker-select');
+  if (input) input.value = ticker;
+  if (select) select.value = '';
+  runFullAnalysisSuite(ticker, false);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 async function runAiAnalysis(ticker, isQuick) {
   var loading = document.getElementById('ai-loading');
   var results = document.getElementById('ai-results');
@@ -2608,7 +2619,7 @@ async function runDualModelScan() {
 
   try {
     var [m1Response, m2Response] = await Promise.all([
-      fetch('/api/top-stocks?n=50&view=consensus'),
+      fetch('/api/top-stocks?n=100&view=consensus'),
       fetch('/api/model2/scan', { method: 'POST' }),
     ]);
 
@@ -2645,7 +2656,7 @@ function runModel2Scan() { runDualModelScan(); }
 async function loadModel2Predictions() {
   try {
     var [m1Response, m2Response] = await Promise.all([
-      fetch('/api/top-stocks?n=50&view=consensus'),
+      fetch('/api/top-stocks?n=100&view=consensus'),
       fetch('/api/model2/predictions'),
     ]);
 
@@ -2712,7 +2723,10 @@ function renderModel1Predictions(stocks) {
 
     html += '<tr style="border-bottom:1px solid var(--border);">' +
       '<td style="padding:0.5rem;color:var(--text-muted);">' + (idx + 1) + '</td>' +
-      '<td style="padding:0.5rem;font-weight:600;">' + escapeHtml(s.ticker) +
+      '<td style="padding:0.5rem;font-weight:600;">' +
+        '<a href="#" onclick="goAnalyze(\'' + escapeHtml(s.ticker) + '\');return false;" ' +
+        'style="color:inherit;text-decoration:none;cursor:pointer;" title="Click to run AI Analysis for ' + escapeHtml(s.ticker) + '">' +
+        escapeHtml(s.ticker) + '</a>' +
         '<div style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(s.name || '') + '</div></td>' +
       '<td style="padding:0.5rem;font-weight:600;color:' + dirColor + ';">' + signalPct + '%</td>' +
       '<td style="padding:0.5rem;color:' + dirColor + ';">' + dirIcon + ' ' + dirLabel + '</td>' +
@@ -2783,7 +2797,10 @@ function renderModel2Predictions(data) {
     var confColor = confBar >= 7 ? 'var(--green, #22c55e)' : confBar >= 4 ? 'var(--yellow, #eab308)' : 'var(--red, #ef4444)';
 
     html += '<tr style="border-bottom:1px solid var(--border);">' +
-      '<td style="padding:0.5rem;font-weight:600;">' + escapeHtml(p.ticker) +
+      '<td style="padding:0.5rem;font-weight:600;">' +
+        '<a href="#" onclick="goAnalyze(\'' + escapeHtml(p.ticker) + '\');return false;" ' +
+        'style="color:inherit;text-decoration:none;cursor:pointer;" title="Click to run AI Analysis for ' + escapeHtml(p.ticker) + '">' +
+        escapeHtml(p.ticker) + '</a>' +
         '<div style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(p.name || '') + '</div></td>' +
       '<td style="padding:0.5rem;color:' + dirColor + ';font-weight:600;">' + dirIcon + ' ' + escapeHtml(p.direction) + '</td>' +
       '<td style="padding:0.5rem;">' +
@@ -2922,7 +2939,10 @@ function renderModelComparison(data, container) {
     }
 
     html += '<tr style="border-bottom:1px solid var(--border);">' +
-      '<td style="padding:0.5rem;font-weight:600;">' + escapeHtml(c.ticker) + '</td>' +
+      '<td style="padding:0.5rem;font-weight:600;">' +
+        '<a href="#" onclick="goAnalyze(\'' + escapeHtml(c.ticker) + '\');return false;" ' +
+        'style="color:inherit;text-decoration:none;cursor:pointer;" title="Click to analyze ' + escapeHtml(c.ticker) + '">' +
+        escapeHtml(c.ticker) + '</a></td>' +
       '<td style="padding:0.5rem;">' + m1Html + '</td>' +
       '<td style="padding:0.5rem;">' + m2Html + '</td>' +
       '<td style="padding:0.5rem;">' + agreeHtml + '</td>' +

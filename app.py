@@ -2361,19 +2361,20 @@ def create_app():
         except FileNotFoundError:
             pass
 
-        # Load Model 2
+        # Load Model 2 — prefer in-memory cache, fallback to file
         try:
-            if SENTIMENT_PREDICTIONS_FILE.exists():
+            m2_source = _sentiment_cache or {}
+            if not m2_source and SENTIMENT_PREDICTIONS_FILE.exists():
                 with open(SENTIMENT_PREDICTIONS_FILE, "r", encoding="utf-8") as fh:
-                    raw = json.load(fh)
-                for pred in (raw.get("predictions") or []):
-                    model2[pred["ticker"]] = {
-                        "direction": pred.get("direction", ""),
-                        "edge_pct": pred.get("edge_pct", 0),
-                        "confidence": pred.get("confidence", 0),
-                        "sentiment_score": pred.get("sentiment_score", 0),
-                        "risk_reward": pred.get("risk_reward", 0),
-                    }
+                    m2_source = json.load(fh)
+            for pred in (m2_source.get("predictions") or []):
+                model2[pred["ticker"]] = {
+                    "direction": pred.get("direction", ""),
+                    "edge_pct": pred.get("edge_pct", 0),
+                    "confidence": pred.get("confidence", 0),
+                    "sentiment_score": pred.get("sentiment_score", 0),
+                    "risk_reward": pred.get("risk_reward", 0),
+                }
         except Exception:
             pass
 

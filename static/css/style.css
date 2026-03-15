@@ -4402,6 +4402,12 @@ a:hover {
 /* ============================================================
    Stat Cards (Model 2 / Comparison)
    ============================================================ */
+/* Clickable ticker links in tables */
+td a[onclick*="goAnalyze"]:hover {
+  color: var(--accent) !important;
+  text-decoration: underline !important;
+}
+
 .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
