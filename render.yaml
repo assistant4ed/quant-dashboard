@@ -11,3 +11,13 @@ services:
         value: /opt/render/project/.venv/bin/python
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: MARKETSTACK_API_KEY
+        sync: false
+      - key: FINTEL_API_KEY
+        sync: false
+      - key: QUIVER_API_KEY
+        sync: false
+      - key: FRED_API_KEY
+        sync: false

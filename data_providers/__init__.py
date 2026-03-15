@@ -18,6 +18,7 @@ Usage:
 """
 import json
 import logging
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -42,13 +43,34 @@ PROVIDER_PRIORITY = ["finnhub", "marketstack", "yfinance"]
 
 
 def _load_api_keys() -> dict:
-    """Load API keys from config file."""
+    """Load API keys from config file, with env var overrides.
+
+    Environment variables take precedence over the JSON file.
+    Mapping: FINNHUB_API_KEY, MARKETSTACK_API_KEY, FINTEL_API_KEY,
+             QUIVER_API_KEY, FRED_API_KEY, ANTHROPIC_API_KEY, OPENROUTER_API_KEY.
+    """
+    keys = {}
     try:
         with open(API_KEYS_FILE) as f:
-            return json.load(f)
+            keys = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as exc:
-        logger.warning("Failed to load API keys: %s", exc)
-        return {}
+        logger.warning("Failed to load API keys file: %s", exc)
+
+    env_map = {
+        "finnhub": "FINNHUB_API_KEY",
+        "marketstack": "MARKETSTACK_API_KEY",
+        "fintel": "FINTEL_API_KEY",
+        "quiver": "QUIVER_API_KEY",
+        "fred": "FRED_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
+    }
+    for key_name, env_var in env_map.items():
+        env_val = os.environ.get(env_var, "")
+        if env_val:
+            keys[key_name] = env_val
+
+    return keys
 
 
 def _init_providers():

@@ -136,16 +136,20 @@ def _call_openrouter(api_key, system_prompt, user_prompt, max_tokens):
 def _call_anthropic(api_key, system_prompt, user_prompt, max_tokens):
     """Call Claude via Anthropic direct API."""
     import anthropic
-    client = anthropic.Anthropic(api_key=api_key)
+    client = anthropic.Anthropic(
+        api_key=api_key,
+        timeout=120.0,
+    )
+    model = "claude-sonnet-4-20250514"
     response = client.messages.create(
-        model="claude-opus-4-6",
+        model=model,
         max_tokens=max_tokens,
         temperature=TEMPERATURE,
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     )
     text = response.content[0].text
-    return text, "claude-opus-4-6", {
+    return text, model, {
         "input": response.usage.input_tokens,
         "output": response.usage.output_tokens,
     }
