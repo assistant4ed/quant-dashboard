@@ -95,7 +95,7 @@ def get_top_50_by_volume() -> list[str]:
     try:
         volume_data = []
         # Batch download 5-day history for the entire pool
-        batch = yf.download(unique_pool, period="5d", group_by="ticker",
+        batch = yf.download(unique_pool, period="2d", group_by="ticker",
                             threads=True, progress=False)
 
         for ticker in unique_pool:
