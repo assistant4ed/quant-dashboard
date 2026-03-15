@@ -29,7 +29,7 @@ PREDICTIONS_FILE = DATA_DIR / "predictions.json"
 ECONOMIC_FILE = DATA_DIR / "economic_data.json"
 NEWS_FILE = DATA_DIR / "news_data.json"
 IMPROVEMENT_STATUS_FILE = DATA_DIR / "improvement_status.json"
-PYTHON_BIN = Path(os.environ.get("PYTHON_BIN", "/Users/Ed/qlib-env/bin/python"))
+PYTHON_BIN = Path(os.environ.get("PYTHON_BIN", sys.executable))
 GENERATE_SCRIPT = BASE_DIR / "generate_data.py"
 IMPROVE_SCRIPT = BASE_DIR / "improve_model.py"
 

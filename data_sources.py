@@ -97,6 +97,9 @@ def _load_api_keys():
         "openrouter": "OPENROUTER_API_KEY",
         "finnhub": "FINNHUB_API_KEY",
         "newsapi": "NEWSAPI_API_KEY",
+        "marketstack": "MARKETSTACK_API_KEY",
+        "fintel": "FINTEL_API_KEY",
+        "quiver": "QUIVER_API_KEY",
     }
     for key_name, env_var in env_map.items():
         env_val = os.environ.get(env_var, "")

@@ -78,11 +78,27 @@ logger = logging.getLogger("scheduler")
 
 
 def load_api_keys():
-    """Load API keys from the configuration file."""
+    """Load API keys from the configuration file, with env var overrides."""
+    import os
+    keys = {}
     if API_KEYS_FILE.exists():
         with open(API_KEYS_FILE, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    return {}
+            keys = json.load(fh)
+    env_map = {
+        "fred": "FRED_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
+        "finnhub": "FINNHUB_API_KEY",
+        "newsapi": "NEWSAPI_API_KEY",
+        "marketstack": "MARKETSTACK_API_KEY",
+        "fintel": "FINTEL_API_KEY",
+        "quiver": "QUIVER_API_KEY",
+    }
+    for key_name, env_var in env_map.items():
+        env_val = os.environ.get(env_var, "")
+        if env_val:
+            keys[key_name] = env_val
+    return keys
 
 
 def _write_json_atomic(file_path, data):
