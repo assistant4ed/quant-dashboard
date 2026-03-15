@@ -1,4 +1,4 @@
-app = 'quant-dashboard'
+app = 'protrader-hk'
 primary_region = 'hkg'
 
 [build]
