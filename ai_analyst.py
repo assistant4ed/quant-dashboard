@@ -64,15 +64,28 @@ def _call_ai(system_prompt, user_prompt, max_tokens=MAX_TOKENS):
 
     Returns (response_text, model_used, usage_dict).
     """
+    errors = []
+
     # Try OpenRouter first
     or_key = _get_openrouter_key()
     if or_key:
-        return _call_openrouter(or_key, system_prompt, user_prompt, max_tokens)
+        try:
+            return _call_openrouter(or_key, system_prompt, user_prompt, max_tokens)
+        except Exception as exc:
+            logger.warning("OpenRouter failed, falling back to Anthropic: %s", exc)
+            errors.append(f"OpenRouter: {exc}")
 
     # Fallback to Anthropic direct
     anthropic_key = _get_anthropic_key()
     if anthropic_key:
-        return _call_anthropic(anthropic_key, system_prompt, user_prompt, max_tokens)
+        try:
+            return _call_anthropic(anthropic_key, system_prompt, user_prompt, max_tokens)
+        except Exception as exc:
+            logger.error("Anthropic direct API also failed: %s", exc)
+            errors.append(f"Anthropic: {exc}")
+
+    if errors:
+        raise ValueError(f"All AI backends failed: {'; '.join(errors)}")
 
     raise ValueError(
         "No AI API key found. Add 'openrouter' or 'anthropic' key to "
