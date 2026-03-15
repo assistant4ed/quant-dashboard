@@ -35,7 +35,8 @@ FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
 FEAR_GREED_URL = "https://production.dataviz.cnn.com/index/fearandgreed/graphdata"
 
 # Top 50 most actively traded US stocks
-TOP_50_TICKERS = [
+# Fallback list used when dynamic fetch fails
+_FALLBACK_TOP_50 = [
     "AAPL", "MSFT", "NVDA", "AMZN", "META",
     "GOOGL", "TSLA", "AVGO", "JPM", "V",
     "UNH", "MA", "HD", "COST", "PG",
@@ -47,6 +48,83 @@ TOP_50_TICKERS = [
     "INTU", "AMGN", "ISRG", "GE", "IBM",
     "NOW", "CAT", "GS", "AMAT", "BLK",
 ]
+
+# Cache for dynamic top-50
+_top50_cache: list[str] = []
+_top50_cache_expiry: float = 0.0
+TOP_50_CACHE_TTL = 86400  # 24 hours
+
+
+def get_top_50_by_volume() -> list[str]:
+    """Fetch the 50 most traded US stocks this week by average daily volume.
+
+    Uses a broad screening pool of ~120 large-cap US tickers and ranks
+    by trailing 5-day average volume. Falls back to the static list
+    on failure.
+    """
+    global _top50_cache, _top50_cache_expiry
+    now = time.time()
+    if _top50_cache and now < _top50_cache_expiry:
+        return _top50_cache
+
+    # Broad pool: S&P 100 + popular mid/large caps
+    pool = [
+        "AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA", "AVGO",
+        "JPM", "V", "UNH", "MA", "HD", "COST", "PG", "JNJ", "ABBV", "CRM",
+        "NFLX", "AMD", "LLY", "MRK", "PEP", "KO", "ADBE", "WMT", "BAC",
+        "TMO", "CSCO", "ACN", "ORCL", "MCD", "ABT", "DHR", "QCOM", "TXN",
+        "NEE", "PM", "INTC", "CMCSA", "INTU", "AMGN", "ISRG", "GE", "IBM",
+        "NOW", "CAT", "GS", "AMAT", "BLK", "UBER", "COIN", "PLTR", "SOFI",
+        "RIVN", "MARA", "XYZ", "SNAP", "ROKU", "HOOD", "SHOP", "ARM", "SMCI",
+        "MSTR", "MU", "CRWD", "PANW", "SNOW", "DDOG", "NET", "ZS", "OKTA",
+        "ABNB", "DASH", "RBLX", "U", "PATH", "BILL", "HUBS", "TEAM", "MNDY",
+        "CEG", "VST", "FSLR", "ENPH", "XOM", "CVX", "COP", "SLB", "HAL",
+        "BA", "RTX", "LMT", "GD", "NOC", "DE", "UPS", "FDX", "DAL", "UAL",
+        "AAL", "CCL", "WYNN", "MGM", "DIS", "CMCSA", "T", "VZ", "TMUS",
+        "BRK-B", "C", "WFC", "MS", "SCHW", "AXP", "BX", "KKR", "GM", "F",
+        "NKE", "SBUX", "TGT", "LOW", "BKNG", "MAR", "HLT", "LULU", "DECK",
+    ]
+    # Deduplicate
+    seen = set()
+    unique_pool = []
+    for t in pool:
+        if t not in seen:
+            seen.add(t)
+            unique_pool.append(t)
+
+    try:
+        volume_data = []
+        # Batch download 5-day history for the entire pool
+        batch = yf.download(unique_pool, period="5d", group_by="ticker",
+                            threads=True, progress=False)
+
+        for ticker in unique_pool:
+            try:
+                if len(unique_pool) > 1:
+                    vol_series = batch[ticker]["Volume"]
+                else:
+                    vol_series = batch["Volume"]
+                avg_vol = float(vol_series.mean())
+                if avg_vol > 0:
+                    volume_data.append((ticker, avg_vol))
+            except Exception:
+                continue
+
+        if len(volume_data) >= 50:
+            volume_data.sort(key=lambda x: x[1], reverse=True)
+            _top50_cache = [t for t, _ in volume_data[:50]]
+            _top50_cache_expiry = now + TOP_50_CACHE_TTL
+            logger.info("Dynamic top-50 fetched: %s", _top50_cache[:10])
+            return _top50_cache
+
+    except Exception as exc:
+        logger.warning("Dynamic top-50 fetch failed, using fallback: %s", exc)
+
+    return _FALLBACK_TOP_50
+
+
+# Public alias — other modules import this
+TOP_50_TICKERS = _FALLBACK_TOP_50
 
 # FRED series IDs for key economic indicators
 # Series that return index levels (need YoY% computation) are marked below.
@@ -769,12 +847,13 @@ def get_market_context():
 
 
 def scan_top_50():
-    """Quick scan of all top 50 stocks with key metrics.
+    """Quick scan of the top 50 most traded US stocks this week.
 
     Returns a lightweight overview suitable for the dashboard.
     """
     results = []
-    for ticker in TOP_50_TICKERS:
+    tickers = get_top_50_by_volume()
+    for ticker in tickers:
         try:
             stock = yf.Ticker(ticker)
             info = stock.info

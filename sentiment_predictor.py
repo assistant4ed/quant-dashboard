@@ -42,21 +42,8 @@ NEGATIVE_KEYWORDS = [
     "recession",
 ]
 
-# ---------------------------------------------------------------------------
-# Top 50 tickers (mirrors data_sources.py)
-# ---------------------------------------------------------------------------
-TOP_50_TICKERS = [
-    "AAPL", "MSFT", "NVDA", "AMZN", "META",
-    "GOOGL", "TSLA", "AVGO", "JPM", "V",
-    "UNH", "MA", "HD", "COST", "PG",
-    "JNJ", "ABBV", "CRM", "NFLX", "AMD",
-    "LLY", "MRK", "PEP", "KO", "ADBE",
-    "WMT", "BAC", "TMO", "CSCO", "ACN",
-    "ORCL", "MCD", "ABT", "DHR", "QCOM",
-    "TXN", "NEE", "PM", "INTC", "CMCSA",
-    "INTU", "AMGN", "ISRG", "GE", "IBM",
-    "NOW", "CAT", "GS", "AMAT", "BLK",
-]
+# Dynamic top 50 — fetched from data_sources at scan time
+from data_sources import get_top_50_by_volume
 
 # ---------------------------------------------------------------------------
 # Tuning constants
@@ -135,7 +122,7 @@ def scan_for_anomalies() -> list[dict]:
 
     shortlist: list[dict] = []
 
-    for ticker in TOP_50_TICKERS:
+    for ticker in get_top_50_by_volume():
         try:
             stock = yf.Ticker(ticker)
             hist = stock.history(period=HISTORY_PERIOD)
@@ -187,7 +174,7 @@ def scan_for_anomalies() -> list[dict]:
     _scan_cache = shortlist
     _scan_cache_expiry = now + CACHE_TTL
     logger.info("Scan complete: %d / %d tickers shortlisted",
-                len(shortlist), len(TOP_50_TICKERS))
+                len(shortlist), len(get_top_50_by_volume()))
     return shortlist
 
 
@@ -618,7 +605,7 @@ def run_sentiment_scan() -> dict:
     # Step 1 -- Scan
     shortlist = scan_for_anomalies()
     scan_results = {
-        "total_scanned": len(TOP_50_TICKERS),
+        "total_scanned": len(get_top_50_by_volume()),
         "shortlisted": len(shortlist),
     }
 
