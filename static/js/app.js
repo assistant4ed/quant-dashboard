@@ -2647,7 +2647,7 @@ async function runDualModelScan() {
     status.style.color = 'var(--red, #ef4444)';
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Run Dual Model Scan';
+    btn.textContent = 'Scan Top 100 Stocks';
   }
 }
 

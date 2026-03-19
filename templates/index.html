@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ProTrader HK — AI-powered institutional-grade trading intelligence with real-time market data, multi-factor analysis, and alternative data signals.">
+  <meta name="description" content="AlphaEdge HK — AI-powered institutional-grade trading intelligence with real-time market data, multi-factor analysis, and alternative data signals.">
   <meta name="theme-color" content="#f8f9fa">
-  <title>ProTrader HK</title>
+  <title>AlphaEdge HK</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
@@ -15,8 +15,8 @@
   <header class="dashboard-header" role="banner">
     <div class="header-inner">
       <div class="header-brand">
-        <h1 class="header-title" id="header-title">ProTrader HK</h1>
-        <p class="header-subtitle" id="header-subtitle">AI-Powered Trading Intelligence</p>
+        <h1 class="header-title" id="header-title">AlphaEdge <span style="opacity:0.6;font-weight:400;">HK</span></h1>
+        <p class="header-subtitle" id="header-subtitle">Institutional-Grade AI Trading Intelligence</p>
       </div>
       <div class="header-actions">
         <div class="header-clock" id="header-clock">
@@ -396,14 +396,32 @@
         <div class="section-header">
           <span class="section-icon" aria-hidden="true">&#x1F9E0;</span>
           <h2 id="model2-label">Dual Model Trading Intelligence</h2>
-          <p class="section-subtitle" id="model2-subtitle">Scans top 50 most traded stocks today. Model 1 (LightGBM Quant) + Model 2 (Sentiment Agent)</p>
+          <p class="section-subtitle" id="model2-subtitle">Scans 100 most traded US stocks from previous trading day</p>
+        </div>
+
+        <!-- Model Explainer -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+          <div style="background:linear-gradient(135deg,#1e3a5f08,#4169E110);border:2px solid #4169E140;border-radius:12px;padding:1rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <span style="font-size:1.2rem;">&#x1F4CA;</span>
+              <strong style="color:#4169E1;">Model 1: Quant Engine</strong>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;line-height:1.4;">LightGBM + Alpha158 factor model trained on S&P 500. Uses 20-day consensus signals from technical &amp; fundamental features. <strong>Best for:</strong> medium-term trend detection, sector rotation.</p>
+          </div>
+          <div style="background:linear-gradient(135deg,#7c3aed08,#7c3aed10);border:2px solid #7c3aed40;border-radius:12px;padding:1rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <span style="font-size:1.2rem;">&#x1F9E0;</span>
+              <strong style="color:#7c3aed;">Model 2: Sentiment Agent</strong>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;line-height:1.4;">5-step pipeline scanning volume/ATR anomalies, news sentiment, analyst gaps. <strong>Best for:</strong> short-term catalysts, momentum breakouts, event-driven trades.</p>
+          </div>
         </div>
 
         <!-- Single Scan Button -->
         <div class="card" style="margin-bottom: 1.5rem;">
           <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" id="model2-scan-btn" onclick="runDualModelScan()">
-              Run Dual Model Scan
+            <button type="button" class="btn btn-primary" id="model2-scan-btn" onclick="runDualModelScan()" style="padding:10px 24px;font-size:0.9rem;">
+              Scan Top 100 Stocks
             </button>
             <span id="model2-scan-status" style="font-size: 0.85rem; color: var(--text-muted);"></span>
           </div>
@@ -417,31 +435,33 @@
           </div>
         </div>
 
-        <!-- Model 1: LightGBM Quant Predictions (top section) -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="margin-bottom: 1rem;">Model 1: LightGBM Quant Signals</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">20-day consensus signals from quantitative factor model trained on S&P 500 data.</p>
+        <!-- Model 1: LightGBM Quant Predictions -->
+        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #4169E1;">
+          <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="color:#4169E1;">&#x1F4CA;</span> Model 1: Quant Engine Signals
+          </h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">20-day consensus signals ranked by strength. Click ticker to run full AI Analysis.</p>
           <div id="model1-predictions-container">
-            <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">
-              Click "Run Dual Model Scan" to load Model 1 predictions.
-            </p>
+            <p style="color:var(--text-muted);text-align:center;padding:1.5rem;">Click "Scan Top 100 Stocks" to load predictions.</p>
           </div>
         </div>
 
         <!-- Model 2: Sentiment Agent Predictions -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="margin-bottom: 1rem;">Model 2: Sentiment Agent Signals</h3>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">5-step pipeline: Scan &rarr; Research &rarr; Predict &rarr; Risk &rarr; Post-Mortem</p>
+        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #7c3aed;">
+          <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="color:#7c3aed;">&#x1F9E0;</span> Model 2: Sentiment Agent Signals
+          </h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">Anomaly-driven trades with entry/stop/target levels. Click ticker to run full AI Analysis.</p>
           <div id="model2-predictions-container">
-            <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">
-              Click "Run Dual Model Scan" to generate predictions.
-            </p>
+            <p style="color:var(--text-muted);text-align:center;padding:1.5rem;">Click "Scan Top 100 Stocks" to generate signals.</p>
           </div>
         </div>
 
         <!-- Model 1 vs Model 2 Comparison -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="margin-bottom: 1rem;">Model 1 vs Model 2 Comparison</h3>
+        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #059669;">
+          <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="color:#059669;">&#x2696;</span> Model 1 vs Model 2 Comparison
+          </h3>
           <div id="model-compare-container">
             <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading comparison...</p>
           </div>

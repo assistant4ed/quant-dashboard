@@ -49,8 +49,8 @@ from data_sources import get_top_50_by_volume
 # Tuning constants
 # ---------------------------------------------------------------------------
 MIN_AVG_VOLUME = 1_000_000
-ATR_JUMP_THRESHOLD = 1.5
-UNUSUAL_VOLUME_MULTIPLIER = 2.0
+ATR_JUMP_THRESHOLD = 1.1
+UNUSUAL_VOLUME_MULTIPLIER = 1.3
 CACHE_TTL = 1800  # 30 minutes
 
 RSI_PERIOD = 14
