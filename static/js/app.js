@@ -424,15 +424,15 @@ function renderMarketLiveBar(data) {
   if (!el) return;
 
   var items = [
-    { key: 'SP500',       label: 'S&P 500',   icon: '📈' },
-    { key: 'NASDAQ',      label: 'NASDAQ',     icon: '💻' },
-    { key: 'DOW',         label: 'DOW',        icon: '🏛' },
-    { key: 'RUSSELL2000', label: 'RUT',        icon: '📊' },
-    { key: 'VIX',         label: 'VIX',        icon: '⚡' },
-    { key: 'GOLD',        label: 'Gold',       icon: '🥇' },
-    { key: 'OIL',         label: 'Oil',        icon: '🛢' },
-    { key: 'TREASURY10Y', label: '10Y Yield',  icon: '🏦' },
-    { key: 'BTC',         label: 'Bitcoin',    icon: '₿' },
+    { key: 'SP500',       label: 'S&P 500',   icon: '' },
+    { key: 'NASDAQ',      label: 'NASDAQ',     icon: '' },
+    { key: 'DOW',         label: 'DOW',        icon: '' },
+    { key: 'RUSSELL2000', label: 'RUT',        icon: '' },
+    { key: 'VIX',         label: 'VIX',        icon: '' },
+    { key: 'GOLD',        label: 'Gold',       icon: '' },
+    { key: 'OIL',         label: 'Oil',        icon: '' },
+    { key: 'TREASURY10Y', label: '10Y Yield',  icon: '' },
+    { key: 'BTC',         label: 'Bitcoin',    icon: '' },
   ];
 
   var html = '<div class="market-live-grid">';
@@ -872,14 +872,14 @@ function renderMethodology() {
 
   dom.quantSections.innerHTML = '';
   var quantIcons = [
-    '\u{1F4BE}', '\u{1F4CA}', '\u{1F916}', '\u{1F6E1}', '\u26A1',
-    '\u{1F50D}', '\u{1F527}', '\u{1F4C8}',
+    '', '', '', '', '',
+    '', '', '',
   ];
   var sections = (methodology.quant_fund_approach || {}).sections || [];
   sections.forEach(function (section, idx) {
     var heading = tName(section.heading, section.heading_cn);
     var content = tName(section.content, section.content_cn);
-    var icon = quantIcons[idx] || '\u{1F4CB}';
+    var icon = quantIcons[idx] || '';
     var item = createAccordionItem(icon, heading, content, 'section');
     dom.quantSections.appendChild(item);
   });
@@ -1103,8 +1103,6 @@ function runFullAnalysisSuite(ticker, isQuick) {
     if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
   } else if (activeAnalysisMethod === 'model1') {
     runModel1StockAnalysis(ticker);
-  } else if (activeAnalysisMethod === 'model2') {
-    runModel2StockAnalysis(ticker);
   }
 }
 
@@ -1190,7 +1188,7 @@ function renderFullAnalysis(data) {
   /* 1. Header with rating badge and confidence */
   var ratingClass = getRatingClass(data.rating);
   var headerRow = document.getElementById('ai-header-row');
-  var ratingEmoji = {'STRONG_BUY': '\uD83D\uDFE2\uD83D\uDFE2', 'BUY': '\uD83D\uDFE2', 'HOLD': '\uD83D\uDFE1', 'SELL': '\uD83D\uDD34', 'STRONG_SELL': '\uD83D\uDD34\uD83D\uDD34'}[data.rating] || '\u26AA';
+  /* Rating emoji removed */
   headerRow.innerHTML =
     '<div class="ai-report-header">' +
     '<div class="ai-rating-section">' +
@@ -1209,10 +1207,10 @@ function renderFullAnalysis(data) {
   /* 2. Score cards with visual bars */
   var scoresGrid = document.getElementById('ai-scores-grid');
   var scores = [
-    { label: 'Fundamental', value: data.fundamental_score, color: '#3b82f6', icon: '\uD83D\uDCCA' },
-    { label: 'Technical', value: data.technical_score, color: '#8b5cf6', icon: '\uD83D\uDCC8' },
-    { label: 'Sentiment', value: data.sentiment_score, color: '#f59e0b', icon: '\uD83C\uDFAF' },
-    { label: 'Risk', value: data.risk_score, color: '#ef4444', icon: '\u26A0\uFE0F' },
+    { label: 'Fundamental', value: data.fundamental_score, color: '#3b82f6', icon: '' },
+    { label: 'Technical', value: data.technical_score, color: '#8b5cf6', icon: '' },
+    { label: 'Sentiment', value: data.sentiment_score, color: '#f59e0b', icon: '' },
+    { label: 'Risk', value: data.risk_score, color: '#ef4444', icon: '' },
   ];
   scoresGrid.innerHTML = scores.map(function(s) {
     var pct = ((s.value || 0) / 10 * 100);
@@ -1289,10 +1287,10 @@ function renderFullAnalysis(data) {
   var detailed = data.detailed_analysis || {};
   var detailedEl = document.getElementById('ai-detailed');
   var sections = [
-    { title: 'Fundamental Rationale', key: 'fundamentals', icon: '\uD83D\uDCCA' },
-    { title: 'Technical Setup', key: 'technicals', icon: '\uD83D\uDCC8' },
-    { title: 'Macro Impact', key: 'macro_impact', icon: '\uD83C\uDF0D' },
-    { title: 'Smart Money Activity', key: 'insider_institutional', icon: '\uD83C\uDFE6' },
+    { title: 'Fundamental Rationale', key: 'fundamentals', icon: '' },
+    { title: 'Technical Setup', key: 'technicals', icon: '' },
+    { title: 'Macro Impact', key: 'macro_impact', icon: '' },
+    { title: 'Smart Money Activity', key: 'insider_institutional', icon: '' },
   ];
   var detailHtml = '<div class="ai-report-section"><h3>Detailed Rationale</h3><div class="ai-rationale-grid">';
   sections.forEach(function(sec) {
@@ -2612,77 +2610,15 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* ============================================================
-   Model 2: Sentiment & Market Agent
+   Model 1: Scan Top Stocks (LightGBM)
    ============================================================ */
 
-let model2Data = null;
-
-async function runDualModelScan() {
-  var btn = document.getElementById('model2-scan-btn');
-  var status = document.getElementById('model2-scan-status');
-  if (!btn || !status) return;
-
-  btn.disabled = true;
-  btn.textContent = 'Scanning both models...';
-  status.textContent = 'Running Model 1 (LightGBM) + Model 2 (Sentiment) on top 50 stocks...';
-  status.style.color = 'var(--accent)';
-
+async function runModel1Scan() {
   try {
-    var [m1Response, m2Response] = await Promise.all([
-      fetch('/api/top-stocks?n=100&view=consensus'),
-      fetch('/api/model2/scan', { method: 'POST' }),
-    ]);
-
-    if (m1Response.ok) {
-      var m1Result = await m1Response.json();
-      if (m1Result.data) renderModel1Predictions(m1Result.data.stocks || []);
-    }
-
-    if (m2Response.ok) {
-      var m2Result = await m2Response.json();
-      if (m2Result.data) {
-        model2Data = m2Result.data;
-        renderModel2Predictions(model2Data);
-        renderModel2Stats(model2Data);
-        renderModel2PostMortem(model2Data.post_mortem);
-      }
-    }
-
-    status.textContent = 'Dual scan complete at ' + new Date().toLocaleTimeString();
-    status.style.color = 'var(--green)';
-    loadModelComparison();
-  } catch (err) {
-    console.error('Dual model scan failed:', err);
-    status.textContent = 'Scan failed: ' + err.message;
-    status.style.color = 'var(--red, #ef4444)';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Scan Top 100 Stocks';
-  }
-}
-
-function runModel2Scan() { runDualModelScan(); }
-
-async function loadModel2Predictions() {
-  try {
-    var [m1Response, m2Response] = await Promise.all([
-      fetch('/api/top-stocks?n=100&view=consensus'),
-      fetch('/api/model2/predictions'),
-    ]);
-
-    if (m1Response.ok) {
-      var m1Result = await m1Response.json();
-      if (m1Result.data) renderModel1Predictions(m1Result.data.stocks || []);
-    }
-
-    if (m2Response.ok) {
-      var m2Result = await m2Response.json();
-      if (m2Result.data) {
-        model2Data = m2Result.data;
-        renderModel2Predictions(model2Data);
-        renderModel2Stats(model2Data);
-        renderModel2PostMortem(model2Data.post_mortem);
-      }
+    var response = await fetch('/api/top-stocks?n=100&view=consensus');
+    if (response.ok) {
+      var result = await response.json();
+      if (result.data) renderModel1Predictions(result.data.stocks || []);
     }
   } catch (err) {
     console.error('Failed to load predictions:', err);
@@ -2757,211 +2693,6 @@ function renderModel1Predictions(stocks) {
   container.innerHTML = html;
 }
 
-function renderModel2Stats(data) {
-  var statsEl = document.getElementById('model2-scan-stats');
-  if (!statsEl || !data) return;
-
-  var scan = data.scan_results || {};
-  var predictions = data.predictions || [];
-  var pm = data.post_mortem || {};
-
-  document.getElementById('m2-scanned').textContent = scan.total_scanned || 0;
-  document.getElementById('m2-shortlisted').textContent = scan.shortlisted || 0;
-  document.getElementById('m2-signals').textContent = predictions.length;
-  document.getElementById('m2-hitrate').textContent =
-    pm.hit_rate != null ? (pm.hit_rate * 100).toFixed(1) + '%' : '--';
-
-  statsEl.style.display = 'block';
-}
-
-function renderModel2Predictions(data) {
-  var container = document.getElementById('model2-predictions-container');
-  if (!container) return;
-
-  var predictions = (data && data.predictions) || [];
-  if (!predictions.length) {
-    container.innerHTML =
-      '<p style="color:var(--text-muted);text-align:center;padding:2rem;">No trade signals yet. Run a scan to generate predictions.</p>';
-    return;
-  }
-
-  var html = '<div style="overflow-x:auto;">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
-    '<thead><tr style="border-bottom:2px solid var(--border);text-align:left;">' +
-    '<th style="padding:0.5rem;">Ticker</th>' +
-    '<th style="padding:0.5rem;">Direction</th>' +
-    '<th style="padding:0.5rem;">Confidence</th>' +
-    '<th style="padding:0.5rem;">Edge</th>' +
-    '<th style="padding:0.5rem;">Sentiment</th>' +
-    '<th style="padding:0.5rem;">R:R</th>' +
-    '<th style="padding:0.5rem;">Position %</th>' +
-    '<th style="padding:0.5rem;">Entry</th>' +
-    '<th style="padding:0.5rem;">Stop</th>' +
-    '<th style="padding:0.5rem;">Target</th>' +
-    '</tr></thead><tbody>';
-
-  predictions.forEach(function (p) {
-    var dirColor = p.direction === 'LONG' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-    var dirIcon = p.direction === 'LONG' ? '&#9650;' : '&#9660;';
-    var confBar = Math.min(p.confidence || 0, 10);
-    var confColor = confBar >= 7 ? 'var(--green, #22c55e)' : confBar >= 4 ? 'var(--yellow, #eab308)' : 'var(--red, #ef4444)';
-
-    html += '<tr style="border-bottom:1px solid var(--border);">' +
-      '<td style="padding:0.5rem;font-weight:600;">' +
-        '<a href="#" onclick="goAnalyze(\'' + escapeHtml(p.ticker) + '\');return false;" ' +
-        'style="color:inherit;text-decoration:none;cursor:pointer;" title="Click to run AI Analysis for ' + escapeHtml(p.ticker) + '">' +
-        escapeHtml(p.ticker) + '</a>' +
-        '<div style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(p.name || '') + '</div></td>' +
-      '<td style="padding:0.5rem;color:' + dirColor + ';font-weight:600;">' + dirIcon + ' ' + escapeHtml(p.direction) + '</td>' +
-      '<td style="padding:0.5rem;">' +
-        '<div style="display:flex;align-items:center;gap:0.5rem;">' +
-        '<div style="width:60px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">' +
-        '<div style="width:' + (confBar * 10) + '%;height:100%;background:' + confColor + ';border-radius:3px;"></div></div>' +
-        '<span>' + confBar + '/10</span></div></td>' +
-      '<td style="padding:0.5rem;color:' + dirColor + ';">' + (p.edge_pct > 0 ? '+' : '') + (p.edge_pct || 0).toFixed(1) + '%</td>' +
-      '<td style="padding:0.5rem;">' + (p.sentiment_score || 0).toFixed(2) + '</td>' +
-      '<td style="padding:0.5rem;">' + (p.risk_reward || 0).toFixed(1) + ':1</td>' +
-      '<td style="padding:0.5rem;">' + (p.position_size_pct || 0).toFixed(1) + '%</td>' +
-      '<td style="padding:0.5rem;">$' + (p.current_price || 0).toFixed(2) + '</td>' +
-      '<td style="padding:0.5rem;color:var(--red, #ef4444);">$' + (p.stop_loss || 0).toFixed(2) + '</td>' +
-      '<td style="padding:0.5rem;color:var(--green, #22c55e);">$' + (p.take_profit || 0).toFixed(2) + '</td>' +
-      '</tr>';
-
-    /* Full rationale row */
-    var ratParts = [];
-    if (p.entry_reason) ratParts.push(p.entry_reason);
-    if (p.volume_ratio) ratParts.push('Volume ' + p.volume_ratio.toFixed(1) + 'x avg');
-    if (p.atr_ratio) ratParts.push('ATR spike ' + p.atr_ratio.toFixed(1) + 'x');
-    if (p.news_sentiment_score) ratParts.push('News sentiment: ' + (p.news_sentiment_score > 0 ? 'positive' : p.news_sentiment_score < 0 ? 'negative' : 'neutral') + ' (' + p.news_sentiment_score + ')');
-    if (p.analyst_gap_pct) ratParts.push('Analyst target gap: ' + (p.analyst_gap_pct > 0 ? '+' : '') + p.analyst_gap_pct.toFixed(1) + '%');
-    if (p.rsi) ratParts.push('RSI: ' + p.rsi.toFixed(0));
-    var rationale = ratParts.join(' | ');
-    if (rationale) {
-      html += '<tr style="border-bottom:1px solid var(--border);background:var(--bg-card);">' +
-        '<td colspan="10" style="padding:0.4rem 0.5rem 0.5rem;font-size:0.78rem;color:var(--text-muted);line-height:1.4;">' +
-        '&#x1F4AC; <strong>Rationale:</strong> ' + escapeHtml(rationale) + '</td></tr>';
-    }
-  });
-
-  html += '</tbody></table></div>';
-
-  if (data.generated_at) {
-    html += '<p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem;">Generated: ' +
-      escapeHtml(data.generated_at) + '</p>';
-  }
-
-  container.innerHTML = html;
-}
-
-function renderModel2PostMortem(pm) {
-  var el = document.getElementById('model2-postmortem');
-  if (!el) return;
-
-  if (!pm || (!pm.total_past && !pm.evaluated)) {
-    el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">No historical data yet. Run scans to build track record.</p>';
-    return;
-  }
-
-  var hitColor = (pm.hit_rate || 0) >= 0.5 ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-  var avgColor = (pm.avg_return || 0) >= 0 ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-
-  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;">' +
-    '<div class="stat-card"><div class="stat-value">' + (pm.total_past || 0) + '</div><div class="stat-label">Total Predictions</div></div>' +
-    '<div class="stat-card"><div class="stat-value">' + (pm.evaluated || 0) + '</div><div class="stat-label">Evaluated</div></div>' +
-    '<div class="stat-card"><div class="stat-value" style="color:' + hitColor + ';">' + ((pm.hit_rate || 0) * 100).toFixed(1) + '%</div><div class="stat-label">Hit Rate</div></div>' +
-    '<div class="stat-card"><div class="stat-value" style="color:' + avgColor + ';">' + (pm.avg_return >= 0 ? '+' : '') + (pm.avg_return || 0).toFixed(2) + '%</div><div class="stat-label">Avg Return</div></div>' +
-    '</div>';
-
-  if (pm.best_trade) {
-    html += '<p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.75rem;">Best: ' + escapeHtml(pm.best_trade) + '</p>';
-  }
-  if (pm.worst_trade) {
-    html += '<p style="font-size:0.8rem;color:var(--text-muted);">Worst: ' + escapeHtml(pm.worst_trade) + '</p>';
-  }
-
-  el.innerHTML = html;
-}
-
-async function loadModelComparison() {
-  var container = document.getElementById('model-compare-container');
-  if (!container) return;
-
-  try {
-    var response = await fetch('/api/models/compare');
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    var result = await response.json();
-    if (!result.data) return;
-
-    renderModelComparison(result.data, container);
-  } catch (err) {
-    console.error('Failed to load model comparison:', err);
-    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">Could not load comparison data.</p>';
-  }
-}
-
-function renderModelComparison(data, container) {
-  var comparison = data.comparison || [];
-  if (!comparison.length) {
-    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">No comparison data available. Need predictions from both models.</p>';
-    return;
-  }
-
-  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1rem;">' +
-    '<div class="stat-card"><div class="stat-value">' + (data.model1_count || 0) + '</div><div class="stat-label">Model 1 Signals</div></div>' +
-    '<div class="stat-card"><div class="stat-value">' + (data.model2_count || 0) + '</div><div class="stat-label">Model 2 Signals</div></div>' +
-    '<div class="stat-card"><div class="stat-value">' + (data.both_models || 0) + '</div><div class="stat-label">Overlap</div></div>' +
-    '</div>';
-
-  html += '<div style="overflow-x:auto;">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
-    '<thead><tr style="border-bottom:2px solid var(--border);text-align:left;">' +
-    '<th style="padding:0.5rem;">Ticker</th>' +
-    '<th style="padding:0.5rem;">Model 1 (LightGBM)</th>' +
-    '<th style="padding:0.5rem;">Model 2 (Sentiment)</th>' +
-    '<th style="padding:0.5rem;">Agreement</th>' +
-    '</tr></thead><tbody>';
-
-  comparison.forEach(function (c) {
-    var m1Html = '--';
-    var m2Html = '--';
-    var agreeHtml = '<span style="color:var(--text-muted);">N/A</span>';
-
-    if (c.model1) {
-      var m1Color = c.model1.trend === 'up' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-      m1Html = '<span style="color:' + m1Color + ';font-weight:600;">' +
-        (c.model1.trend === 'up' ? '&#9650; Bullish' : '&#9660; Bearish') +
-        '</span><div style="font-size:0.75rem;color:var(--text-muted);">Signal: ' +
-        (c.model1.signal * 100).toFixed(2) + '% | Score: ' + (c.model1.combined_score || 0).toFixed(2) + '</div>';
-    }
-
-    if (c.model2) {
-      var m2Color = c.model2.direction === 'LONG' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-      m2Html = '<span style="color:' + m2Color + ';font-weight:600;">' +
-        (c.model2.direction === 'LONG' ? '&#9650; LONG' : '&#9660; SHORT') +
-        '</span><div style="font-size:0.75rem;color:var(--text-muted);">Conf: ' +
-        (c.model2.confidence || 0) + '/10 | Edge: ' + (c.model2.edge_pct || 0).toFixed(1) + '%</div>';
-    }
-
-    if (c.models_agree !== undefined) {
-      agreeHtml = c.models_agree
-        ? '<span style="color:var(--green, #22c55e);font-weight:600;">&#10003; Agree</span>'
-        : '<span style="color:var(--yellow, #eab308);font-weight:600;">&#10007; Disagree</span>';
-    }
-
-    html += '<tr style="border-bottom:1px solid var(--border);">' +
-      '<td style="padding:0.5rem;font-weight:600;">' +
-        '<a href="#" onclick="goAnalyze(\'' + escapeHtml(c.ticker) + '\');return false;" ' +
-        'style="color:inherit;text-decoration:none;cursor:pointer;" title="Click to analyze ' + escapeHtml(c.ticker) + '">' +
-        escapeHtml(c.ticker) + '</a></td>' +
-      '<td style="padding:0.5rem;">' + m1Html + '</td>' +
-      '<td style="padding:0.5rem;">' + m2Html + '</td>' +
-      '<td style="padding:0.5rem;">' + agreeHtml + '</td>' +
-      '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
-}
 
 /* ============================================================
    Analysis Method Selector
@@ -2994,7 +2725,6 @@ function setAnalysisMethod(method) {
       ai: t('ai.claude.desc'),
       factors: t('ai.factors.desc'),
       model1: t('ai.model1.desc'),
-      model2: t('ai.model2.desc'),
     };
     descEl.textContent = descriptions[method] || '';
   }
@@ -3003,8 +2733,7 @@ function setAnalysisMethod(method) {
   var loadingTexts = {
     ai: 'Analyzing with Claude Opus 4.6... This may take 15-30 seconds.',
     factors: 'Computing factor exposures across 12 categories...',
-    model1: 'Loading LightGBM quant predictions...',
-    model2: 'Running sentiment anomaly scan...',
+    model1: 'Running Quantitative Signal Engine...',
   };
   var loadTextEl = document.getElementById('ai-loading-text');
   if (loadTextEl) loadTextEl.textContent = loadingTexts[method] || '';
@@ -3013,12 +2742,10 @@ function setAnalysisMethod(method) {
   var aiResults = document.getElementById('ai-results');
   var factorsResults = document.getElementById('factors-results');
   var model1Results = document.getElementById('model1-results');
-  var model2Results = document.getElementById('model2-results');
 
   if (aiResults) aiResults.classList.add('hidden');
   if (factorsResults) factorsResults.classList.add('hidden');
   if (model1Results) model1Results.classList.add('hidden');
-  if (model2Results) model2Results.classList.add('hidden');
 
   /* Show/hide factor section based on method */
   var factorsSection = document.querySelector('[aria-labelledby="factors-label"]');
@@ -3038,9 +2765,6 @@ function setAnalysisMethod(method) {
       if (quickBtn) quickBtn.style.display = 'none';
     } else if (method === 'model1') {
       analyzeBtn.textContent = 'Load Predictions';
-      if (quickBtn) quickBtn.style.display = 'none';
-    } else if (method === 'model2') {
-      analyzeBtn.textContent = 'Scan & Analyze';
       if (quickBtn) quickBtn.style.display = 'none';
     }
   }
@@ -3166,149 +2890,7 @@ function renderModel1Table(stocks, highlightTicker) {
 }
 
 /* ============================================================
-   Model 2: Per-Stock Sentiment Analysis
-   ============================================================ */
-
-async function runModel2StockAnalysis(ticker) {
-  var loading = document.getElementById('ai-loading');
-  var container = document.getElementById('model2-results');
-  var resultEl = document.getElementById('model2-stock-result');
-  var analyzeBtn = document.getElementById('ai-analyze-btn');
-
-  if (loading) loading.classList.remove('hidden');
-  if (container) container.classList.add('hidden');
-  if (analyzeBtn) analyzeBtn.disabled = true;
-
-  try {
-    /* Fetch existing predictions first, then scan if needed */
-    var response = await fetch('/api/model2/predictions');
-    var result = response.ok ? await response.json() : { data: null };
-    var predictions = (result.data && result.data.predictions) || [];
-
-    /* Check if ticker is in existing predictions */
-    var stockPred = predictions.find(function(p) {
-      return p.ticker && p.ticker.toUpperCase() === ticker.toUpperCase();
-    });
-
-    /* If not found, run a fresh scan */
-    if (!stockPred && predictions.length === 0) {
-      var scanResponse = await fetch('/api/model2/scan', { method: 'POST' });
-      if (scanResponse.ok) {
-        var scanResult = await scanResponse.json();
-        predictions = (scanResult.data && scanResult.data.predictions) || [];
-        stockPred = predictions.find(function(p) {
-          return p.ticker && p.ticker.toUpperCase() === ticker.toUpperCase();
-        });
-      }
-    }
-
-    if (loading) loading.classList.add('hidden');
-    if (analyzeBtn) analyzeBtn.disabled = false;
-    if (container) container.classList.remove('hidden');
-
-    if (!stockPred) {
-      resultEl.innerHTML =
-        '<div class="ai-error">' + escapeHtml(t('model2.no.data')) + '</div>' +
-        (predictions.length > 0
-          ? '<h3 style="font-size:0.938rem;margin:20px 0 12px;color:var(--text-secondary);">Active Signals</h3>' + renderModel2Table(predictions)
-          : '');
-      return;
-    }
-
-    var dirColor = stockPred.direction === 'LONG' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-    var dirIcon = stockPred.direction === 'LONG' ? '\u25B2' : '\u25BC';
-
-    var html =
-      '<div class="ai-report-header" style="margin-bottom:1.5rem;">' +
-        '<div class="ai-rating-section">' +
-          '<div class="ai-rating-badge-lg" style="background:' + dirColor + ';color:#fff;padding:8px 20px;border-radius:8px;font-size:1.1rem;">' +
-            dirIcon + ' ' + escapeHtml(stockPred.direction) + '</div>' +
-          '<div style="margin-top:8px;">' +
-            '<span style="font-size:1.5rem;font-weight:700;">' + escapeHtml(ticker) + '</span>' +
-            '<span style="color:var(--text-muted);margin-left:8px;">' + escapeHtml(stockPred.name || '') + '</span>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.5rem;">' +
-        '<div class="stat-card"><div class="stat-value">' + (stockPred.confidence || 0) + '/10</div><div class="stat-label">Confidence</div></div>' +
-        '<div class="stat-card"><div class="stat-value" style="color:' + dirColor + ';">' + (stockPred.edge_pct > 0 ? '+' : '') + (stockPred.edge_pct || 0).toFixed(1) + '%</div><div class="stat-label">Edge</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + (stockPred.sentiment_score || 0).toFixed(2) + '</div><div class="stat-label">Sentiment Score</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + (stockPred.risk_reward || 0).toFixed(1) + ':1</div><div class="stat-label">Risk/Reward</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + (stockPred.position_size_pct || 0).toFixed(1) + '%</div><div class="stat-label">Position Size</div></div>' +
-        '<div class="stat-card"><div class="stat-value">$' + (stockPred.current_price || 0).toFixed(2) + '</div><div class="stat-label">Entry Price</div></div>' +
-        '<div class="stat-card"><div class="stat-value" style="color:var(--red, #ef4444);">$' + (stockPred.stop_loss || 0).toFixed(2) + '</div><div class="stat-label">Stop Loss</div></div>' +
-        '<div class="stat-card"><div class="stat-value" style="color:var(--green, #22c55e);">$' + (stockPred.take_profit || 0).toFixed(2) + '</div><div class="stat-label">Take Profit</div></div>' +
-      '</div>';
-
-    /* Rationale */
-    var ratParts = [];
-    if (stockPred.entry_reason) ratParts.push(stockPred.entry_reason);
-    if (stockPred.volume_ratio) ratParts.push('Volume ' + stockPred.volume_ratio.toFixed(1) + 'x avg');
-    if (stockPred.atr_ratio) ratParts.push('ATR spike ' + stockPred.atr_ratio.toFixed(1) + 'x');
-    if (stockPred.rsi) ratParts.push('RSI: ' + stockPred.rsi.toFixed(0));
-    if (stockPred.analyst_gap_pct) ratParts.push('Analyst target gap: ' + (stockPred.analyst_gap_pct > 0 ? '+' : '') + stockPred.analyst_gap_pct.toFixed(1) + '%');
-
-    if (ratParts.length) {
-      html += '<div style="background:var(--bg-card);border-radius:8px;padding:1rem;margin-bottom:1.5rem;">' +
-        '<strong>Rationale:</strong> ' + escapeHtml(ratParts.join(' | ')) + '</div>';
-    }
-
-    /* Show all active signals */
-    if (predictions.length > 1) {
-      html += '<h3 style="font-size:0.938rem;margin:20px 0 12px;color:var(--text-secondary);">All Active Signals</h3>' +
-        renderModel2Table(predictions, ticker);
-    }
-
-    resultEl.innerHTML = html;
-    updateSectionTimestamp('ai');
-  } catch (err) {
-    if (loading) loading.classList.add('hidden');
-    if (analyzeBtn) analyzeBtn.disabled = false;
-    if (container) container.classList.remove('hidden');
-    resultEl.innerHTML = '<div class="ai-error">Failed to load Model 2 analysis: ' + escapeHtml(err.message) + '</div>';
-  }
-}
-
-function renderModel2Table(predictions, highlightTicker) {
-  if (!predictions || !predictions.length) return '<p style="color:var(--text-muted);">No signals available.</p>';
-
-  var html = '<div style="overflow-x:auto;">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
-    '<thead><tr style="border-bottom:2px solid var(--border);text-align:left;">' +
-    '<th style="padding:0.5rem;">Ticker</th>' +
-    '<th style="padding:0.5rem;">Direction</th>' +
-    '<th style="padding:0.5rem;">Confidence</th>' +
-    '<th style="padding:0.5rem;">Edge</th>' +
-    '<th style="padding:0.5rem;">R:R</th>' +
-    '<th style="padding:0.5rem;">Entry</th>' +
-    '<th style="padding:0.5rem;">Stop</th>' +
-    '<th style="padding:0.5rem;">Target</th>' +
-    '</tr></thead><tbody>';
-
-  predictions.forEach(function(p) {
-    var dirColor = p.direction === 'LONG' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
-    var isHighlighted = highlightTicker && p.ticker && p.ticker.toUpperCase() === highlightTicker.toUpperCase();
-    var rowBg = isHighlighted ? 'background:var(--accent-blue-dim);' : '';
-
-    html += '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">' +
-      '<td style="padding:0.5rem;font-weight:600;">' + escapeHtml(p.ticker) + '</td>' +
-      '<td style="padding:0.5rem;color:' + dirColor + ';font-weight:600;">' +
-        (p.direction === 'LONG' ? '\u25B2' : '\u25BC') + ' ' + escapeHtml(p.direction) + '</td>' +
-      '<td style="padding:0.5rem;">' + (p.confidence || 0) + '/10</td>' +
-      '<td style="padding:0.5rem;color:' + dirColor + ';">' + (p.edge_pct > 0 ? '+' : '') + (p.edge_pct || 0).toFixed(1) + '%</td>' +
-      '<td style="padding:0.5rem;">' + (p.risk_reward || 0).toFixed(1) + ':1</td>' +
-      '<td style="padding:0.5rem;">$' + (p.current_price || 0).toFixed(2) + '</td>' +
-      '<td style="padding:0.5rem;color:var(--red, #ef4444);">$' + (p.stop_loss || 0).toFixed(2) + '</td>' +
-      '<td style="padding:0.5rem;color:var(--green, #22c55e);">$' + (p.take_profit || 0).toFixed(2) + '</td>' +
-      '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-  return html;
-}
-
-/* ============================================================
-   Model Comparison i18n Updates
+   Method Comparison i18n Updates
    ============================================================ */
 
 function updateModelComparisonLabels() {
@@ -3321,44 +2903,36 @@ function updateModelComparisonLabels() {
   if (el) el.textContent = t('ai.factors.desc');
   el = document.getElementById('mc-model1-desc');
   if (el) el.textContent = t('ai.model1.desc');
-  el = document.getElementById('mc-model2-desc');
-  if (el) el.textContent = t('ai.model2.desc');
   el = document.getElementById('mc-claude-type');
   if (el) el.textContent = t('ai.claude.type');
   el = document.getElementById('mc-factors-type');
   if (el) el.textContent = t('ai.factors.type');
   el = document.getElementById('mc-model1-type');
   if (el) el.textContent = t('ai.model1.type');
-  el = document.getElementById('mc-model2-type');
-  if (el) el.textContent = t('ai.model2.type');
   el = document.getElementById('mc-claude-time');
   if (el) el.textContent = t('ai.claude.timeframe');
   el = document.getElementById('mc-factors-time');
   if (el) el.textContent = t('ai.factors.timeframe');
   el = document.getElementById('mc-model1-time');
   if (el) el.textContent = t('ai.model1.timeframe');
-  el = document.getElementById('mc-model2-time');
-  if (el) el.textContent = t('ai.model2.timeframe');
   el = document.getElementById('mc-claude-best');
   if (el) el.textContent = t('ai.claude.bestfor');
   el = document.getElementById('mc-factors-best');
   if (el) el.textContent = t('ai.factors.bestfor');
   el = document.getElementById('mc-model1-best');
   if (el) el.textContent = t('ai.model1.bestfor');
-  el = document.getElementById('mc-model2-best');
-  if (el) el.textContent = t('ai.model2.bestfor');
 
   /* Update method selector button labels */
   document.querySelectorAll('.ai-method-selector .toggle-btn').forEach(function(btn) {
     var method = btn.getAttribute('data-method');
-    var keys = { ai: 'ai.method.claude', factors: 'ai.method.factors', model1: 'ai.method.model1', model2: 'ai.method.model2' };
+    var keys = { ai: 'ai.method.claude', factors: 'ai.method.factors', model1: 'ai.method.model1' };
     if (keys[method]) btn.textContent = t(keys[method]);
   });
 
   /* Update description for current method */
   var descEl = document.getElementById('ai-method-description');
   if (descEl) {
-    var descKeys = { ai: 'ai.claude.desc', factors: 'ai.factors.desc', model1: 'ai.model1.desc', model2: 'ai.model2.desc' };
+    var descKeys = { ai: 'ai.claude.desc', factors: 'ai.factors.desc', model1: 'ai.model1.desc' };
     descEl.textContent = t(descKeys[activeAnalysisMethod] || 'ai.claude.desc');
   }
 }

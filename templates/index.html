@@ -8,6 +8,177 @@
   <title>AlphaEdge HK</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    /* ── Consulting Design Overrides ── */
+    .consulting-section-number {
+      display: block;
+      font-size: 0.688rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted, #8b8fa3);
+      margin-bottom: 4px;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+    .consulting-accent-bar {
+      width: 32px;
+      height: 3px;
+      background: #3b82f6;
+      border-radius: 2px;
+      margin-bottom: 12px;
+    }
+    .consulting-accent-bar--purple { background: #8b5cf6; }
+    .consulting-accent-bar--indigo { background: #4169E1; }
+    .consulting-accent-bar--slate { background: #64748b; }
+    .consulting-accent-bar--emerald { background: #10b981; }
+    .consulting-accent-bar--amber { background: #f59e0b; }
+    .consulting-accent-bar--rose { background: #f43f5e; }
+    .consulting-section-divider {
+      border: none;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      margin: 32px 0;
+    }
+    .consulting-method-label {
+      display: inline-block;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 3px;
+      margin-bottom: 8px;
+    }
+    .consulting-method-label--ai {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .consulting-method-label--factors {
+      color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+    .consulting-method-label--quant {
+      color: #4169E1;
+      background: rgba(65, 105, 225, 0.08);
+      border: 1px solid rgba(65, 105, 225, 0.2);
+    }
+
+    /* Model comparison consulting cards */
+    .mc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .mc-card {
+      border-radius: 8px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .mc-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .mc-card--ai {
+      background: rgba(59, 130, 246, 0.04);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+    .mc-card--ai::before { background: #3b82f6; }
+    .mc-card--factors {
+      background: rgba(139, 92, 246, 0.04);
+      border: 1px solid rgba(139, 92, 246, 0.15);
+    }
+    .mc-card--factors::before { background: #8b5cf6; }
+    .mc-card--quant {
+      background: rgba(65, 105, 225, 0.04);
+      border: 1px solid rgba(65, 105, 225, 0.15);
+    }
+    .mc-card--quant::before { background: #4169E1; }
+    .mc-card-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin: 8px 0 6px;
+      letter-spacing: -0.01em;
+    }
+    .mc-card-title--ai { color: #3b82f6; }
+    .mc-card-title--factors { color: #8b5cf6; }
+    .mc-card-title--quant { color: #4169E1; }
+    .mc-card-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted, #8b8fa3);
+      margin: 0 0 0.75rem;
+      line-height: 1.5;
+    }
+    .mc-card-meta {
+      font-size: 0.72rem;
+      color: var(--text-secondary, #a1a5b7);
+      line-height: 1.7;
+    }
+    .mc-card-meta strong {
+      color: var(--text-secondary, #a1a5b7);
+    }
+
+    /* Data flow diagrams */
+    .mc-flow-diagram {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .mc-flow-diagram svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .mc-flow-diagram text {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* Section header consulting style */
+    .section-header-consulting {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .section-header-consulting .section-header-text {
+      flex: 1;
+    }
+    .section-header-consulting .section-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Footer consulting style */
+    .footer-consulting {
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      padding-top: 24px;
+      margin-top: 16px;
+    }
+    .footer-powered-stack {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .footer-powered-item {
+      font-size: 0.72rem;
+      color: var(--text-muted, #8b8fa3);
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 768px) {
+      .mc-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -54,11 +225,14 @@
     <!-- ====== TAB: Overview ====== -->
     <div class="tab-panel active" id="tab-overview" role="tabpanel">
 
-      <!-- Market Overview -->
+      <!-- 01 — Market Overview -->
       <section class="section" id="overview-section" aria-labelledby="overview-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4CA;</span>
-          <h2 id="overview-label">Market Overview</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">01 / Market Overview</span>
+            <div class="consulting-accent-bar"></div>
+            <h2 id="overview-label">Market Overview</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="overview-timestamp"></span>
             <button type="button" class="btn btn-sm btn-refresh" data-refresh="overview" aria-label="Refresh overview">Refresh</button>
@@ -70,11 +244,16 @@
         </div>
       </section>
 
-      <!-- Economic Calendar -->
+      <hr class="consulting-section-divider">
+
+      <!-- 02 — Economic Calendar -->
       <section class="section" id="calendar-section" aria-labelledby="calendar-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4C5;</span>
-          <h2 id="calendar-label">Upcoming Data Releases</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">02 / Data Releases</span>
+            <div class="consulting-accent-bar consulting-accent-bar--purple"></div>
+            <h2 id="calendar-label">Upcoming Data Releases</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="calendar-timestamp"></span>
             <button type="button" class="btn btn-sm btn-refresh" data-refresh="calendar" aria-label="Refresh calendar">Refresh</button>
@@ -84,11 +263,16 @@
         <div class="calendar-grid" id="calendar-grid"></div>
       </section>
 
-      <!-- Latest News (7 days) -->
+      <hr class="consulting-section-divider">
+
+      <!-- 03 — Market News -->
       <section class="section" id="overview-news-section" aria-labelledby="overview-news-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4F0;</span>
-          <h2 id="overview-news-label">Market News <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(Last 7 Days)</span></h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">03 / Market Intelligence</span>
+            <div class="consulting-accent-bar consulting-accent-bar--indigo"></div>
+            <h2 id="overview-news-label">Market News <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(Last 7 Days)</span></h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="overview-news-timestamp"></span>
             <button type="button" class="btn btn-sm btn-refresh" data-refresh="overview-news" aria-label="Refresh news">Refresh</button>
@@ -98,11 +282,16 @@
         <div class="overview-news-grid" id="overview-news-grid"></div>
       </section>
 
-      <!-- Alternative Data Signals -->
+      <hr class="consulting-section-divider">
+
+      <!-- 04 — Alternative Data Signals -->
       <section class="section" id="alt-data-section" aria-labelledby="alt-data-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F50D;</span>
-          <h2 id="alt-data-label">Alternative Data Signals</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">04 / Alternative Data</span>
+            <div class="consulting-accent-bar consulting-accent-bar--emerald"></div>
+            <h2 id="alt-data-label">Alternative Data Signals</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="alt-data-timestamp"></span>
           </div>
@@ -116,11 +305,16 @@
         </div>
       </section>
 
-      <!-- Data Sources Status -->
+      <hr class="consulting-section-divider">
+
+      <!-- 05 — Data Sources -->
       <section class="section" id="providers-section" aria-labelledby="providers-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4E1;</span>
-          <h2 id="providers-label">Data Sources</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">05 / Infrastructure</span>
+            <div class="consulting-accent-bar consulting-accent-bar--slate"></div>
+            <h2 id="providers-label">Data Sources</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="providers-timestamp"></span>
           </div>
@@ -128,11 +322,16 @@
         <div class="providers-grid" id="providers-grid" role="status" aria-live="polite"></div>
       </section>
 
-      <!-- Sector Breakdown -->
+      <hr class="consulting-section-divider">
+
+      <!-- 06 — Sector Breakdown -->
       <section class="section" aria-labelledby="sector-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4CA;</span>
-          <h2 id="sector-label">Sector Breakdown</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">06 / Sector Analysis</span>
+            <div class="consulting-accent-bar consulting-accent-bar--amber"></div>
+            <h2 id="sector-label">Sector Breakdown</h2>
+          </div>
         </div>
         <div class="sector-chart" id="sector-chart" role="img" aria-label="Sector signal breakdown chart"></div>
       </section>
@@ -143,8 +342,11 @@
 
       <section class="section" id="ai-section" aria-labelledby="ai-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F9E0;</span>
-          <h2 id="ai-label">AI Stock Analysis</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">01 / Investment Analysis</span>
+            <div class="consulting-accent-bar"></div>
+            <h2 id="ai-label">AI Stock Analysis</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="ai-timestamp"></span>
           </div>
@@ -172,14 +374,13 @@
 
           <!-- Analysis Method Selector -->
           <div class="ai-method-selector" role="tablist" aria-label="Analysis method">
-            <button type="button" class="toggle-btn active" data-method="ai" role="tab" aria-selected="true">AI (Claude)</button>
-            <button type="button" class="toggle-btn" data-method="factors" role="tab" aria-selected="false" id="method-factors-btn">12-Factor Analysis</button>
-            <button type="button" class="toggle-btn" data-method="model1" role="tab" aria-selected="false" id="method-model1-btn">Model 1: Quant Engine</button>
-            <button type="button" class="toggle-btn" data-method="model2" role="tab" aria-selected="false" id="method-model2-btn">Model 2: Sentiment</button>
+            <button type="button" class="toggle-btn active" data-method="ai" role="tab" aria-selected="true">AI Strategic Analysis</button>
+            <button type="button" class="toggle-btn" data-method="factors" role="tab" aria-selected="false" id="method-factors-btn">Multi-Factor Scoring</button>
+            <button type="button" class="toggle-btn" data-method="model1" role="tab" aria-selected="false" id="method-model1-btn">Quantitative Signal Engine</button>
           </div>
 
           <p class="ai-description" id="ai-method-description">
-            Venture fund-grade analysis: fundamentals, technicals, macro, insider activity, institutional holdings, AI model signals, and upcoming events.
+            Claude Opus-powered comprehensive investment thesis with fundamentals, technicals, macro, and institutional data integration.
           </p>
         </div>
 
@@ -205,72 +406,160 @@
           <div id="model1-stock-result"></div>
         </div>
 
-        <!-- Model 2 (Sentiment) Results -->
-        <div class="ai-results hidden" id="model2-results">
-          <div id="model2-stock-result"></div>
-        </div>
-
-        <!-- Model Comparison Table -->
+        <!-- Model Comparison -->
         <div class="ai-model-comparison" id="ai-model-comparison">
-          <h3 style="font-size:0.938rem;margin-bottom:1rem;color:var(--text-secondary);" id="model-comparison-title">Model Comparison</h3>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;">
-            <div style="background:linear-gradient(135deg,#3b82f608,#3b82f610);border:2px solid #3b82f640;border-radius:12px;padding:1rem;">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-                <span style="font-size:1.1rem;">&#x1F9E0;</span>
-                <strong style="color:#3b82f6;">AI (Claude)</strong>
-              </div>
-              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-claude-desc">Venture fund-grade deep analysis using Claude Opus 4.6. Fundamentals, technicals, macro, insider &amp; institutional data.</p>
-              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+          <div style="margin-bottom:1.25rem;">
+            <span class="consulting-section-number">Methodology Comparison</span>
+            <div class="consulting-accent-bar consulting-accent-bar--slate"></div>
+            <h3 style="font-size:0.938rem;color:var(--text-secondary);margin:0;" id="model-comparison-title">Analysis Methods</h3>
+          </div>
+
+          <div class="mc-grid">
+            <!-- Card 1: AI Strategic Analysis -->
+            <div class="mc-card mc-card--ai">
+              <span class="consulting-method-label consulting-method-label--ai">Method A</span>
+              <div class="mc-card-title mc-card-title--ai">AI Strategic Analysis</div>
+              <p class="mc-card-desc" id="mc-claude-desc">Claude Opus-powered comprehensive investment thesis with fundamentals, technicals, macro, and institutional data integration.</p>
+              <div class="mc-card-meta">
                 <div><strong id="mc-type-label">Type:</strong> <span id="mc-claude-type">Natural Language AI</span></div>
                 <div><strong id="mc-time-label">Timeframe:</strong> <span id="mc-claude-time">6-month strategic</span></div>
                 <div><strong id="mc-best-label">Best for:</strong> <span id="mc-claude-best">Strategic positioning, deep analysis</span></div>
               </div>
-            </div>
-            <div style="background:linear-gradient(135deg,#8b5cf608,#8b5cf610);border:2px solid #8b5cf640;border-radius:12px;padding:1rem;">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-                <span style="font-size:1.1rem;">&#x1F52C;</span>
-                <strong style="color:#8b5cf6;">12-Factor Analysis</strong>
+              <!-- Data Flow Diagram -->
+              <div class="mc-flow-diagram">
+                <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg" aria-label="AI Strategic Analysis data flow diagram">
+                  <!-- Input sources -->
+                  <rect x="2" y="8" width="62" height="18" rx="3" fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="33" y="20" text-anchor="middle" font-size="6" fill="#3b82f6" font-weight="600">Fundamentals</text>
+                  <rect x="2" y="30" width="62" height="18" rx="3" fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="33" y="42" text-anchor="middle" font-size="6" fill="#3b82f6" font-weight="600">Technicals</text>
+                  <rect x="2" y="52" width="62" height="18" rx="3" fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="33" y="64" text-anchor="middle" font-size="6" fill="#3b82f6" font-weight="600">Macro Data</text>
+                  <rect x="2" y="74" width="62" height="18" rx="3" fill="none" stroke="#3b82f6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="33" y="86" text-anchor="middle" font-size="6" fill="#3b82f6" font-weight="600">Institutional</text>
+                  <!-- Arrows to processor -->
+                  <line x1="66" y1="17" x2="120" y2="42" stroke="#3b82f6" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="66" y1="39" x2="120" y2="42" stroke="#3b82f6" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="66" y1="61" x2="120" y2="52" stroke="#3b82f6" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="66" y1="83" x2="120" y2="52" stroke="#3b82f6" stroke-width="0.6" opacity="0.4"/>
+                  <!-- Processor -->
+                  <rect x="122" y="30" width="80" height="34" rx="4" fill="rgba(59,130,246,0.08)" stroke="#3b82f6" stroke-width="1"/>
+                  <text x="162" y="44" text-anchor="middle" font-size="6.5" fill="#3b82f6" font-weight="700">Claude Opus</text>
+                  <text x="162" y="56" text-anchor="middle" font-size="5.5" fill="#3b82f6" opacity="0.7">Reasoning Engine</text>
+                  <!-- Arrow to output -->
+                  <line x1="204" y1="47" x2="240" y2="47" stroke="#3b82f6" stroke-width="0.8" marker-end="url(#arrowAi)"/>
+                  <defs><marker id="arrowAi" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#3b82f6"/></marker></defs>
+                  <!-- Output -->
+                  <rect x="242" y="28" width="92" height="38" rx="4" fill="rgba(59,130,246,0.06)" stroke="#3b82f6" stroke-width="0.8"/>
+                  <text x="288" y="43" text-anchor="middle" font-size="6" fill="#3b82f6" font-weight="600">Investment Thesis</text>
+                  <text x="288" y="54" text-anchor="middle" font-size="5" fill="#3b82f6" opacity="0.6">Scores / Targets / Risk</text>
+                </svg>
               </div>
-              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-factors-desc">12-category multi-factor model with dynamic regime weighting. Momentum, value, quality, growth, volatility, and more.</p>
-              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+            </div>
+
+            <!-- Card 2: Multi-Factor Scoring -->
+            <div class="mc-card mc-card--factors">
+              <span class="consulting-method-label consulting-method-label--factors">Method B</span>
+              <div class="mc-card-title mc-card-title--factors">Multi-Factor Scoring</div>
+              <p class="mc-card-desc" id="mc-factors-desc">12-category regime-weighted quantitative assessment across momentum, value, quality, growth, volatility, and macro dimensions.</p>
+              <div class="mc-card-meta">
                 <div><strong>Type:</strong> <span id="mc-factors-type">Multi-Factor Model</span></div>
                 <div><strong>Timeframe:</strong> <span id="mc-factors-time">1 week to 24 months</span></div>
                 <div><strong>Best for:</strong> <span id="mc-factors-best">Regime-aware multi-horizon decisions</span></div>
               </div>
-            </div>
-            <div style="background:linear-gradient(135deg,#4169E108,#4169E110);border:2px solid #4169E140;border-radius:12px;padding:1rem;">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-                <span style="font-size:1.1rem;">&#x1F4CA;</span>
-                <strong style="color:#4169E1;">Model 1: Quant</strong>
+              <!-- Data Flow Diagram -->
+              <div class="mc-flow-diagram">
+                <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg" aria-label="Multi-Factor Scoring data flow diagram">
+                  <!-- Input -->
+                  <rect x="2" y="14" width="58" height="18" rx="3" fill="none" stroke="#8b5cf6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="31" y="26" text-anchor="middle" font-size="6" fill="#8b5cf6" font-weight="600">Price Data</text>
+                  <rect x="2" y="36" width="58" height="18" rx="3" fill="none" stroke="#8b5cf6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="31" y="48" text-anchor="middle" font-size="6" fill="#8b5cf6" font-weight="600">Financials</text>
+                  <rect x="2" y="58" width="58" height="18" rx="3" fill="none" stroke="#8b5cf6" stroke-width="0.8" opacity="0.6"/>
+                  <text x="31" y="70" text-anchor="middle" font-size="6" fill="#8b5cf6" font-weight="600">Macro Regime</text>
+                  <!-- Arrows -->
+                  <line x1="62" y1="23" x2="96" y2="38" stroke="#8b5cf6" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="62" y1="45" x2="96" y2="45" stroke="#8b5cf6" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="62" y1="67" x2="96" y2="52" stroke="#8b5cf6" stroke-width="0.6" opacity="0.4"/>
+                  <!-- Step 1: Factor Calc -->
+                  <rect x="98" y="28" width="64" height="34" rx="4" fill="rgba(139,92,246,0.08)" stroke="#8b5cf6" stroke-width="0.8"/>
+                  <text x="130" y="42" text-anchor="middle" font-size="5.5" fill="#8b5cf6" font-weight="700">12 Factor</text>
+                  <text x="130" y="52" text-anchor="middle" font-size="5.5" fill="#8b5cf6" font-weight="700">Categories</text>
+                  <!-- Arrow -->
+                  <line x1="164" y1="45" x2="182" y2="45" stroke="#8b5cf6" stroke-width="0.8" marker-end="url(#arrowF)"/>
+                  <!-- Step 2: Regime Weighting -->
+                  <rect x="184" y="28" width="62" height="34" rx="4" fill="rgba(139,92,246,0.08)" stroke="#8b5cf6" stroke-width="0.8"/>
+                  <text x="215" y="42" text-anchor="middle" font-size="5.5" fill="#8b5cf6" font-weight="700">Regime</text>
+                  <text x="215" y="52" text-anchor="middle" font-size="5.5" fill="#8b5cf6" font-weight="700">Weighting</text>
+                  <!-- Arrow -->
+                  <line x1="248" y1="45" x2="266" y2="45" stroke="#8b5cf6" stroke-width="0.8" marker-end="url(#arrowF)"/>
+                  <defs><marker id="arrowF" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#8b5cf6"/></marker></defs>
+                  <!-- Output -->
+                  <rect x="268" y="28" width="66" height="34" rx="4" fill="rgba(139,92,246,0.06)" stroke="#8b5cf6" stroke-width="0.8"/>
+                  <text x="301" y="42" text-anchor="middle" font-size="6" fill="#8b5cf6" font-weight="600">Composite</text>
+                  <text x="301" y="53" text-anchor="middle" font-size="5" fill="#8b5cf6" opacity="0.6">Score 0-100</text>
+                </svg>
               </div>
-              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-model1-desc">LightGBM + Alpha158 trained on 18yr S&amp;P 500 data. 158 alpha factors, 20-day consensus signals.</p>
-              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+            </div>
+
+            <!-- Card 3: Quantitative Signal Engine -->
+            <div class="mc-card mc-card--quant">
+              <span class="consulting-method-label consulting-method-label--quant">Method C</span>
+              <div class="mc-card-title mc-card-title--quant">Quantitative Signal Engine</div>
+              <p class="mc-card-desc" id="mc-model1-desc">LightGBM machine learning model with Alpha158 feature set trained on 18 years of S&amp;P 500 data.</p>
+              <div class="mc-card-meta">
                 <div><strong>Type:</strong> <span id="mc-model1-type">Quantitative ML</span></div>
                 <div><strong>Timeframe:</strong> <span id="mc-model1-time">20-day forward</span></div>
                 <div><strong>Best for:</strong> <span id="mc-model1-best">Medium-term trends, sector rotation</span></div>
               </div>
-            </div>
-            <div style="background:linear-gradient(135deg,#7c3aed08,#7c3aed10);border:2px solid #7c3aed40;border-radius:12px;padding:1rem;">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-                <span style="font-size:1.1rem;">&#x1F3AF;</span>
-                <strong style="color:#7c3aed;">Model 2: Sentiment</strong>
-              </div>
-              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-model2-desc">5-step anomaly pipeline: volume/ATR spikes, news sentiment, directional edge, Kelly sizing, outcome tracking.</p>
-              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
-                <div><strong>Type:</strong> <span id="mc-model2-type">Behavioral/Anomaly</span></div>
-                <div><strong>Timeframe:</strong> <span id="mc-model2-time">5-20 day catalysts</span></div>
-                <div><strong>Best for:</strong> <span id="mc-model2-best">Short-term momentum, event-driven</span></div>
+              <!-- Data Flow Diagram -->
+              <div class="mc-flow-diagram">
+                <svg viewBox="0 0 340 100" xmlns="http://www.w3.org/2000/svg" aria-label="Quantitative Signal Engine data flow diagram">
+                  <!-- Input -->
+                  <rect x="2" y="18" width="56" height="18" rx="3" fill="none" stroke="#4169E1" stroke-width="0.8" opacity="0.6"/>
+                  <text x="30" y="30" text-anchor="middle" font-size="6" fill="#4169E1" font-weight="600">OHLCV</text>
+                  <rect x="2" y="42" width="56" height="18" rx="3" fill="none" stroke="#4169E1" stroke-width="0.8" opacity="0.6"/>
+                  <text x="30" y="54" text-anchor="middle" font-size="6" fill="#4169E1" font-weight="600">18yr History</text>
+                  <rect x="2" y="66" width="56" height="18" rx="3" fill="none" stroke="#4169E1" stroke-width="0.8" opacity="0.6"/>
+                  <text x="30" y="78" text-anchor="middle" font-size="5.5" fill="#4169E1" font-weight="600">S&amp;P 500 Index</text>
+                  <!-- Arrows -->
+                  <line x1="60" y1="27" x2="88" y2="38" stroke="#4169E1" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="60" y1="51" x2="88" y2="45" stroke="#4169E1" stroke-width="0.6" opacity="0.4"/>
+                  <line x1="60" y1="75" x2="88" y2="52" stroke="#4169E1" stroke-width="0.6" opacity="0.4"/>
+                  <!-- Step 1: Feature Eng -->
+                  <rect x="90" y="28" width="60" height="34" rx="4" fill="rgba(65,105,225,0.08)" stroke="#4169E1" stroke-width="0.8"/>
+                  <text x="120" y="42" text-anchor="middle" font-size="5.5" fill="#4169E1" font-weight="700">Alpha158</text>
+                  <text x="120" y="52" text-anchor="middle" font-size="5" fill="#4169E1" opacity="0.7">158 Features</text>
+                  <!-- Arrow -->
+                  <line x1="152" y1="45" x2="170" y2="45" stroke="#4169E1" stroke-width="0.8" marker-end="url(#arrowQ)"/>
+                  <!-- Step 2: LightGBM -->
+                  <rect x="172" y="28" width="60" height="34" rx="4" fill="rgba(65,105,225,0.08)" stroke="#4169E1" stroke-width="1"/>
+                  <text x="202" y="42" text-anchor="middle" font-size="6" fill="#4169E1" font-weight="700">LightGBM</text>
+                  <text x="202" y="52" text-anchor="middle" font-size="5" fill="#4169E1" opacity="0.7">ML Model</text>
+                  <!-- Arrow -->
+                  <line x1="234" y1="45" x2="252" y2="45" stroke="#4169E1" stroke-width="0.8" marker-end="url(#arrowQ)"/>
+                  <defs><marker id="arrowQ" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#4169E1"/></marker></defs>
+                  <!-- Output -->
+                  <rect x="254" y="28" width="80" height="34" rx="4" fill="rgba(65,105,225,0.06)" stroke="#4169E1" stroke-width="0.8"/>
+                  <text x="294" y="42" text-anchor="middle" font-size="6" fill="#4169E1" font-weight="600">20-Day Signal</text>
+                  <text x="294" y="53" text-anchor="middle" font-size="5" fill="#4169E1" opacity="0.6">Buy / Hold / Sell</text>
+                </svg>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Factor Analysis 因子分析 (moved from separate tab) -->
+      <hr class="consulting-section-divider">
+
+      <!-- 02 — Factor Analysis -->
       <section class="section" aria-labelledby="factors-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F52C;</span>
-          <h2 id="factors-label">Venture Fund Factor Analysis 因子分析</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">02 / Factor Analysis</span>
+            <div class="consulting-accent-bar consulting-accent-bar--purple"></div>
+            <h2 id="factors-label">Venture Fund Factor Analysis</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="factors-timestamp"></span>
           </div>
@@ -291,24 +580,24 @@
           <div class="factors-top-row">
             <!-- Radar Chart -->
             <div class="factor-radar-box">
-              <h3 class="factor-group-title">Factor Exposure Radar 因子雷达图</h3>
+              <h3 class="factor-group-title">Factor Exposure Radar</h3>
               <div class="factor-radar-container">
                 <canvas id="factor-radar-chart" aria-label="Factor radar chart"></canvas>
               </div>
             </div>
             <!-- Group Score Bars -->
             <div class="factor-groups-box">
-              <h3 class="factor-group-title">Group Scores 因子组评分</h3>
+              <h3 class="factor-group-title">Group Scores</h3>
               <div class="factor-group-bars" id="factor-group-bars"></div>
             </div>
           </div>
 
-          <!-- Individual Factor Tables: one per group, shown as expandable panels -->
+          <!-- Individual Factor Tables -->
           <div class="factor-detail-grid" id="factor-detail-grid"></div>
 
-          <!-- Factor Attribution (which groups drive the composite) -->
+          <!-- Factor Attribution -->
           <div class="factor-attribution-box">
-            <h3 class="factor-group-title">Factor Attribution 因子贡献分解</h3>
+            <h3 class="factor-group-title">Factor Attribution</h3>
             <div class="factor-attribution-container">
               <canvas id="factor-attribution-chart" aria-label="Factor attribution chart"></canvas>
             </div>
@@ -316,18 +605,23 @@
 
           <!-- Economic & Macro Data Integration -->
           <div class="factor-macro-box">
-            <h3 class="factor-group-title">Macro Environment Overlay 宏观环境叠加</h3>
+            <h3 class="factor-group-title">Macro Environment Overlay</h3>
             <div class="factor-macro-grid" id="factor-macro-grid"></div>
           </div>
 
         </div>
       </section>
 
-      <!-- Stock Analysis Chart (moved from Charts tab, placed at bottom) -->
+      <hr class="consulting-section-divider">
+
+      <!-- 03 — Stock Analysis Chart -->
       <section class="section" aria-labelledby="chart-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4C8;</span>
-          <h2 id="chart-label">Stock Analysis</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">03 / Technical Chart</span>
+            <div class="consulting-accent-bar consulting-accent-bar--indigo"></div>
+            <h2 id="chart-label">Stock Analysis</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="chart-timestamp"></span>
           </div>
@@ -349,17 +643,17 @@
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="chart-predict-btn" style="display:none">AI Predict</button>
         </div>
-        <div id="tv-chart-wrapper" style="width:100%;background:#131722;border-radius:12px;overflow:hidden;margin-top:12px;">
+        <div id="tv-chart-wrapper" style="width:100%;background:#131722;border-radius:8px;overflow:hidden;margin-top:12px;">
           <div id="tv-price-chart" style="width:100%;height:480px;"></div>
           <div id="tv-volume-chart" style="width:100%;height:120px;border-top:1px solid #2a2e39;"></div>
         </div>
-        <!-- Prediction zone (shown below TV chart) -->
+        <!-- Prediction zone -->
         <div class="prediction-zone hidden" id="chart-prediction-zone">
           <div class="prediction-zone-header">
-            <h3 class="factor-group-title">AI Price Prediction 价格预测</h3>
+            <h3 class="factor-group-title">AI Price Prediction</h3>
             <span class="prediction-zone-ticker" id="prediction-zone-ticker"></span>
           </div>
-          <div id="tv-prediction-chart" style="width:100%;height:360px;background:#131722;border-radius:12px;"></div>
+          <div id="tv-prediction-chart" style="width:100%;height:360px;background:#131722;border-radius:8px;"></div>
           <div class="prediction-levels" id="prediction-levels"></div>
         </div>
       </section>
@@ -369,11 +663,14 @@
     <!-- ====== TAB: Market Data ====== -->
     <div class="tab-panel" id="tab-market" role="tabpanel">
 
-      <!-- Market Sentiment -->
+      <!-- 01 — Market Sentiment -->
       <section class="section" id="sentiment-section" aria-labelledby="sentiment-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F3AF;</span>
-          <h2 id="sentiment-label">Market Sentiment & Fear/Greed</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">01 / Sentiment</span>
+            <div class="consulting-accent-bar"></div>
+            <h2 id="sentiment-label">Market Sentiment &amp; Fear/Greed</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="sentiment-timestamp"></span>
             <button type="button" class="btn btn-sm btn-refresh" data-refresh="sentiment" aria-label="Refresh sentiment">Refresh</button>
@@ -383,26 +680,36 @@
         <div class="sector-rotation-grid" id="sector-rotation-grid"></div>
       </section>
 
-      <!-- Economic Indicators & News -->
+      <hr class="consulting-section-divider">
+
+      <!-- 02 — Economic & Market Signals -->
       <section class="section" aria-labelledby="macro-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F30D;</span>
-          <h2 id="macro-label">Economic & Market Signals</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">02 / Macro Environment</span>
+            <div class="consulting-accent-bar consulting-accent-bar--emerald"></div>
+            <h2 id="macro-label">Economic &amp; Market Signals</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="macro-timestamp"></span>
             <button type="button" class="btn btn-sm btn-refresh" data-refresh="macro" aria-label="Refresh economic data">Refresh</button>
           </div>
         </div>
         <div class="macro-grid" id="macro-grid"></div>
-        <h3 id="news-label" style="font-size:0.938rem;margin:24px 0 12px;color:var(--text-secondary);">Financial & Political News</h3>
+        <h3 id="news-label" style="font-size:0.938rem;margin:24px 0 12px;color:var(--text-secondary);">Financial &amp; Political News</h3>
         <div class="news-feed" id="news-feed" role="feed" aria-label="Financial news"></div>
       </section>
 
-      <!-- Growth Prediction -->
+      <hr class="consulting-section-divider">
+
+      <!-- 03 — Growth Predictions -->
       <section class="section" aria-labelledby="growth-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4B9;</span>
-          <h2 id="growth-label">Growth Predictions</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">03 / Growth Outlook</span>
+            <div class="consulting-accent-bar consulting-accent-bar--amber"></div>
+            <h2 id="growth-label">Growth Predictions</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="growth-timestamp"></span>
           </div>
@@ -414,11 +721,14 @@
     <!-- ====== TAB: Model ====== -->
     <div class="tab-panel" id="tab-model" role="tabpanel">
 
-      <!-- Model Evolution -->
+      <!-- 01 — Model Evolution -->
       <section class="section" id="evolution-section" aria-labelledby="evolution-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F9EC;</span>
-          <h2 id="evolution-label">Model Evolution & Testing</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">01 / Model Evolution</span>
+            <div class="consulting-accent-bar"></div>
+            <h2 id="evolution-label">Model Evolution &amp; Testing</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="evolution-timestamp"></span>
           </div>
@@ -444,21 +754,31 @@
         <div class="formulas-grid" id="formulas-container"></div>
       </section>
 
-      <!-- Model Performance -->
+      <hr class="consulting-section-divider">
+
+      <!-- 02 — Model Performance -->
       <section class="section" aria-labelledby="perf-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F3AF;</span>
-          <h2 id="perf-label">Model Performance</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">02 / Performance</span>
+            <div class="consulting-accent-bar consulting-accent-bar--emerald"></div>
+            <h2 id="perf-label">Model Performance</h2>
+          </div>
         </div>
         <div class="metrics-grid" id="metrics-grid"></div>
         <div class="period-info" id="period-info"></div>
       </section>
 
-      <!-- Methodology -->
+      <hr class="consulting-section-divider">
+
+      <!-- 03 — Methodology -->
       <section class="section" aria-labelledby="methodology-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F9EA;</span>
-          <h2 id="methodology-label">Methodology</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">03 / Methodology</span>
+            <div class="consulting-accent-bar consulting-accent-bar--purple"></div>
+            <h2 id="methodology-label">Methodology</h2>
+          </div>
         </div>
         <h3 id="methodology-steps-label" style="font-size:0.938rem;margin-bottom:12px;color:var(--text-secondary);">How the Model Works</h3>
         <div class="accordion" id="methodology-steps"></div>
@@ -472,8 +792,11 @@
     <div class="tab-panel" id="tab-study" role="tabpanel">
       <section class="section" id="study-section" aria-labelledby="study-label">
         <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F4DA;</span>
-          <h2 id="study-label">Trading Study Cards & Quiz</h2>
+          <div style="flex:1;">
+            <span class="consulting-section-number">01 / Learning</span>
+            <div class="consulting-accent-bar"></div>
+            <h2 id="study-label">Trading Study Cards &amp; Quiz</h2>
+          </div>
           <div class="section-meta">
             <span class="section-timestamp" id="study-timestamp"></span>
           </div>
@@ -546,13 +869,15 @@
   <!-- ====== Footer ====== -->
   <footer class="dashboard-footer" role="contentinfo">
     <div class="dashboard-container">
-      <h3 id="disclaimer-label" style="font-size:0.813rem;color:var(--text-muted);margin-bottom:8px;">Disclaimer</h3>
-      <p class="footer-disclaimer" id="disclaimer-text">
-        This is not financial advice. Predictions are generated by a machine learning model for educational and research purposes only.
-      </p>
-      <p class="footer-powered" id="footer-powered">
-        Powered by Microsoft Qlib + LightGBM
-      </p>
+      <div class="footer-consulting">
+        <h3 id="disclaimer-label" style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Disclaimer</h3>
+        <p class="footer-disclaimer" id="disclaimer-text">
+          This is not financial advice. Predictions are generated by a machine learning model for educational and research purposes only.
+        </p>
+        <div class="footer-powered-stack">
+          <span class="footer-powered-item" id="footer-powered">Powered by Microsoft Qlib + LightGBM</span>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -613,7 +938,7 @@
           <div class="signal-analysis-grid" id="signal-analysis"></div>
         </section>
         <section class="modal-section">
-          <h3 id="modal-news-label">Recent News & Impact</h3>
+          <h3 id="modal-news-label">Recent News &amp; Impact</h3>
           <div class="modal-news-feed" id="modal-news"></div>
         </section>
         <section class="modal-section">
