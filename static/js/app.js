@@ -25,6 +25,7 @@ let sectionTimestamps = {};
 let newsAutoRefreshTimer = null;
 let newsLastUpdated = null;
 let newsNextRefresh = null;
+let activeAnalysisMethod = 'ai';
 
 /* ============================================================
    DOM References
@@ -105,7 +106,8 @@ function updateClock() {
   var now = new Date();
   var dateOpts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
   var timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-  var lang = (typeof getLang === 'function' && getLang() === 'cn') ? 'zh-CN' : 'en-US';
+  var clockLangMap = { en: 'en-US', tc: 'zh-TW', sc: 'zh-CN' };
+  var lang = (typeof getLang === 'function') ? (clockLangMap[getLang()] || 'en-US') : 'en-US';
 
   if (dom.clockDate) {
     dom.clockDate.textContent = now.toLocaleDateString(lang, dateOpts);
@@ -325,11 +327,9 @@ function renderLabels() {
   if (dom.headerTitle) dom.headerTitle.textContent = t('app.title');
   if (dom.headerSubtitle) dom.headerSubtitle.textContent = t('app.subtitle');
   if (dom.langBtn) {
-    dom.langBtn.textContent = getLang() === 'en' ? 'CN' : 'EN';
-    dom.langBtn.setAttribute(
-      'aria-label',
-      getLang() === 'en' ? 'Switch to Chinese' : 'Switch to English',
-    );
+    var langLabels = { en: 'EN', tc: '\u7E41\u4E2D', sc: '\u7B80\u4E2D' };
+    dom.langBtn.textContent = langLabels[getLang()] || 'EN';
+    dom.langBtn.setAttribute('aria-label', 'Switch language');
   }
   if (dom.refreshLabel) dom.refreshLabel.textContent = t('auto.refresh');
 
@@ -1027,6 +1027,7 @@ window.onLanguageChange = function () {
   if (predictionData) {
     renderAll();
   }
+  updateModelComparisonLabels();
 };
 
 /* ============================================================
@@ -1092,10 +1093,19 @@ function initAiAnalysis() {
 }
 
 function runFullAnalysisSuite(ticker, isQuick) {
-  /* Run all 3 sections in parallel: AI analysis, Factor analysis, Stock chart */
-  runAiAnalysis(ticker, isQuick);
-  if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
+  /* Run analysis based on selected method + always load chart */
   if (typeof loadChart === 'function') loadChart(ticker, typeof selectedPeriod !== 'undefined' ? selectedPeriod : '1y');
+
+  if (activeAnalysisMethod === 'ai') {
+    runAiAnalysis(ticker, isQuick);
+    if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
+  } else if (activeAnalysisMethod === 'factors') {
+    if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
+  } else if (activeAnalysisMethod === 'model1') {
+    runModel1StockAnalysis(ticker);
+  } else if (activeAnalysisMethod === 'model2') {
+    runModel2StockAnalysis(ticker);
+  }
 }
 
 function goAnalyze(ticker) {
@@ -2550,7 +2560,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  document.documentElement.lang = getLang() === 'cn' ? 'zh-CN' : 'en';
+  var langMap = { en: 'en', tc: 'zh-TW', sc: 'zh-CN' };
+  document.documentElement.lang = langMap[getLang()] || 'en';
 
   /* Fetch data */
   fetchPredictions();
@@ -2596,9 +2607,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  /* Load Model 2 cached predictions on startup */
-  loadModel2Predictions();
-  loadModelComparison();
+  /* Initialize analysis method selector */
+  initMethodSelector();
 });
 
 /* ============================================================
@@ -2951,4 +2961,404 @@ function renderModelComparison(data, container) {
 
   html += '</tbody></table></div>';
   container.innerHTML = html;
+}
+
+/* ============================================================
+   Analysis Method Selector
+   ============================================================ */
+
+function initMethodSelector() {
+  var methodBtns = document.querySelectorAll('.ai-method-selector .toggle-btn');
+  methodBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var method = btn.getAttribute('data-method');
+      setAnalysisMethod(method);
+    });
+  });
+}
+
+function setAnalysisMethod(method) {
+  activeAnalysisMethod = method;
+
+  /* Update button states */
+  document.querySelectorAll('.ai-method-selector .toggle-btn').forEach(function(btn) {
+    var isActive = btn.getAttribute('data-method') === method;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+
+  /* Update description text */
+  var descEl = document.getElementById('ai-method-description');
+  if (descEl) {
+    var descriptions = {
+      ai: t('ai.claude.desc'),
+      factors: t('ai.factors.desc'),
+      model1: t('ai.model1.desc'),
+      model2: t('ai.model2.desc'),
+    };
+    descEl.textContent = descriptions[method] || '';
+  }
+
+  /* Update loading text */
+  var loadingTexts = {
+    ai: 'Analyzing with Claude Opus 4.6... This may take 15-30 seconds.',
+    factors: 'Computing factor exposures across 12 categories...',
+    model1: 'Loading LightGBM quant predictions...',
+    model2: 'Running sentiment anomaly scan...',
+  };
+  var loadTextEl = document.getElementById('ai-loading-text');
+  if (loadTextEl) loadTextEl.textContent = loadingTexts[method] || '';
+
+  /* Show/hide result containers based on method */
+  var aiResults = document.getElementById('ai-results');
+  var factorsResults = document.getElementById('factors-results');
+  var model1Results = document.getElementById('model1-results');
+  var model2Results = document.getElementById('model2-results');
+
+  if (aiResults) aiResults.classList.add('hidden');
+  if (factorsResults) factorsResults.classList.add('hidden');
+  if (model1Results) model1Results.classList.add('hidden');
+  if (model2Results) model2Results.classList.add('hidden');
+
+  /* Show/hide factor section based on method */
+  var factorsSection = document.querySelector('[aria-labelledby="factors-label"]');
+  if (factorsSection) {
+    factorsSection.style.display = (method === 'ai' || method === 'factors') ? '' : 'none';
+  }
+
+  /* Update Analyze button text */
+  var analyzeBtn = document.getElementById('ai-analyze-btn');
+  var quickBtn = document.getElementById('ai-quick-btn');
+  if (analyzeBtn) {
+    if (method === 'ai') {
+      analyzeBtn.textContent = 'Full Analysis';
+      if (quickBtn) quickBtn.style.display = '';
+    } else if (method === 'factors') {
+      analyzeBtn.textContent = 'Analyze Factors';
+      if (quickBtn) quickBtn.style.display = 'none';
+    } else if (method === 'model1') {
+      analyzeBtn.textContent = 'Load Predictions';
+      if (quickBtn) quickBtn.style.display = 'none';
+    } else if (method === 'model2') {
+      analyzeBtn.textContent = 'Scan & Analyze';
+      if (quickBtn) quickBtn.style.display = 'none';
+    }
+  }
+}
+
+/* ============================================================
+   Model 1: Per-Stock LightGBM Analysis
+   ============================================================ */
+
+async function runModel1StockAnalysis(ticker) {
+  var loading = document.getElementById('ai-loading');
+  var container = document.getElementById('model1-results');
+  var resultEl = document.getElementById('model1-stock-result');
+  var analyzeBtn = document.getElementById('ai-analyze-btn');
+
+  if (loading) loading.classList.remove('hidden');
+  if (container) container.classList.add('hidden');
+  if (analyzeBtn) analyzeBtn.disabled = true;
+
+  try {
+    var response = await fetch('/api/top-stocks?n=500&view=consensus');
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    var result = await response.json();
+
+    if (loading) loading.classList.add('hidden');
+    if (analyzeBtn) analyzeBtn.disabled = false;
+
+    var stocks = (result.data && result.data.stocks) || [];
+    var stock = stocks.find(function(s) {
+      return s.ticker && s.ticker.toUpperCase() === ticker.toUpperCase();
+    });
+
+    if (container) container.classList.remove('hidden');
+
+    if (!stock) {
+      resultEl.innerHTML =
+        '<div class="ai-error">' + escapeHtml(t('model1.no.data')) + '</div>' +
+        '<div style="margin-top:1.5rem;">' + renderModel1Table(stocks.slice(0, 20), ticker) + '</div>';
+      return;
+    }
+
+    var signal = stock.signal || 0;
+    var consistency = stock.consistency || 0;
+    var isUp = signal > 0;
+    var dirColor = isUp ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
+    var dirLabel = isUp ? 'Bullish' : 'Bearish';
+    var dirIcon = isUp ? '\u25B2' : '\u25BC';
+    var signalPct = (signal * 100).toFixed(2);
+    var consistencyPct = (consistency * 100).toFixed(0);
+    var dayChg = stock.day_change_pct || 0;
+    var dayColor = dayChg >= 0 ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
+
+    /* Find rank */
+    var rank = stocks.findIndex(function(s) { return s.ticker === stock.ticker; }) + 1;
+
+    var html =
+      '<div class="ai-report-header" style="margin-bottom:1.5rem;">' +
+        '<div class="ai-rating-section">' +
+          '<div class="ai-rating-badge-lg" style="background:' + dirColor + ';color:#fff;padding:8px 20px;border-radius:8px;font-size:1.1rem;">' +
+            dirIcon + ' ' + dirLabel + '</div>' +
+          '<div style="margin-top:8px;">' +
+            '<span style="font-size:1.5rem;font-weight:700;">' + escapeHtml(ticker) + '</span>' +
+            '<span style="color:var(--text-muted);margin-left:8px;">' + escapeHtml(stock.name || '') + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:1.5rem;">' +
+        '<div class="stat-card"><div class="stat-value" style="color:' + dirColor + ';">' + signalPct + '%</div><div class="stat-label">Signal Strength</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + consistencyPct + '%</div><div class="stat-label">20-Day Consistency</div></div>' +
+        '<div class="stat-card"><div class="stat-value">#' + rank + '</div><div class="stat-label">Rank (of ' + stocks.length + ')</div></div>' +
+        '<div class="stat-card"><div class="stat-value">$' + (stock.current_price || 0).toFixed(2) + '</div><div class="stat-label">Current Price</div></div>' +
+        '<div class="stat-card"><div class="stat-value" style="color:' + dayColor + ';">' + (dayChg >= 0 ? '+' : '') + dayChg.toFixed(2) + '%</div><div class="stat-label">Day Change</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + escapeHtml(stock.sector || 'N/A') + '</div><div class="stat-label">Sector</div></div>' +
+      '</div>' +
+      '<h3 style="font-size:0.938rem;margin:20px 0 12px;color:var(--text-secondary);">Top 20 Ranked Stocks</h3>' +
+      renderModel1Table(stocks.slice(0, 20), ticker);
+
+    resultEl.innerHTML = html;
+    updateSectionTimestamp('ai');
+  } catch (err) {
+    if (loading) loading.classList.add('hidden');
+    if (analyzeBtn) analyzeBtn.disabled = false;
+    if (container) container.classList.remove('hidden');
+    resultEl.innerHTML = '<div class="ai-error">Failed to load Model 1 predictions: ' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+function renderModel1Table(stocks, highlightTicker) {
+  if (!stocks || !stocks.length) return '<p style="color:var(--text-muted);">No predictions available.</p>';
+
+  var html = '<div style="overflow-x:auto;">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
+    '<thead><tr style="border-bottom:2px solid var(--border);text-align:left;">' +
+    '<th style="padding:0.5rem;">#</th>' +
+    '<th style="padding:0.5rem;">Ticker</th>' +
+    '<th style="padding:0.5rem;">Signal</th>' +
+    '<th style="padding:0.5rem;">Direction</th>' +
+    '<th style="padding:0.5rem;">Consistency</th>' +
+    '<th style="padding:0.5rem;">Price</th>' +
+    '<th style="padding:0.5rem;">Sector</th>' +
+    '</tr></thead><tbody>';
+
+  stocks.forEach(function(s, idx) {
+    var signal = s.signal || 0;
+    var isUp = signal > 0;
+    var dirColor = isUp ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
+    var isHighlighted = highlightTicker && s.ticker && s.ticker.toUpperCase() === highlightTicker.toUpperCase();
+    var rowBg = isHighlighted ? 'background:var(--accent-blue-dim);' : '';
+
+    html += '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">' +
+      '<td style="padding:0.5rem;color:var(--text-muted);">' + (idx + 1) + '</td>' +
+      '<td style="padding:0.5rem;font-weight:600;">' + escapeHtml(s.ticker) + '</td>' +
+      '<td style="padding:0.5rem;font-weight:600;color:' + dirColor + ';">' + (signal * 100).toFixed(2) + '%</td>' +
+      '<td style="padding:0.5rem;color:' + dirColor + ';">' + (isUp ? '\u25B2 Bullish' : '\u25BC Bearish') + '</td>' +
+      '<td style="padding:0.5rem;">' + ((s.consistency || 0) * 100).toFixed(0) + '%</td>' +
+      '<td style="padding:0.5rem;">$' + (s.current_price || 0).toFixed(2) + '</td>' +
+      '<td style="padding:0.5rem;font-size:0.78rem;color:var(--text-muted);">' + escapeHtml(s.sector || '') + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+/* ============================================================
+   Model 2: Per-Stock Sentiment Analysis
+   ============================================================ */
+
+async function runModel2StockAnalysis(ticker) {
+  var loading = document.getElementById('ai-loading');
+  var container = document.getElementById('model2-results');
+  var resultEl = document.getElementById('model2-stock-result');
+  var analyzeBtn = document.getElementById('ai-analyze-btn');
+
+  if (loading) loading.classList.remove('hidden');
+  if (container) container.classList.add('hidden');
+  if (analyzeBtn) analyzeBtn.disabled = true;
+
+  try {
+    /* Fetch existing predictions first, then scan if needed */
+    var response = await fetch('/api/model2/predictions');
+    var result = response.ok ? await response.json() : { data: null };
+    var predictions = (result.data && result.data.predictions) || [];
+
+    /* Check if ticker is in existing predictions */
+    var stockPred = predictions.find(function(p) {
+      return p.ticker && p.ticker.toUpperCase() === ticker.toUpperCase();
+    });
+
+    /* If not found, run a fresh scan */
+    if (!stockPred && predictions.length === 0) {
+      var scanResponse = await fetch('/api/model2/scan', { method: 'POST' });
+      if (scanResponse.ok) {
+        var scanResult = await scanResponse.json();
+        predictions = (scanResult.data && scanResult.data.predictions) || [];
+        stockPred = predictions.find(function(p) {
+          return p.ticker && p.ticker.toUpperCase() === ticker.toUpperCase();
+        });
+      }
+    }
+
+    if (loading) loading.classList.add('hidden');
+    if (analyzeBtn) analyzeBtn.disabled = false;
+    if (container) container.classList.remove('hidden');
+
+    if (!stockPred) {
+      resultEl.innerHTML =
+        '<div class="ai-error">' + escapeHtml(t('model2.no.data')) + '</div>' +
+        (predictions.length > 0
+          ? '<h3 style="font-size:0.938rem;margin:20px 0 12px;color:var(--text-secondary);">Active Signals</h3>' + renderModel2Table(predictions)
+          : '');
+      return;
+    }
+
+    var dirColor = stockPred.direction === 'LONG' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
+    var dirIcon = stockPred.direction === 'LONG' ? '\u25B2' : '\u25BC';
+
+    var html =
+      '<div class="ai-report-header" style="margin-bottom:1.5rem;">' +
+        '<div class="ai-rating-section">' +
+          '<div class="ai-rating-badge-lg" style="background:' + dirColor + ';color:#fff;padding:8px 20px;border-radius:8px;font-size:1.1rem;">' +
+            dirIcon + ' ' + escapeHtml(stockPred.direction) + '</div>' +
+          '<div style="margin-top:8px;">' +
+            '<span style="font-size:1.5rem;font-weight:700;">' + escapeHtml(ticker) + '</span>' +
+            '<span style="color:var(--text-muted);margin-left:8px;">' + escapeHtml(stockPred.name || '') + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.5rem;">' +
+        '<div class="stat-card"><div class="stat-value">' + (stockPred.confidence || 0) + '/10</div><div class="stat-label">Confidence</div></div>' +
+        '<div class="stat-card"><div class="stat-value" style="color:' + dirColor + ';">' + (stockPred.edge_pct > 0 ? '+' : '') + (stockPred.edge_pct || 0).toFixed(1) + '%</div><div class="stat-label">Edge</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + (stockPred.sentiment_score || 0).toFixed(2) + '</div><div class="stat-label">Sentiment Score</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + (stockPred.risk_reward || 0).toFixed(1) + ':1</div><div class="stat-label">Risk/Reward</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + (stockPred.position_size_pct || 0).toFixed(1) + '%</div><div class="stat-label">Position Size</div></div>' +
+        '<div class="stat-card"><div class="stat-value">$' + (stockPred.current_price || 0).toFixed(2) + '</div><div class="stat-label">Entry Price</div></div>' +
+        '<div class="stat-card"><div class="stat-value" style="color:var(--red, #ef4444);">$' + (stockPred.stop_loss || 0).toFixed(2) + '</div><div class="stat-label">Stop Loss</div></div>' +
+        '<div class="stat-card"><div class="stat-value" style="color:var(--green, #22c55e);">$' + (stockPred.take_profit || 0).toFixed(2) + '</div><div class="stat-label">Take Profit</div></div>' +
+      '</div>';
+
+    /* Rationale */
+    var ratParts = [];
+    if (stockPred.entry_reason) ratParts.push(stockPred.entry_reason);
+    if (stockPred.volume_ratio) ratParts.push('Volume ' + stockPred.volume_ratio.toFixed(1) + 'x avg');
+    if (stockPred.atr_ratio) ratParts.push('ATR spike ' + stockPred.atr_ratio.toFixed(1) + 'x');
+    if (stockPred.rsi) ratParts.push('RSI: ' + stockPred.rsi.toFixed(0));
+    if (stockPred.analyst_gap_pct) ratParts.push('Analyst target gap: ' + (stockPred.analyst_gap_pct > 0 ? '+' : '') + stockPred.analyst_gap_pct.toFixed(1) + '%');
+
+    if (ratParts.length) {
+      html += '<div style="background:var(--bg-card);border-radius:8px;padding:1rem;margin-bottom:1.5rem;">' +
+        '<strong>Rationale:</strong> ' + escapeHtml(ratParts.join(' | ')) + '</div>';
+    }
+
+    /* Show all active signals */
+    if (predictions.length > 1) {
+      html += '<h3 style="font-size:0.938rem;margin:20px 0 12px;color:var(--text-secondary);">All Active Signals</h3>' +
+        renderModel2Table(predictions, ticker);
+    }
+
+    resultEl.innerHTML = html;
+    updateSectionTimestamp('ai');
+  } catch (err) {
+    if (loading) loading.classList.add('hidden');
+    if (analyzeBtn) analyzeBtn.disabled = false;
+    if (container) container.classList.remove('hidden');
+    resultEl.innerHTML = '<div class="ai-error">Failed to load Model 2 analysis: ' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+function renderModel2Table(predictions, highlightTicker) {
+  if (!predictions || !predictions.length) return '<p style="color:var(--text-muted);">No signals available.</p>';
+
+  var html = '<div style="overflow-x:auto;">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
+    '<thead><tr style="border-bottom:2px solid var(--border);text-align:left;">' +
+    '<th style="padding:0.5rem;">Ticker</th>' +
+    '<th style="padding:0.5rem;">Direction</th>' +
+    '<th style="padding:0.5rem;">Confidence</th>' +
+    '<th style="padding:0.5rem;">Edge</th>' +
+    '<th style="padding:0.5rem;">R:R</th>' +
+    '<th style="padding:0.5rem;">Entry</th>' +
+    '<th style="padding:0.5rem;">Stop</th>' +
+    '<th style="padding:0.5rem;">Target</th>' +
+    '</tr></thead><tbody>';
+
+  predictions.forEach(function(p) {
+    var dirColor = p.direction === 'LONG' ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
+    var isHighlighted = highlightTicker && p.ticker && p.ticker.toUpperCase() === highlightTicker.toUpperCase();
+    var rowBg = isHighlighted ? 'background:var(--accent-blue-dim);' : '';
+
+    html += '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">' +
+      '<td style="padding:0.5rem;font-weight:600;">' + escapeHtml(p.ticker) + '</td>' +
+      '<td style="padding:0.5rem;color:' + dirColor + ';font-weight:600;">' +
+        (p.direction === 'LONG' ? '\u25B2' : '\u25BC') + ' ' + escapeHtml(p.direction) + '</td>' +
+      '<td style="padding:0.5rem;">' + (p.confidence || 0) + '/10</td>' +
+      '<td style="padding:0.5rem;color:' + dirColor + ';">' + (p.edge_pct > 0 ? '+' : '') + (p.edge_pct || 0).toFixed(1) + '%</td>' +
+      '<td style="padding:0.5rem;">' + (p.risk_reward || 0).toFixed(1) + ':1</td>' +
+      '<td style="padding:0.5rem;">$' + (p.current_price || 0).toFixed(2) + '</td>' +
+      '<td style="padding:0.5rem;color:var(--red, #ef4444);">$' + (p.stop_loss || 0).toFixed(2) + '</td>' +
+      '<td style="padding:0.5rem;color:var(--green, #22c55e);">$' + (p.take_profit || 0).toFixed(2) + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+/* ============================================================
+   Model Comparison i18n Updates
+   ============================================================ */
+
+function updateModelComparisonLabels() {
+  var el;
+  el = document.getElementById('model-comparison-title');
+  if (el) el.textContent = t('ai.model.comparison');
+  el = document.getElementById('mc-claude-desc');
+  if (el) el.textContent = t('ai.claude.desc');
+  el = document.getElementById('mc-factors-desc');
+  if (el) el.textContent = t('ai.factors.desc');
+  el = document.getElementById('mc-model1-desc');
+  if (el) el.textContent = t('ai.model1.desc');
+  el = document.getElementById('mc-model2-desc');
+  if (el) el.textContent = t('ai.model2.desc');
+  el = document.getElementById('mc-claude-type');
+  if (el) el.textContent = t('ai.claude.type');
+  el = document.getElementById('mc-factors-type');
+  if (el) el.textContent = t('ai.factors.type');
+  el = document.getElementById('mc-model1-type');
+  if (el) el.textContent = t('ai.model1.type');
+  el = document.getElementById('mc-model2-type');
+  if (el) el.textContent = t('ai.model2.type');
+  el = document.getElementById('mc-claude-time');
+  if (el) el.textContent = t('ai.claude.timeframe');
+  el = document.getElementById('mc-factors-time');
+  if (el) el.textContent = t('ai.factors.timeframe');
+  el = document.getElementById('mc-model1-time');
+  if (el) el.textContent = t('ai.model1.timeframe');
+  el = document.getElementById('mc-model2-time');
+  if (el) el.textContent = t('ai.model2.timeframe');
+  el = document.getElementById('mc-claude-best');
+  if (el) el.textContent = t('ai.claude.bestfor');
+  el = document.getElementById('mc-factors-best');
+  if (el) el.textContent = t('ai.factors.bestfor');
+  el = document.getElementById('mc-model1-best');
+  if (el) el.textContent = t('ai.model1.bestfor');
+  el = document.getElementById('mc-model2-best');
+  if (el) el.textContent = t('ai.model2.bestfor');
+
+  /* Update method selector button labels */
+  document.querySelectorAll('.ai-method-selector .toggle-btn').forEach(function(btn) {
+    var method = btn.getAttribute('data-method');
+    var keys = { ai: 'ai.method.claude', factors: 'ai.method.factors', model1: 'ai.method.model1', model2: 'ai.method.model2' };
+    if (keys[method]) btn.textContent = t(keys[method]);
+  });
+
+  /* Update description for current method */
+  var descEl = document.getElementById('ai-method-description');
+  if (descEl) {
+    var descKeys = { ai: 'ai.claude.desc', factors: 'ai.factors.desc', model1: 'ai.model1.desc', model2: 'ai.model2.desc' };
+    descEl.textContent = t(descKeys[activeAnalysisMethod] || 'ai.claude.desc');
+  }
 }

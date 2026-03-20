@@ -2467,10 +2467,28 @@ a:hover {
   box-shadow: 0 0 0 3px var(--accent-blue-dim);
 }
 
+.ai-method-selector {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.ai-method-selector .toggle-btn {
+  font-size: 0.813rem;
+  padding: 7px 16px;
+}
+
 .ai-description {
   margin-top: 8px;
   font-size: 0.813rem;
   color: var(--text-muted);
+}
+
+.ai-model-comparison {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Loading spinner */
@@ -2924,6 +2942,17 @@ a:hover {
   }
   .rotation-row {
     grid-template-columns: 90px 1fr 50px;
+  }
+  .ai-model-comparison > div[style*="grid-template-columns"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .ai-method-selector {
+    flex-wrap: wrap;
+  }
+  .ai-method-selector .toggle-btn {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
   }
 }
 

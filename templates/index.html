@@ -32,8 +32,8 @@
           type="button"
           class="btn btn-sm btn-lang"
           id="lang-toggle"
-          aria-label="Switch to Chinese"
-        >CN</button>
+          aria-label="Switch language"
+        >繁中</button>
       </div>
     </div>
   </header>
@@ -45,7 +45,6 @@
       <button type="button" class="tab-btn" data-tab="ai" role="tab" aria-selected="false" aria-controls="tab-ai">AI Analysis</button>
       <button type="button" class="tab-btn" data-tab="market" role="tab" aria-selected="false" aria-controls="tab-market">Market Data</button>
       <button type="button" class="tab-btn" data-tab="model" role="tab" aria-selected="false" aria-controls="tab-model">Model</button>
-      <button type="button" class="tab-btn" data-tab="model2" role="tab" aria-selected="false" aria-controls="tab-model2">Sentiment Agent</button>
       <button type="button" class="tab-btn" data-tab="study" role="tab" aria-selected="false" aria-controls="tab-study">Study</button>
     </div>
   </nav>
@@ -145,7 +144,7 @@
       <section class="section" id="ai-section" aria-labelledby="ai-label">
         <div class="section-header">
           <span class="section-icon" aria-hidden="true">&#x1F9E0;</span>
-          <h2 id="ai-label">AI Stock Analysis (Claude Opus 4.6)</h2>
+          <h2 id="ai-label">AI Stock Analysis</h2>
           <div class="section-meta">
             <span class="section-timestamp" id="ai-timestamp"></span>
           </div>
@@ -167,17 +166,30 @@
             </select>
             <span class="ai-or-text">or</span>
             <input type="text" id="ai-ticker-input" class="ai-ticker-input" placeholder="Enter any ticker" maxlength="10" aria-label="Custom stock ticker">
-            <button type="button" class="btn btn-primary" id="ai-analyze-btn">Full Analysis</button>
+            <button type="button" class="btn btn-primary" id="ai-analyze-btn">Analyze</button>
             <button type="button" class="btn btn-sm" id="ai-quick-btn">Quick</button>
           </div>
-          <p class="ai-description">
+
+          <!-- Analysis Method Selector -->
+          <div class="ai-method-selector" role="tablist" aria-label="Analysis method">
+            <button type="button" class="toggle-btn active" data-method="ai" role="tab" aria-selected="true">AI (Claude)</button>
+            <button type="button" class="toggle-btn" data-method="factors" role="tab" aria-selected="false" id="method-factors-btn">12-Factor Analysis</button>
+            <button type="button" class="toggle-btn" data-method="model1" role="tab" aria-selected="false" id="method-model1-btn">Model 1: Quant Engine</button>
+            <button type="button" class="toggle-btn" data-method="model2" role="tab" aria-selected="false" id="method-model2-btn">Model 2: Sentiment</button>
+          </div>
+
+          <p class="ai-description" id="ai-method-description">
             Venture fund-grade analysis: fundamentals, technicals, macro, insider activity, institutional holdings, AI model signals, and upcoming events.
           </p>
         </div>
+
+        <!-- Loading Indicator -->
         <div class="ai-loading hidden" id="ai-loading">
           <div class="ai-spinner"></div>
-          <span>Analyzing with Claude Opus 4.6... This may take 15-30 seconds.</span>
+          <span id="ai-loading-text">Analyzing with Claude Opus 4.6... This may take 15-30 seconds.</span>
         </div>
+
+        <!-- AI (Claude) Results -->
         <div class="ai-results hidden" id="ai-results">
           <div class="ai-header-row" id="ai-header-row"></div>
           <div class="ai-scores-grid" id="ai-scores-grid"></div>
@@ -186,6 +198,71 @@
           <div class="ai-strategy" id="ai-strategy"></div>
           <div class="ai-growth" id="ai-growth"></div>
           <div class="ai-detailed" id="ai-detailed"></div>
+        </div>
+
+        <!-- Model 1 (LightGBM) Results -->
+        <div class="ai-results hidden" id="model1-results">
+          <div id="model1-stock-result"></div>
+        </div>
+
+        <!-- Model 2 (Sentiment) Results -->
+        <div class="ai-results hidden" id="model2-results">
+          <div id="model2-stock-result"></div>
+        </div>
+
+        <!-- Model Comparison Table -->
+        <div class="ai-model-comparison" id="ai-model-comparison">
+          <h3 style="font-size:0.938rem;margin-bottom:1rem;color:var(--text-secondary);" id="model-comparison-title">Model Comparison</h3>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;">
+            <div style="background:linear-gradient(135deg,#3b82f608,#3b82f610);border:2px solid #3b82f640;border-radius:12px;padding:1rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <span style="font-size:1.1rem;">&#x1F9E0;</span>
+                <strong style="color:#3b82f6;">AI (Claude)</strong>
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-claude-desc">Venture fund-grade deep analysis using Claude Opus 4.6. Fundamentals, technicals, macro, insider &amp; institutional data.</p>
+              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+                <div><strong id="mc-type-label">Type:</strong> <span id="mc-claude-type">Natural Language AI</span></div>
+                <div><strong id="mc-time-label">Timeframe:</strong> <span id="mc-claude-time">6-month strategic</span></div>
+                <div><strong id="mc-best-label">Best for:</strong> <span id="mc-claude-best">Strategic positioning, deep analysis</span></div>
+              </div>
+            </div>
+            <div style="background:linear-gradient(135deg,#8b5cf608,#8b5cf610);border:2px solid #8b5cf640;border-radius:12px;padding:1rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <span style="font-size:1.1rem;">&#x1F52C;</span>
+                <strong style="color:#8b5cf6;">12-Factor Analysis</strong>
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-factors-desc">12-category multi-factor model with dynamic regime weighting. Momentum, value, quality, growth, volatility, and more.</p>
+              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+                <div><strong>Type:</strong> <span id="mc-factors-type">Multi-Factor Model</span></div>
+                <div><strong>Timeframe:</strong> <span id="mc-factors-time">1 week to 24 months</span></div>
+                <div><strong>Best for:</strong> <span id="mc-factors-best">Regime-aware multi-horizon decisions</span></div>
+              </div>
+            </div>
+            <div style="background:linear-gradient(135deg,#4169E108,#4169E110);border:2px solid #4169E140;border-radius:12px;padding:1rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <span style="font-size:1.1rem;">&#x1F4CA;</span>
+                <strong style="color:#4169E1;">Model 1: Quant</strong>
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-model1-desc">LightGBM + Alpha158 trained on 18yr S&amp;P 500 data. 158 alpha factors, 20-day consensus signals.</p>
+              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+                <div><strong>Type:</strong> <span id="mc-model1-type">Quantitative ML</span></div>
+                <div><strong>Timeframe:</strong> <span id="mc-model1-time">20-day forward</span></div>
+                <div><strong>Best for:</strong> <span id="mc-model1-best">Medium-term trends, sector rotation</span></div>
+              </div>
+            </div>
+            <div style="background:linear-gradient(135deg,#7c3aed08,#7c3aed10);border:2px solid #7c3aed40;border-radius:12px;padding:1rem;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                <span style="font-size:1.1rem;">&#x1F3AF;</span>
+                <strong style="color:#7c3aed;">Model 2: Sentiment</strong>
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 0.5rem;line-height:1.4;" id="mc-model2-desc">5-step anomaly pipeline: volume/ATR spikes, news sentiment, directional edge, Kelly sizing, outcome tracking.</p>
+              <div style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6;">
+                <div><strong>Type:</strong> <span id="mc-model2-type">Behavioral/Anomaly</span></div>
+                <div><strong>Timeframe:</strong> <span id="mc-model2-time">5-20 day catalysts</span></div>
+                <div><strong>Best for:</strong> <span id="mc-model2-best">Short-term momentum, event-driven</span></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -390,124 +467,6 @@
       </section>
     </div>
 
-    <!-- ====== TAB: Sentiment Agent (Model 1 + Model 2) ====== -->
-    <div class="tab-panel" id="tab-model2" role="tabpanel">
-      <section class="section" id="model2-section">
-        <div class="section-header">
-          <span class="section-icon" aria-hidden="true">&#x1F9E0;</span>
-          <h2 id="model2-label">Dual Model Trading Intelligence</h2>
-          <p class="section-subtitle" id="model2-subtitle">Scans 100 most traded US stocks from previous trading day</p>
-        </div>
-
-        <!-- Model Explainer -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-          <div style="background:linear-gradient(135deg,#1e3a5f08,#4169E110);border:2px solid #4169E140;border-radius:12px;padding:1rem;">
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-              <span style="font-size:1.2rem;">&#x1F4CA;</span>
-              <strong style="color:#4169E1;">Model 1: Quant Engine</strong>
-            </div>
-            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;line-height:1.4;">LightGBM + Alpha158 factor model trained on S&P 500. Uses 20-day consensus signals from technical &amp; fundamental features. <strong>Best for:</strong> medium-term trend detection, sector rotation.</p>
-          </div>
-          <div style="background:linear-gradient(135deg,#7c3aed08,#7c3aed10);border:2px solid #7c3aed40;border-radius:12px;padding:1rem;">
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
-              <span style="font-size:1.2rem;">&#x1F9E0;</span>
-              <strong style="color:#7c3aed;">Model 2: Sentiment Agent</strong>
-            </div>
-            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;line-height:1.4;">5-step pipeline scanning volume/ATR anomalies, news sentiment, analyst gaps. <strong>Best for:</strong> short-term catalysts, momentum breakouts, event-driven trades.</p>
-          </div>
-        </div>
-
-        <!-- Single Scan Button -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" id="model2-scan-btn" onclick="runDualModelScan()" style="padding:10px 24px;font-size:0.9rem;">
-              Scan Top 100 Stocks
-            </button>
-            <span id="model2-scan-status" style="font-size: 0.85rem; color: var(--text-muted);"></span>
-          </div>
-          <div id="model2-scan-stats" style="display:none; margin-top: 1rem;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
-              <div class="stat-card"><div class="stat-value" id="m2-scanned">0</div><div class="stat-label">Stocks Scanned</div></div>
-              <div class="stat-card"><div class="stat-value" id="m2-shortlisted">0</div><div class="stat-label">Shortlisted</div></div>
-              <div class="stat-card"><div class="stat-value" id="m2-signals">0</div><div class="stat-label">Trade Signals</div></div>
-              <div class="stat-card"><div class="stat-value" id="m2-hitrate">--</div><div class="stat-label">Historical Hit Rate</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Model 1: LightGBM Quant Predictions -->
-        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #4169E1;">
-          <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
-            <span style="color:#4169E1;">&#x1F4CA;</span> Model 1: Quant Engine Signals
-          </h3>
-          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">20-day consensus signals ranked by strength. Click ticker to run full AI Analysis.</p>
-          <div id="model1-predictions-container">
-            <p style="color:var(--text-muted);text-align:center;padding:1.5rem;">Click "Scan Top 100 Stocks" to load predictions.</p>
-          </div>
-        </div>
-
-        <!-- Model 2: Sentiment Agent Predictions -->
-        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #7c3aed;">
-          <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
-            <span style="color:#7c3aed;">&#x1F9E0;</span> Model 2: Sentiment Agent Signals
-          </h3>
-          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">Anomaly-driven trades with entry/stop/target levels. Click ticker to run full AI Analysis.</p>
-          <div id="model2-predictions-container">
-            <p style="color:var(--text-muted);text-align:center;padding:1.5rem;">Click "Scan Top 100 Stocks" to generate signals.</p>
-          </div>
-        </div>
-
-        <!-- Model 1 vs Model 2 Comparison -->
-        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #059669;">
-          <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
-            <span style="color:#059669;">&#x2696;</span> Model 1 vs Model 2 Comparison
-          </h3>
-          <div id="model-compare-container">
-            <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading comparison...</p>
-          </div>
-        </div>
-
-        <!-- Post-Mortem -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="margin-bottom: 1rem;">Post-Mortem Analysis</h3>
-          <div id="model2-postmortem">
-            <p style="color: var(--text-muted); text-align: center; padding: 1rem;">No historical data yet. Run scans to build track record.</p>
-          </div>
-        </div>
-
-        <!-- Architecture Diagram -->
-        <div class="card" style="margin-top: 1.5rem;">
-          <h3 style="margin-bottom: 1rem;">5-Step Pipeline Architecture</h3>
-          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; text-align: center; font-size: 0.8rem;">
-            <div style="background: var(--bg-card); border: 2px solid #4169E1; border-radius: 8px; padding: 0.75rem;">
-              <div style="font-size: 1.5rem;">&#x1F50D;</div>
-              <strong>1. Scan</strong><br>
-              <span style="color: var(--text-muted);">50 stocks<br>Volume &amp; ATR anomalies</span>
-            </div>
-            <div style="background: var(--bg-card); border: 2px solid #7C3AED; border-radius: 8px; padding: 0.75rem;">
-              <div style="font-size: 1.5rem;">&#x1F4F0;</div>
-              <strong>2. Research</strong><br>
-              <span style="color: var(--text-muted);">News sentiment<br>Analyst gap</span>
-            </div>
-            <div style="background: var(--bg-card); border: 2px solid #D97706; border-radius: 8px; padding: 0.75rem;">
-              <div style="font-size: 1.5rem;">&#x1F3AF;</div>
-              <strong>3. Predict</strong><br>
-              <span style="color: var(--text-muted);">Edge calibration<br>Multi-signal confirm</span>
-            </div>
-            <div style="background: var(--bg-card); border: 2px solid #DC2626; border-radius: 8px; padding: 0.75rem;">
-              <div style="font-size: 1.5rem;">&#x1F6E1;</div>
-              <strong>4. Risk</strong><br>
-              <span style="color: var(--text-muted);">Kelly sizing<br>Stop/Target levels</span>
-            </div>
-            <div style="background: var(--bg-card); border: 2px solid #059669; border-radius: 8px; padding: 0.75rem;">
-              <div style="font-size: 1.5rem;">&#x1F4CB;</div>
-              <strong>5. Post-Mortem</strong><br>
-              <span style="color: var(--text-muted);">Track hit rate<br>Learn from losses</span>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
 
     <!-- ====== TAB: Study ====== -->
     <div class="tab-panel" id="tab-study" role="tabpanel">

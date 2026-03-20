@@ -957,23 +957,23 @@ function generateEnvironmentFactors(stock) {
   /* Sector-specific factors */
   var sectorFactors = {
     'Technology': [
-      { title: lang === 'cn' ? 'AI投资热潮' : 'AI Investment Boom', desc: lang === 'cn' ? 'AI基础设施支出持续增长，利好科技板块' : 'AI infrastructure spending continues to surge, benefiting tech sector', sentiment: 'positive' },
-      { title: lang === 'cn' ? '利率环境' : 'Interest Rate Environment', desc: lang === 'cn' ? '利率下降预期利好成长型科技股估值' : 'Expected rate cuts support growth tech valuations', sentiment: 'positive' },
+      { title: lang !== 'en' ? 'AI投资热潮' : 'AI Investment Boom', desc: lang !== 'en' ? 'AI基础设施支出持续增长，利好科技板块' : 'AI infrastructure spending continues to surge, benefiting tech sector', sentiment: 'positive' },
+      { title: lang !== 'en' ? '利率环境' : 'Interest Rate Environment', desc: lang !== 'en' ? '利率下降预期利好成长型科技股估值' : 'Expected rate cuts support growth tech valuations', sentiment: 'positive' },
     ],
     'Financial Services': [
-      { title: lang === 'cn' ? '利率曲线正常化' : 'Yield Curve Normalization', desc: lang === 'cn' ? '收益率曲线正常化改善银行净息差' : 'Yield curve normalization improves bank net interest margins', sentiment: 'positive' },
-      { title: lang === 'cn' ? '监管环境' : 'Regulatory Environment', desc: lang === 'cn' ? '金融监管政策趋于稳定' : 'Financial regulatory policies stabilizing', sentiment: 'neutral' },
+      { title: lang !== 'en' ? '利率曲线正常化' : 'Yield Curve Normalization', desc: lang !== 'en' ? '收益率曲线正常化改善银行净息差' : 'Yield curve normalization improves bank net interest margins', sentiment: 'positive' },
+      { title: lang !== 'en' ? '监管环境' : 'Regulatory Environment', desc: lang !== 'en' ? '金融监管政策趋于稳定' : 'Financial regulatory policies stabilizing', sentiment: 'neutral' },
     ],
     'Airlines': [
-      { title: lang === 'cn' ? '旅游需求强劲' : 'Strong Travel Demand', desc: lang === 'cn' ? '国际旅行需求持续恢复' : 'International travel demand continues recovery', sentiment: 'positive' },
-      { title: lang === 'cn' ? '油价走势' : 'Oil Price Trend', desc: lang === 'cn' ? 'OPEC+增产导致油价下行，降低航空燃油成本' : 'OPEC+ production increase pushes oil lower, reducing fuel costs', sentiment: 'positive' },
+      { title: lang !== 'en' ? '旅游需求强劲' : 'Strong Travel Demand', desc: lang !== 'en' ? '国际旅行需求持续恢复' : 'International travel demand continues recovery', sentiment: 'positive' },
+      { title: lang !== 'en' ? '油价走势' : 'Oil Price Trend', desc: lang !== 'en' ? 'OPEC+增产导致油价下行，降低航空燃油成本' : 'OPEC+ production increase pushes oil lower, reducing fuel costs', sentiment: 'positive' },
     ],
     'Consumer Discretionary': [
-      { title: lang === 'cn' ? '消费者支出' : 'Consumer Spending', desc: lang === 'cn' ? '消费支出显示放缓迹象，需关注' : 'Consumer spending showing signs of slowdown, worth monitoring', sentiment: 'negative' },
-      { title: lang === 'cn' ? '就业市场' : 'Labor Market', desc: lang === 'cn' ? '就业市场保持韧性，支撑消费能力' : 'Labor market remains resilient, supporting spending power', sentiment: 'positive' },
+      { title: lang !== 'en' ? '消费者支出' : 'Consumer Spending', desc: lang !== 'en' ? '消费支出显示放缓迹象，需关注' : 'Consumer spending showing signs of slowdown, worth monitoring', sentiment: 'negative' },
+      { title: lang !== 'en' ? '就业市场' : 'Labor Market', desc: lang !== 'en' ? '就业市场保持韧性，支撑消费能力' : 'Labor market remains resilient, supporting spending power', sentiment: 'positive' },
     ],
     'Materials': [
-      { title: lang === 'cn' ? '基建支出' : 'Infrastructure Spending', desc: lang === 'cn' ? '美国基建法案推动原材料需求' : 'US infrastructure bill driving materials demand', sentiment: 'positive' },
+      { title: lang !== 'en' ? '基建支出' : 'Infrastructure Spending', desc: lang !== 'en' ? '美国基建法案推动原材料需求' : 'US infrastructure bill driving materials demand', sentiment: 'positive' },
     ],
   };
 
@@ -986,14 +986,14 @@ function generateEnvironmentFactors(stock) {
 
   /* Add universal macro factors */
   factors.push({
-    title: lang === 'cn' ? '美联储政策' : 'Fed Policy Outlook',
-    description: lang === 'cn' ? '美联储暗示2026年Q2可能降息25个基点' : 'Fed signals potential 25bp rate cut in Q2 2026',
+    title: lang !== 'en' ? '美联储政策' : 'Fed Policy Outlook',
+    description: lang !== 'en' ? '美联储暗示2026年Q2可能降息25个基点' : 'Fed signals potential 25bp rate cut in Q2 2026',
     sentiment: 'positive',
   });
 
   factors.push({
-    title: lang === 'cn' ? '地缘政治' : 'Geopolitical Risk',
-    description: lang === 'cn' ? '美中贸易关系改善降低不确定性' : 'Improved US-China trade relations reducing uncertainty',
+    title: lang !== 'en' ? '地缘政治' : 'Geopolitical Risk',
+    description: lang !== 'en' ? '美中贸易关系改善降低不确定性' : 'Improved US-China trade relations reducing uncertainty',
     sentiment: 'positive',
   });
 
