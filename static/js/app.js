@@ -2822,7 +2822,7 @@ async function runModel1StockAnalysis(ticker) {
   if (analyzeBtn) analyzeBtn.disabled = true;
 
   try {
-    /* First try the prediction set */
+    /* Try prediction set first */
     var response = await fetch('/api/top-stocks?n=500&view=consensus');
     var result = response.ok ? await response.json() : { data: { stocks: [] } };
     var stocks = (result.data && result.data.stocks) || [];
@@ -2830,29 +2830,19 @@ async function runModel1StockAnalysis(ticker) {
       return s.ticker && s.ticker.toUpperCase() === ticker.toUpperCase();
     });
 
-    /* If not in prediction set, run on-demand analysis */
+    /* Fallback: on-demand analysis for any ticker */
     if (!stock) {
       var analyzeResp = await fetch('/api/analyze/' + encodeURIComponent(ticker), { method: 'POST' });
       if (!analyzeResp.ok) throw new Error('Analysis failed (HTTP ' + analyzeResp.status + ')');
       var analyzeResult = await analyzeResp.json();
       if (analyzeResult.error) throw new Error(analyzeResult.error.message || 'Analysis failed');
-
       var d = analyzeResult.data;
-      /* Normalize on-demand result to match prediction format */
       stock = {
-        ticker: d.ticker,
-        name: d.name || d.ticker,
-        signal: d.signal || 0,
-        consistency: 0,
-        current_price: d.current_price || 0,
-        day_change_pct: 0,
-        sector: d.sector || '',
-        trend: d.trend || '',
-        sma_20: d.sma_20 || 0,
-        sma_50: d.sma_50 || 0,
-        volatility: d.volatility || 0,
-        momentum: d.momentum || 0,
-        status: d.status || 'analyzed',
+        ticker: d.ticker, name: d.name || d.ticker, signal: d.signal || 0,
+        consistency: 0, current_price: d.current_price || 0, day_change_pct: 0,
+        sector: d.sector || '', trend: d.trend || '',
+        sma_20: d.sma_20 || 0, sma_50: d.sma_50 || 0,
+        volatility: d.volatility || 0, momentum: d.momentum || 0,
         source: 'on_demand',
       };
     }
@@ -2864,31 +2854,27 @@ async function runModel1StockAnalysis(ticker) {
     var signal = stock.signal || 0;
     var consistency = stock.consistency || 0;
     var isUp = signal > 0;
-    var dirColor = isUp ? 'var(--accent-green, #22c55e)' : 'var(--accent-red, #ef4444)';
+    var dirColor = isUp ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
     var dirLabel = isUp ? 'Bullish' : 'Bearish';
     var dirIcon = isUp ? '\u25B2' : '\u25BC';
     var signalPct = (signal * 100).toFixed(2);
     var consistencyPct = (consistency * 100).toFixed(0);
     var dayChg = stock.day_change_pct || 0;
-    var dayColor = dayChg >= 0 ? 'var(--accent-green, #22c55e)' : 'var(--accent-red, #ef4444)';
-    var isOnDemand = stock.source === 'on_demand';
+    var dayColor = dayChg >= 0 ? 'var(--green, #22c55e)' : 'var(--red, #ef4444)';
 
-    /* Find rank if in prediction set */
+    var isOnDemand = stock.source === 'on_demand';
     var rank = stocks.findIndex(function(s) { return s.ticker === stock.ticker; }) + 1;
     var rankDisplay = rank > 0 ? '#' + rank : 'N/A';
-    var rankOf = rank > 0 ? ' (of ' + stocks.length + ')' : ' (on-demand)';
+    var rankSuffix = rank > 0 ? ' (of ' + stocks.length + ')' : ' (live)';
 
-    /* Build analysis rationale */
+    /* Build rationale */
     var rationale = [];
     if (isOnDemand) {
-      rationale.push('On-demand analysis via yfinance (not in pre-computed prediction set)');
-      if (stock.momentum) rationale.push('Momentum: ' + stock.momentum + '% (distance from 50-day SMA)');
+      rationale.push('Live analysis via yfinance (not in pre-computed set)');
+      if (stock.momentum) rationale.push('Momentum: ' + stock.momentum + '% from 50-day SMA');
       if (stock.volatility) rationale.push('Annualized volatility: ' + stock.volatility + '%');
-      if (stock.sma_20 && stock.sma_50) {
-        var smaSignal = stock.current_price > stock.sma_20 ? 'above' : 'below';
-        rationale.push('Price $' + stock.current_price.toFixed(2) + ' is ' + smaSignal + ' SMA20 ($' + stock.sma_20.toFixed(2) + ')');
-      }
-      rationale.push('Trend: ' + (stock.trend || 'unknown'));
+      if (stock.sma_20) rationale.push('Price $' + stock.current_price.toFixed(2) + ' vs SMA20 $' + stock.sma_20.toFixed(2));
+      rationale.push('Trend: ' + (stock.trend || 'N/A'));
     } else {
       if (Math.abs(signal) > 0.02) rationale.push('Strong ' + (signal > 0 ? 'buy' : 'sell') + ' signal at ' + signalPct + '%');
       else if (Math.abs(signal) > 0.01) rationale.push('Moderate signal at ' + signalPct + '%');
@@ -2899,10 +2885,9 @@ async function runModel1StockAnalysis(ticker) {
     }
     if (stock.sector) rationale.push('Sector: ' + stock.sector);
 
-    /* Source badge */
     var sourceBadge = isOnDemand
-      ? '<span style="display:inline-block;font-size:0.6875rem;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--gold-dim,rgba(196,169,98,0.1));color:var(--gold-dark,#A68B3E);margin-left:8px;">LIVE ANALYSIS</span>'
-      : '<span style="display:inline-block;font-size:0.6875rem;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--navy-dim,rgba(27,42,74,0.06));color:var(--navy,#1B2A4A);margin-left:8px;">FROM PREDICTION SET</span>';
+      ? '<span style="display:inline-block;font-size:0.6875rem;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--gold-dim);color:var(--gold-dark);margin-left:8px;">LIVE</span>'
+      : '';
 
     var html =
       '<div class="ai-report-header" style="margin-bottom:1.5rem;">' +
@@ -2916,41 +2901,31 @@ async function runModel1StockAnalysis(ticker) {
           '</div>' +
         '</div>' +
       '</div>' +
-      /* Stat cards */
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:1.5rem;">' +
         '<div class="stat-card"><div class="stat-value" style="color:' + dirColor + ';">' + signalPct + '%</div><div class="stat-label">Signal Strength</div></div>' +
         (isOnDemand
           ? '<div class="stat-card"><div class="stat-value">' + (stock.momentum || 0) + '%</div><div class="stat-label">Momentum</div></div>'
-          : '<div class="stat-card"><div class="stat-value">' + consistencyPct + '%</div><div class="stat-label">20-Day Consistency</div></div>'
-        ) +
-        '<div class="stat-card"><div class="stat-value">' + rankDisplay + '</div><div class="stat-label">Rank' + escapeHtml(rankOf) + '</div></div>' +
+          : '<div class="stat-card"><div class="stat-value">' + consistencyPct + '%</div><div class="stat-label">20-Day Consistency</div></div>') +
+        '<div class="stat-card"><div class="stat-value">' + rankDisplay + '</div><div class="stat-label">Rank' + escapeHtml(rankSuffix) + '</div></div>' +
         '<div class="stat-card"><div class="stat-value">$' + (stock.current_price || 0).toFixed(2) + '</div><div class="stat-label">Current Price</div></div>' +
         (isOnDemand
-          ? '<div class="stat-card"><div class="stat-value">' + (stock.volatility || 0) + '%</div><div class="stat-label">Volatility (Ann.)</div></div>'
-          : '<div class="stat-card"><div class="stat-value" style="color:' + dayColor + ';">' + (dayChg >= 0 ? '+' : '') + dayChg.toFixed(2) + '%</div><div class="stat-label">Day Change</div></div>'
-        ) +
+          ? '<div class="stat-card"><div class="stat-value">' + (stock.volatility || 0) + '%</div><div class="stat-label">Volatility</div></div>'
+          : '<div class="stat-card"><div class="stat-value" style="color:' + dayColor + ';">' + (dayChg >= 0 ? '+' : '') + dayChg.toFixed(2) + '%</div><div class="stat-label">Day Change</div></div>') +
         '<div class="stat-card"><div class="stat-value">' + escapeHtml(stock.sector || 'N/A') + '</div><div class="stat-label">Sector</div></div>' +
       '</div>' +
-      /* Signal Analysis */
       '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;margin-bottom:1.5rem;">' +
         '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:10px;">Signal Analysis</h4>' +
         '<ul style="margin:0;padding-left:20px;font-size:0.8125rem;color:var(--text-secondary);line-height:1.8;">' +
           rationale.map(function(r) { return '<li>' + escapeHtml(r) + '</li>'; }).join('') +
         '</ul>' +
       '</div>' +
-      /* Calculation Methodology */
       '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;">' +
-        '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:10px;">Calculation Methodology</h4>' +
+        '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:10px;">Methodology</h4>' +
         '<div style="font-size:0.8125rem;color:var(--text-secondary);line-height:1.8;">' +
-          '<div style="display:grid;grid-template-columns:140px 1fr;gap:4px 16px;">' +
-            '<span style="font-weight:600;color:var(--text-primary);">Signal</span><span>' + (isOnDemand ? 'Composite of momentum, volatility, and short-term trend' : '20-day consensus from Alpha158 features via LightGBM') + ' (' + signalPct + '%)</span>' +
-            (isOnDemand
-              ? '<span style="font-weight:600;color:var(--text-primary);">SMA 20</span><span>$' + (stock.sma_20 || 0).toFixed(2) + '</span>' +
-                '<span style="font-weight:600;color:var(--text-primary);">SMA 50</span><span>$' + (stock.sma_50 || 0).toFixed(2) + '</span>'
-              : '<span style="font-weight:600;color:var(--text-primary);">Consistency</span><span>% of 20 trading days with same directional signal (' + consistencyPct + '%)</span>'
-            ) +
-            '<span style="font-weight:600;color:var(--text-primary);">Direction</span><span>' + dirLabel + ' — signal is ' + (isUp ? 'positive (predicted upward)' : 'negative (predicted downward)') + '</span>' +
-            '<span style="font-weight:600;color:var(--text-primary);">Model</span><span>' + (isOnDemand ? 'On-demand technical analysis (momentum + volatility + trend)' : 'LightGBM + Alpha158 (158 factors, 18yr training set)') + '</span>' +
+          '<div style="display:grid;grid-template-columns:120px 1fr;gap:4px 16px;">' +
+            '<span style="font-weight:600;color:var(--text-primary);">Signal</span><span>' + (isOnDemand ? 'Composite of momentum + volatility + trend' : '20-day Alpha158 consensus via LightGBM') + ' (' + signalPct + '%)</span>' +
+            '<span style="font-weight:600;color:var(--text-primary);">Direction</span><span>' + dirLabel + '</span>' +
+            '<span style="font-weight:600;color:var(--text-primary);">Model</span><span>' + (isOnDemand ? 'On-demand technical (momentum + volatility + SMA)' : 'LightGBM + Alpha158 (158 factors, 18yr training)') + '</span>' +
           '</div>' +
         '</div>' +
       '</div>';

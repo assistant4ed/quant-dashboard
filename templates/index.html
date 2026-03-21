@@ -278,41 +278,40 @@
 
       <hr class="consulting-section-divider">
 
-      <!-- Two-column: Sector + Alt Data -->
-      <div class="overview-two-col">
-        <!-- 04 -- Sector Breakdown (moved up from 06) -->
-        <section class="section" aria-labelledby="sector-label">
-          <div class="section-header">
-            <div class="section-header-text">
-              <svg class="section-icon-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--navy, #1B2A4A)" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9,2 L9,9 L16,9"/></svg>
-              <span class="consulting-section-number">04 / Sector Analysis</span>
-              <h2 id="sector-label">Sector Breakdown</h2>
-            </div>
+      <!-- 04 -- Sector Breakdown (moved up from 06) -->
+      <section class="section" aria-labelledby="sector-label">
+        <div class="section-header">
+          <div class="section-header-text">
+            <svg class="section-icon-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--navy, #1B2A4A)" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9,2 L9,9 L16,9"/></svg>
+            <span class="consulting-section-number">04 / Sector Analysis</span>
+            <h2 id="sector-label">Sector Breakdown</h2>
           </div>
-          <div class="sector-chart" id="sector-chart" role="img" aria-label="Sector signal breakdown chart"></div>
-        </section>
+        </div>
+        <div class="sector-chart" id="sector-chart" role="img" aria-label="Sector signal breakdown chart"></div>
+      </section>
 
-        <!-- 05 -- Alternative Data Signals -->
-        <section class="section" id="alt-data-section" aria-labelledby="alt-data-label">
-          <div class="section-header">
-            <div class="section-header-text">
-              <svg class="section-icon-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--navy, #1B2A4A)" stroke-width="1.5"><path d="M2,14 L6,6 L10,10 L14,3"/><circle cx="14" cy="3" r="1.5" fill="var(--navy, #1B2A4A)"/></svg>
-              <span class="consulting-section-number">05 / Alternative Data</span>
-              <h2 id="alt-data-label">Alternative Data Signals</h2>
-            </div>
-            <div class="section-meta">
-              <span class="section-timestamp" id="alt-data-timestamp"></span>
-            </div>
+      <hr class="consulting-section-divider">
+
+      <!-- 05 -- Alternative Data Signals -->
+      <section class="section" id="alt-data-section" aria-labelledby="alt-data-label">
+        <div class="section-header">
+          <div class="section-header-text">
+            <svg class="section-icon-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--navy, #1B2A4A)" stroke-width="1.5"><path d="M2,14 L6,6 L10,10 L14,3"/><circle cx="14" cy="3" r="1.5" fill="var(--navy, #1B2A4A)"/></svg>
+            <span class="consulting-section-number">05 / Alternative Data</span>
+            <h2 id="alt-data-label">Alternative Data Signals</h2>
           </div>
-          <div class="alt-data-controls">
-            <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL)" maxlength="10" value="AAPL" aria-label="Ticker symbol for alternative data lookup">
-            <button type="button" class="btn btn-primary btn-sm" id="alt-data-load-btn">Load Alt Data</button>
+          <div class="section-meta">
+            <span class="section-timestamp" id="alt-data-timestamp"></span>
           </div>
-          <div class="alt-data-grid" id="alt-data-grid" role="region" aria-live="polite">
-            <p style="color:var(--text-muted);font-size:0.875rem;">Enter a ticker and click Load to see alternative data signals.</p>
-          </div>
-        </section>
-      </div>
+        </div>
+        <div class="alt-data-controls">
+          <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL)" maxlength="10" value="AAPL" aria-label="Ticker symbol for alternative data lookup">
+          <button type="button" class="btn btn-primary btn-sm" id="alt-data-load-btn">Load Alt Data</button>
+        </div>
+        <div class="alt-data-grid" id="alt-data-grid" role="region" aria-live="polite">
+          <p style="color:var(--text-muted);font-size:0.875rem;">Enter a ticker and click Load to see alternative data signals.</p>
+        </div>
+      </section>
 
       <hr class="consulting-section-divider">
 
