@@ -1036,6 +1036,15 @@ async function initModelEvolution() {
     var data = result.data;
     if (!data || !data.evolution || data.evolution.length === 0) return;
 
+    /* Get data scrape date from predictions */
+    try {
+      var predResp = await fetch('/api/predictions');
+      if (predResp.ok) {
+        var predData = await predResp.json();
+        data.generated_at = (predData.data && predData.data.generated_at) || '';
+      }
+    } catch(e) {}
+
     renderEvolutionSummary(data);
     renderEvolutionAccuracyChart(data.evolution);
     renderEvolutionMetricsChart(data.evolution);
@@ -1052,6 +1061,30 @@ function renderEvolutionSummary(data) {
   container.innerHTML = '';
 
   var evo = data.evolution;
+
+  /* Page explanation banner */
+  var genDate = data.generated_at || '';
+  var formattedDate = '';
+  if (genDate) {
+    try { formattedDate = new Date(genDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); } catch(e) {}
+  }
+
+  var banner = document.createElement('div');
+  banner.style.cssText = 'background:var(--bg-card,#fff);border:1px solid var(--border-color,#E8E8EC);border-radius:8px;padding:20px;margin-bottom:20px;';
+  banner.innerHTML =
+    '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:8px;">About This Page</h4>' +
+    '<p style="font-size:0.8125rem;color:var(--text-secondary,#4A4A5A);line-height:1.7;margin:0 0 10px;">' +
+      'This page documents the training history of the <strong>Quantitative Signal Engine</strong> (LightGBM + Alpha158). ' +
+      'It shows how the model was iteratively refined across ' + evo.length + ' training rounds, with each round testing different hyperparameters ' +
+      '(learning rate, tree depth, feature sampling) to improve prediction accuracy. ' +
+      'The charts below track accuracy and key metrics (IC, ICIR) across rounds.' +
+    '</p>' +
+    '<p style="font-size:0.8125rem;color:var(--text-secondary,#4A4A5A);line-height:1.7;margin:0 0 10px;">' +
+      '<strong>How this is used:</strong> The trained model generates signals for each stock in the S&P 500 universe. ' +
+      'These signals power the "Quantitative Signal Engine" method in the AI Analysis tab, providing 20-day forward directional predictions with consistency scoring.' +
+    '</p>' +
+    (formattedDate ? '<div style="font-size:0.75rem;color:var(--text-muted,#8A8A9A);font-family:monospace;">Data generated: ' + formattedDate + '</div>' : '');
+  container.appendChild(banner);
   var best = evo[evo.length - 1];
   var first = evo[0];
 

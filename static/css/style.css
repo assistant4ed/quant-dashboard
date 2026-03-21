@@ -460,6 +460,23 @@ a:hover {
 @keyframes tabFadeIn {
   from { opacity: 0; transform: translateY(3px); }
   to { opacity: 1; transform: translateY(0); }
+
+/* --- Overview 2-column layout for desktop --- */
+.overview-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 32px;
+  align-items: start;
+}
+
+.overview-two-col > .section {
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .overview-two-col {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* --- Section Meta (timestamp + refresh) --- */
@@ -2205,7 +2222,7 @@ a:hover {
 
 .evo-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
   margin-bottom: 24px;
 }
@@ -4687,7 +4704,7 @@ td a[onclick*="goAnalyze"]:hover {
 
 .market-live-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 12px;
 }
 
