@@ -451,7 +451,6 @@ function renderMarketLiveBar(data) {
     html +=
       '<div class="market-live-card ' + dirClass + '">' +
         '<div class="market-live-header">' +
-          '<span class="market-live-icon">' + item.icon + '</span>' +
           '<span class="market-live-label">' + item.label + '</span>' +
         '</div>' +
         '<div class="market-live-price">' + price + '</div>' +
@@ -476,6 +475,7 @@ function fetchOverviewNews() {
     .then(function (resp) {
       var articles = (resp.data || {}).articles || [];
       var filtered = articles.filter(isFinanceNews);
+      filtered.sort(function(a, b) { return scoreArticle(b) - scoreArticle(a); });
       renderOverviewNews(filtered);
       newsLastUpdated = new Date();
       updateNewsRefreshStatus();
@@ -598,22 +598,43 @@ var FINANCE_KEYWORDS = [
   'guidance', 'sector', 'index', 'futures', 'options', 'short', 'margin',
 ];
 
+var HIGH_IMPACT_KEYWORDS = [
+  'war', 'conflict', 'iran', 'military', 'strike', 'sanction', 'tariff',
+  'fed rate', 'rate cut', 'rate hike', 'fomc', 'central bank', 'powell',
+  'cpi', 'pce', 'jobs report', 'nonfarm', 'unemployment', 'gdp',
+  'recession', 'default', 'debt ceiling', 'shutdown', 'election',
+  'crash', 'crisis', 'pandemic', 'inflation report',
+  'geopolitic', 'nato', 'china', 'russia', 'ukraine', 'taiwan',
+  'opec', 'oil embargo', 'nuclear', 'missile',
+];
+
 var FINANCE_SOURCES = [
   'bloomberg', 'reuters', 'cnbc', 'wsj', 'ft', 'barron', 'marketwatch',
   'seeking alpha', 'investopedia', 'yahoo finance', 'benzinga', 'thestreet',
   'motley', 'zacks',
 ];
 
-function isFinanceNews(article) {
+function scoreArticle(article) {
   var title = (article.title || '').toLowerCase();
+  var summary = (article.summary || '').toLowerCase();
   var source = (article.source || '').toLowerCase();
+  var text = title + ' ' + summary;
+  var score = 0;
+
   for (var i = 0; i < FINANCE_SOURCES.length; i++) {
-    if (source.indexOf(FINANCE_SOURCES[i]) >= 0) return true;
+    if (source.indexOf(FINANCE_SOURCES[i]) >= 0) { score += 2; break; }
+  }
+  for (var i = 0; i < HIGH_IMPACT_KEYWORDS.length; i++) {
+    if (text.indexOf(HIGH_IMPACT_KEYWORDS[i]) >= 0) { score += 3; break; }
   }
   for (var i = 0; i < FINANCE_KEYWORDS.length; i++) {
-    if (title.indexOf(FINANCE_KEYWORDS[i]) >= 0) return true;
+    if (title.indexOf(FINANCE_KEYWORDS[i]) >= 0) { score += 1; break; }
   }
-  return false;
+  return score;
+}
+
+function isFinanceNews(article) {
+  return scoreArticle(article) >= 2;
 }
 
 function formatArticleDateET(date) {
@@ -2365,7 +2386,6 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--short">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-icon" aria-hidden="true">&#x1F4C9;</span>' +
           '<span class="alt-card-title">Short Interest</span>' +
           '<span class="alt-card-source">Fintel</span>' +
         '</div>' +
@@ -2393,7 +2413,6 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--insider">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-icon" aria-hidden="true">&#x1F464;</span>' +
           '<span class="alt-card-title">Insider Activity</span>' +
           '<span class="alt-card-source">Fintel</span>' +
         '</div>' +
@@ -2419,7 +2438,6 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--congress">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-icon" aria-hidden="true">&#x1F3DB;</span>' +
           '<span class="alt-card-title">Congressional Trading</span>' +
           '<span class="alt-card-source">Quiver Quant</span>' +
         '</div>' +
@@ -2442,7 +2460,6 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--darkpool">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-icon" aria-hidden="true">&#x1F311;</span>' +
           '<span class="alt-card-title">Dark Pool Activity</span>' +
           '<span class="alt-card-source">Quiver Quant</span>' +
         '</div>' +
