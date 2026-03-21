@@ -2597,15 +2597,36 @@ a:hover {
 }
 
 .ai-method-selector {
-  display: flex;
-  gap: 6px;
-  margin-top: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 8px;
 }
 
 .ai-method-selector .toggle-btn {
   font-size: 0.8125rem;
-  padding: 7px 16px;
+  font-weight: 600;
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.ai-method-selector .toggle-btn:hover {
+  border-color: var(--steel);
+  color: var(--navy);
+  background: var(--steel-dim);
+}
+
+.ai-method-selector .toggle-btn.active {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(27, 42, 74, 0.2);
 }
 
 .ai-description {
@@ -3080,12 +3101,7 @@ a:hover {
     grid-template-columns: repeat(2, 1fr) !important;
   }
   .ai-method-selector {
-    flex-wrap: wrap;
-  }
-  .ai-method-selector .toggle-btn {
-    flex: 1;
-    min-width: 100px;
-    text-align: center;
+    grid-template-columns: 1fr;
   }
 }
 

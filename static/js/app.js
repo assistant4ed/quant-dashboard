@@ -2838,8 +2838,10 @@ async function runModel1StockAnalysis(ticker) {
 
     if (!stock) {
       resultEl.innerHTML =
-        '<div class="ai-error">' + escapeHtml(t('model1.no.data')) + '</div>' +
-        '<div style="margin-top:1.5rem;">' + renderModel1Table(stocks.slice(0, 20), ticker) + '</div>';
+        '<div class="ai-error">' +
+          '<strong>' + escapeHtml(ticker) + '</strong> was not found in the current LightGBM prediction set (' + stocks.length + ' stocks).' +
+          '<div style="margin-top:8px;font-size:0.8125rem;color:var(--text-muted);">This stock may not be in the S&P 500 universe or may lack sufficient data for signal generation.</div>' +
+        '</div>';
       return;
     }
 
@@ -2857,6 +2859,21 @@ async function runModel1StockAnalysis(ticker) {
     /* Find rank */
     var rank = stocks.findIndex(function(s) { return s.ticker === stock.ticker; }) + 1;
 
+    /* Build rationale */
+    var rationale = [];
+    if (Math.abs(signal) > 0.02) rationale.push('Strong ' + (signal > 0 ? 'buy' : 'sell') + ' signal at ' + signalPct + '%');
+    else if (Math.abs(signal) > 0.01) rationale.push('Moderate signal at ' + signalPct + '%');
+    else rationale.push('Weak signal at ' + signalPct + '%');
+    if (consistency > 0.8) rationale.push('High consistency (' + consistencyPct + '%) across 20 trading days indicates strong conviction');
+    else if (consistency > 0.6) rationale.push('Moderate consistency (' + consistencyPct + '%) — signal direction held in majority of days');
+    else rationale.push('Low consistency (' + consistencyPct + '%) — signal may reverse, use caution');
+    if (stock.sector) rationale.push('Sector: ' + stock.sector);
+
+    /* Nearby stocks for context (2 above, 2 below in rank) */
+    var nearbyStart = Math.max(0, rank - 3);
+    var nearbyEnd = Math.min(stocks.length, rank + 2);
+    var nearbyStocks = stocks.slice(nearbyStart, nearbyEnd);
+
     var html =
       '<div class="ai-report-header" style="margin-bottom:1.5rem;">' +
         '<div class="ai-rating-section">' +
@@ -2868,6 +2885,7 @@ async function runModel1StockAnalysis(ticker) {
           '</div>' +
         '</div>' +
       '</div>' +
+      /* Stat cards */
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:1.5rem;">' +
         '<div class="stat-card"><div class="stat-value" style="color:' + dirColor + ';">' + signalPct + '%</div><div class="stat-label">Signal Strength</div></div>' +
         '<div class="stat-card"><div class="stat-value">' + consistencyPct + '%</div><div class="stat-label">20-Day Consistency</div></div>' +
@@ -2876,8 +2894,32 @@ async function runModel1StockAnalysis(ticker) {
         '<div class="stat-card"><div class="stat-value" style="color:' + dayColor + ';">' + (dayChg >= 0 ? '+' : '') + dayChg.toFixed(2) + '%</div><div class="stat-label">Day Change</div></div>' +
         '<div class="stat-card"><div class="stat-value">' + escapeHtml(stock.sector || 'N/A') + '</div><div class="stat-label">Sector</div></div>' +
       '</div>' +
-      '<h3 style="font-size:0.938rem;margin:20px 0 12px;color:var(--text-secondary);">Top 20 Ranked Stocks</h3>' +
-      renderModel1Table(stocks.slice(0, 20), ticker);
+      /* Analysis rationale */
+      '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;margin-bottom:1.5rem;">' +
+        '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:10px;">Signal Analysis</h4>' +
+        '<ul style="margin:0;padding-left:20px;font-size:0.8125rem;color:var(--text-secondary);line-height:1.8;">' +
+          rationale.map(function(r) { return '<li>' + escapeHtml(r) + '</li>'; }).join('') +
+        '</ul>' +
+      '</div>' +
+      /* Calculation methodology */
+      '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;margin-bottom:1.5rem;">' +
+        '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:10px;">Calculation Methodology</h4>' +
+        '<div style="font-size:0.8125rem;color:var(--text-secondary);line-height:1.8;">' +
+          '<div style="display:grid;grid-template-columns:140px 1fr;gap:4px 16px;">' +
+            '<span style="font-weight:600;color:var(--text-primary);">Signal</span><span>20-day consensus from Alpha158 features via LightGBM (' + signalPct + '%)</span>' +
+            '<span style="font-weight:600;color:var(--text-primary);">Consistency</span><span>% of 20 trading days with same directional signal (' + consistencyPct + '%)</span>' +
+            '<span style="font-weight:600;color:var(--text-primary);">Direction</span><span>' + dirLabel + ' — signal is ' + (isUp ? 'positive (predicted upward movement)' : 'negative (predicted downward movement)') + '</span>' +
+            '<span style="font-weight:600;color:var(--text-primary);">Ranking</span><span>#' + rank + ' out of ' + stocks.length + ' stocks by combined score</span>' +
+            '<span style="font-weight:600;color:var(--text-primary);">Model</span><span>LightGBM + Alpha158 (158 factors, 18yr training set)</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      /* Nearby rankings for context */
+      '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;">' +
+        '<h4 style="font-size:0.875rem;font-weight:600;color:var(--navy,#1B2A4A);margin-bottom:10px;">Nearby Rankings</h4>' +
+        '<p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">Stocks ranked near ' + escapeHtml(ticker) + ' for context</p>' +
+        renderModel1Table(nearbyStocks, ticker) +
+      '</div>';
 
     resultEl.innerHTML = html;
     updateSectionTimestamp('ai');
