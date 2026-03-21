@@ -12,6 +12,16 @@ const MAX_VISIBLE_COUNT = 30;
 const AUTO_REFRESH_INTERVAL_MS = 300000; /* 5 minutes */
 const SIGNAL_BAR_MAX = 0.07;
 
+var SECTION_ICONS = {
+  shortInterest: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,4 6,8 10,6 14,12"/></svg>',
+  insider: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2,14 Q2,10 8,10 Q14,10 14,14"/></svg>',
+  congress: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3,14 L3,7 M8,14 L8,7 M13,14 L13,7 M1,7 L15,7 M8,2 L2,7 L14,7 Z"/></svg>',
+  darkPool: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/></svg>',
+  calendar: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/></svg>',
+  provider: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2"/><circle cx="5" cy="8" r="1" fill="currentColor"/><line x1="8" y1="7" x2="12" y2="7"/><line x1="8" y1="10" x2="11" y2="10"/></svg>',
+  signal: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2,12 L5,5 L8,9 L11,3 L14,8"/></svg>',
+};
+
 /* ============================================================
    State
    ============================================================ */
@@ -568,8 +578,8 @@ function fetchMarketNewsFeed() {
           '<a class="overview-news-card" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:0.75rem;">' +
             '<div class="overview-news-meta">' +
               '<span class="overview-news-source">' + source + '</span>' +
+              (pubDate ? '<span class="overview-news-date-badge">' + pubDate + '</span>' : '') +
             '</div>' +
-            '<div class="overview-news-date-prominent">' + pubDate + '</div>' +
             '<div class="overview-news-title">' + title + '</div>' +
             (summary ? '<div class="overview-news-summary">' + summary + '...</div>' : '') +
           '</a>';
@@ -1119,7 +1129,6 @@ function runFullAnalysisSuite(ticker, isQuick) {
 
   if (activeAnalysisMethod === 'ai') {
     runAiAnalysis(ticker, isQuick);
-    if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
   } else if (activeAnalysisMethod === 'factors') {
     if (typeof runFactorAnalysis === 'function') runFactorAnalysis(ticker);
   } else if (activeAnalysisMethod === 'model1') {
@@ -1654,7 +1663,7 @@ function renderCalendarHighlights(data) {
     var daysUntil = Math.ceil((new Date(nextMajor.date) - new Date()) / 86400000);
     var urgencyClass = daysUntil <= 1 ? 'calendar-urgent' : daysUntil <= 3 ? 'calendar-soon' : '';
     html += '<div class="calendar-highlight-card ' + urgencyClass + '">';
-    html += '<div class="calendar-highlight-label">Next Major Event</div>';
+    html += '<div class="calendar-highlight-label">' + SECTION_ICONS.calendar + ' Next Major Event</div>';
     html += '<div class="calendar-highlight-event"><span class="hl-keyword">' + escapeHtml(nextMajor.event) + '</span></div>';
     html += '<div class="calendar-highlight-date">' + escapeHtml(nextMajor.date) + (nextMajor.time ? ' ' + nextMajor.time : '') + '</div>';
     html += '<div class="calendar-highlight-days"><span class="hl-number">' + daysUntil + '</span> day' + (daysUntil !== 1 ? 's' : '') + ' away</div>';
@@ -2323,7 +2332,7 @@ function renderProviderStatus(providers) {
       '<div class="provider-card ' + statusClass + '">' +
         '<div class="provider-dot">' + dot + '</div>' +
         '<div class="provider-info">' +
-          '<div class="provider-name">' + escapeHtml(p.name) + '</div>' +
+          '<div class="provider-name">' + SECTION_ICONS.provider + ' ' + escapeHtml(p.name) + '</div>' +
           '<div class="provider-status-text">' + statusText + '</div>' +
         '</div>' +
       '</div>';
@@ -2386,7 +2395,7 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--short">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-title">Short Interest</span>' +
+          '<span class="alt-card-title">' + SECTION_ICONS.shortInterest + ' Short Interest</span>' +
           '<span class="alt-card-source">Fintel</span>' +
         '</div>' +
         '<div class="alt-card-metric">' +
@@ -2413,7 +2422,7 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--insider">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-title">Insider Activity</span>' +
+          '<span class="alt-card-title">' + SECTION_ICONS.insider + ' Insider Activity</span>' +
           '<span class="alt-card-source">Fintel</span>' +
         '</div>' +
         '<div class="alt-card-metric">' +
@@ -2438,7 +2447,7 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--congress">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-title">Congressional Trading</span>' +
+          '<span class="alt-card-title">' + SECTION_ICONS.congress + ' Congressional Trading</span>' +
           '<span class="alt-card-source">Quiver Quant</span>' +
         '</div>' +
         '<div class="alt-card-metric">' +
@@ -2460,7 +2469,7 @@ function renderAltData(data, ticker) {
     html +=
       '<div class="alt-card alt-card--darkpool">' +
         '<div class="alt-card-header">' +
-          '<span class="alt-card-title">Dark Pool Activity</span>' +
+          '<span class="alt-card-title">' + SECTION_ICONS.darkPool + ' Dark Pool Activity</span>' +
           '<span class="alt-card-source">Quiver Quant</span>' +
         '</div>' +
         '<div class="alt-card-metric">' +
@@ -2755,19 +2764,30 @@ function setAnalysisMethod(method) {
   var loadTextEl = document.getElementById('ai-loading-text');
   if (loadTextEl) loadTextEl.textContent = loadingTexts[method] || '';
 
-  /* Show/hide result containers based on method */
+  /* Show/hide result containers - preserve content, just toggle visibility */
   var aiResults = document.getElementById('ai-results');
   var factorsResults = document.getElementById('factors-results');
   var model1Results = document.getElementById('model1-results');
+  var factorsSection = document.querySelector('[aria-labelledby="factors-label"]');
 
+  /* Hide all non-active containers */
   if (aiResults) aiResults.classList.add('hidden');
   if (factorsResults) factorsResults.classList.add('hidden');
   if (model1Results) model1Results.classList.add('hidden');
+  if (factorsSection) factorsSection.style.display = 'none';
 
-  /* Show/hide factor section based on method */
-  var factorsSection = document.querySelector('[aria-labelledby="factors-label"]');
-  if (factorsSection) {
-    factorsSection.style.display = (method === 'ai' || method === 'factors') ? '' : 'none';
+  /* Show active method's container if it has cached content */
+  if (method === 'ai' && aiResults && aiResults.innerHTML.trim()) {
+    aiResults.classList.remove('hidden');
+  }
+  if (method === 'factors') {
+    if (factorsSection) factorsSection.style.display = '';
+    if (factorsResults && factorsResults.innerHTML.trim()) {
+      factorsResults.classList.remove('hidden');
+    }
+  }
+  if (method === 'model1' && model1Results && model1Results.innerHTML.trim()) {
+    model1Results.classList.remove('hidden');
   }
 
   /* Update Analyze button text */
