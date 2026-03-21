@@ -305,11 +305,14 @@
           </div>
         </div>
         <div class="alt-data-controls">
-          <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL)" maxlength="10" value="AAPL" aria-label="Ticker symbol for alternative data lookup">
+          <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL, TSLA)" maxlength="10" value="" aria-label="Ticker symbol for alternative data lookup">
           <button type="button" class="btn btn-primary btn-sm" id="alt-data-load-btn">Load Alt Data</button>
         </div>
         <div class="alt-data-grid" id="alt-data-grid" role="region" aria-live="polite">
-          <p style="color:var(--text-muted);font-size:0.875rem;">Enter a ticker and click Load to see alternative data signals.</p>
+          <div class="alt-data-empty">
+            <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:6px;">Enter a stock ticker above to view alternative data signals.</p>
+            <p style="color:var(--text-muted);font-size:0.78rem;">Includes short interest, insider trades, congressional trading, and dark pool activity.</p>
+          </div>
         </div>
       </section>
 

@@ -3577,16 +3577,18 @@ a:hover {
 .calendar-table {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow-x: auto;
+  background: var(--bg-card);
 }
 
 .calendar-row {
   display: grid;
-  grid-template-columns: 100px 70px 1fr 90px 80px 80px;
-  padding: 8px 12px;
+  grid-template-columns: 90px 60px 1fr 80px 72px 72px;
+  padding: 10px 16px;
   font-size: 0.8125rem;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
+  gap: 8px;
 }
 
 .calendar-row:last-child {
@@ -3594,17 +3596,21 @@ a:hover {
 }
 
 .calendar-header {
-  background: var(--bg-card-hover);
+  background: var(--navy);
   font-weight: 600;
-  color: var(--navy);
-  font-size: 0.75rem;
+  color: #fff;
+  font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .calendar-today {
   background: var(--navy-dim);
-  border-left: 2px solid var(--navy);
+  border-left: 3px solid var(--navy);
+}
+
+.calendar-row:not(.calendar-header):hover {
+  background: var(--bg-card-hover);
 }
 
 
@@ -4931,20 +4937,24 @@ td a[onclick*="goAnalyze"]:hover {
    Data Provider Status
    ============================================================ */
 .provider-status-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
 }
 
 .provider-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 12px;
+  padding: 14px 18px;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  min-width: 160px;
+  transition: border-color var(--transition-fast);
+}
+
+.provider-card:hover {
+  border-color: var(--steel);
 }
 
 .provider-card.provider-online .provider-dot {
@@ -4952,12 +4962,14 @@ td a[onclick*="goAnalyze"]:hover {
 }
 
 .provider-card.provider-offline .provider-dot {
-  color: var(--text-muted);
+  color: var(--accent-red);
+  opacity: 0.6;
 }
 
 .provider-dot {
-  font-size: 1.25rem;
+  font-size: 0.75rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .provider-name {
@@ -4967,8 +4979,13 @@ td a[onclick*="goAnalyze"]:hover {
 }
 
 .provider-status-text {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.provider-online .provider-status-text {
+  color: var(--accent-green);
 }
 
 .provider-online .provider-status-text {
@@ -4983,6 +5000,14 @@ td a[onclick*="goAnalyze"]:hover {
   gap: 10px;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.alt-data-empty {
+  text-align: center;
+  padding: 32px 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
 }
 
 .alt-data-loading {

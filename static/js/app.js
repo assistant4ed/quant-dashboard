@@ -2607,7 +2607,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* Initialize alternative data */
   initAltData();
-  fetchAltData('AAPL');
 
   /* Initialize study cards */
   initStudyCards();
