@@ -1613,7 +1613,7 @@ function loadTVPrediction(ticker) {
   if (zone) zone.classList.remove('hidden');
   if (tickerLabel) tickerLabel.textContent = ticker;
 
-  fetch('/api/predict-chart/' + ticker)
+  fetch('/api/predict-chart/' + encodeURIComponent(ticker))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       initTVPredictionChart(data, ticker);

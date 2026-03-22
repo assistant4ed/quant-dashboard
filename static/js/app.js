@@ -1159,8 +1159,8 @@ async function runAiAnalysis(ticker, isQuick) {
   quickBtn.disabled = true;
 
   var endpoint = isQuick
-    ? '/api/ai-quick/' + ticker
-    : '/api/ai-analyze/' + ticker;
+    ? '/api/ai-quick/' + encodeURIComponent(ticker)
+    : '/api/ai-analyze/' + encodeURIComponent(ticker);
 
   try {
     var controller = new AbortController();
@@ -2050,7 +2050,7 @@ function runFactorAnalysis(ticker) {
   if (loading) loading.classList.remove('hidden');
   if (results) results.classList.add('hidden');
 
-  fetch('/api/factors/' + ticker)
+  fetch('/api/factors/' + encodeURIComponent(ticker))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (loading) loading.classList.add('hidden');

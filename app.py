@@ -46,7 +46,7 @@ MAX_TOP_N = 100
 # Historical data cache (ticker_period -> list of OHLCV dicts)
 CACHE_TTL = 3600  # 1 hour in seconds
 ALLOWED_PERIODS = {"1mo", "3mo", "6mo", "1y", "5y"}
-TICKER_PATTERN = re.compile(r"^[A-Za-z0-9]{1,10}$")
+TICKER_PATTERN = re.compile(r"^[A-Za-z0-9]{1,10}(\.[A-Za-z]{1,4})?$")
 TRADING_DAYS_PER_YEAR = 252
 MAX_SIGNAL_BOOST = 15
 MAX_PROBABILITY = 95

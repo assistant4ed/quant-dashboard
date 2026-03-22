@@ -305,7 +305,7 @@
           </div>
         </div>
         <div class="alt-data-controls">
-          <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="Enter ticker (e.g. AAPL, TSLA)" maxlength="10" value="" aria-label="Ticker symbol for alternative data lookup">
+          <input type="text" id="alt-data-ticker" class="ai-ticker-input" placeholder="e.g. AAPL or 0700.HK" maxlength="10" value="" aria-label="Ticker symbol for alternative data lookup">
           <button type="button" class="btn btn-primary btn-sm" id="alt-data-load-btn">Load Alt Data</button>
         </div>
         <div class="alt-data-grid" id="alt-data-grid" role="region" aria-live="polite">
@@ -352,20 +352,39 @@
         <div class="ai-controls">
           <div class="ai-input-group">
             <select id="ai-ticker-select" class="ai-ticker-select" aria-label="Select top stock">
-              <option value="">Top 10 Most Traded</option>
-              <option value="AAPL">AAPL - Apple</option>
-              <option value="MSFT">MSFT - Microsoft</option>
-              <option value="NVDA">NVDA - NVIDIA</option>
-              <option value="AMZN">AMZN - Amazon</option>
-              <option value="META">META - Meta Platforms</option>
-              <option value="GOOGL">GOOGL - Alphabet</option>
-              <option value="TSLA">TSLA - Tesla</option>
-              <option value="AVGO">AVGO - Broadcom</option>
-              <option value="JPM">JPM - JPMorgan</option>
-              <option value="V">V - Visa</option>
+              <option value="">Select a stock...</option>
+              <optgroup label="US — Most Traded">
+                <option value="AAPL">AAPL - Apple</option>
+                <option value="MSFT">MSFT - Microsoft</option>
+                <option value="NVDA">NVDA - NVIDIA</option>
+                <option value="AMZN">AMZN - Amazon</option>
+                <option value="META">META - Meta Platforms</option>
+                <option value="GOOGL">GOOGL - Alphabet</option>
+                <option value="TSLA">TSLA - Tesla</option>
+                <option value="AVGO">AVGO - Broadcom</option>
+                <option value="JPM">JPM - JPMorgan</option>
+                <option value="V">V - Visa</option>
+              </optgroup>
+              <optgroup label="HK — Hong Kong">
+                <option value="0700.HK">0700.HK - Tencent</option>
+                <option value="9988.HK">9988.HK - Alibaba</option>
+                <option value="0005.HK">0005.HK - HSBC</option>
+                <option value="1299.HK">1299.HK - AIA Group</option>
+                <option value="0941.HK">0941.HK - China Mobile</option>
+                <option value="2318.HK">2318.HK - Ping An</option>
+                <option value="0388.HK">0388.HK - HKEX</option>
+                <option value="9618.HK">9618.HK - JD.com</option>
+                <option value="3690.HK">3690.HK - Meituan</option>
+                <option value="1810.HK">1810.HK - Xiaomi</option>
+                <option value="9999.HK">9999.HK - NetEase</option>
+                <option value="0027.HK">0027.HK - Galaxy Ent</option>
+                <option value="1928.HK">1928.HK - Sands China</option>
+                <option value="2020.HK">2020.HK - ANTA Sports</option>
+                <option value="9888.HK">9888.HK - Baidu</option>
+              </optgroup>
             </select>
             <span class="ai-or-text">or</span>
-            <input type="text" id="ai-ticker-input" class="ai-ticker-input" placeholder="Enter any ticker" maxlength="10" aria-label="Custom stock ticker">
+            <input type="text" id="ai-ticker-input" class="ai-ticker-input" placeholder="e.g. AAPL or 0700.HK" maxlength="10" aria-label="Custom stock ticker">
             <button type="button" class="btn btn-primary" id="ai-analyze-btn">Analyze</button>
             <button type="button" class="btn btn-sm" id="ai-quick-btn">Quick</button>
           </div>
