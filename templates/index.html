@@ -210,6 +210,7 @@
       <button type="button" class="tab-btn" data-tab="market" role="tab" aria-selected="false" aria-controls="tab-market">Market Data</button>
       <button type="button" class="tab-btn" data-tab="model" role="tab" aria-selected="false" aria-controls="tab-model">Methodology</button>
       <button type="button" class="tab-btn" data-tab="study" role="tab" aria-selected="false" aria-controls="tab-study">Study</button>
+      <button type="button" class="tab-btn" data-tab="guide" role="tab" aria-selected="false" aria-controls="tab-guide">Guide</button>
     </div>
   </nav>
 
@@ -877,6 +878,1214 @@
           <div class="study-skills-grid" id="study-skills-grid"></div>
         </div>
       </section>
+    </div>
+
+    <!-- ====== TAB: Guide ====== -->
+    <div class="tab-panel" id="tab-guide" role="tabpanel">
+      <style>
+        /* Guide Tab Styles */
+        .guide-hero {
+          background: linear-gradient(135deg, #1B2A4A 0%, #2a3f6b 60%, #4A6FA5 100%);
+          border-radius: 12px;
+          padding: 48px 40px 40px;
+          margin-bottom: 32px;
+          position: relative;
+          overflow: hidden;
+        }
+        .guide-hero::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          right: -20%;
+          width: 400px;
+          height: 400px;
+          border-radius: 50%;
+          background: rgba(196, 169, 98, 0.06);
+          pointer-events: none;
+        }
+        .guide-hero-eyebrow {
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          color: var(--gold, #C4A962);
+          margin-bottom: 12px;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-hero h2 {
+          font-size: 1.75rem;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0 0 8px;
+          letter-spacing: -0.02em;
+        }
+        .guide-hero-subtitle {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.65);
+          margin: 0 0 32px;
+          max-width: 540px;
+          line-height: 1.6;
+        }
+        .guide-hero-stats {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+        .guide-hero-stat {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 16px;
+          text-align: center;
+          backdrop-filter: blur(4px);
+        }
+        .guide-hero-stat-value {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: var(--gold, #C4A962);
+          display: block;
+          margin-bottom: 4px;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-hero-stat-label {
+          font-size: 0.688rem;
+          color: rgba(255, 255, 255, 0.55);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          font-weight: 600;
+        }
+        @media (max-width: 768px) {
+          .guide-hero {
+            padding: 32px 20px 28px;
+          }
+          .guide-hero h2 {
+            font-size: 1.25rem;
+          }
+          .guide-hero-stats {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        /* Step Progress Bar */
+        .guide-step-bar {
+          display: flex;
+          gap: 0;
+          align-items: stretch;
+          margin-bottom: 32px;
+          overflow-x: auto;
+          padding-bottom: 4px;
+          -webkit-overflow-scrolling: touch;
+        }
+        .guide-step-bar::-webkit-scrollbar {
+          height: 3px;
+        }
+        .guide-step-bar::-webkit-scrollbar-thumb {
+          background: rgba(27, 42, 74, 0.15);
+          border-radius: 2px;
+        }
+        .guide-step-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex: 1;
+          min-width: 80px;
+          position: relative;
+          padding: 0 4px;
+        }
+        .guide-step-item::after {
+          content: '';
+          position: absolute;
+          top: 14px;
+          right: -50%;
+          width: 100%;
+          height: 2px;
+          background: rgba(148, 163, 184, 0.15);
+        }
+        .guide-step-item:last-child::after {
+          display: none;
+        }
+        .guide-step-num {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: var(--navy, #1B2A4A);
+          color: #ffffff;
+          font-size: 0.688rem;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 6px;
+          position: relative;
+          z-index: 1;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-step-label {
+          font-size: 0.6rem;
+          color: var(--text-muted, #8b8fa3);
+          text-align: center;
+          line-height: 1.3;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+        }
+
+        /* Feature Accordion */
+        .guide-feature {
+          border: 1px solid rgba(148, 163, 184, 0.12);
+          border-radius: 10px;
+          margin-bottom: 12px;
+          overflow: hidden;
+          transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .guide-feature:hover {
+          border-color: rgba(148, 163, 184, 0.25);
+          box-shadow: 0 2px 12px rgba(27, 42, 74, 0.04);
+        }
+        .guide-feature-header {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 16px 20px;
+          cursor: pointer;
+          user-select: none;
+          background: transparent;
+          transition: background 0.15s ease;
+        }
+        .guide-feature-header:hover {
+          background: rgba(27, 42, 74, 0.02);
+        }
+        .guide-feature-badge {
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 800;
+          flex-shrink: 0;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-badge-navy {
+          background: rgba(27, 42, 74, 0.08);
+          color: var(--navy, #1B2A4A);
+          border: 1px solid rgba(27, 42, 74, 0.15);
+        }
+        .guide-badge-gold {
+          background: rgba(196, 169, 98, 0.1);
+          color: var(--gold, #C4A962);
+          border: 1px solid rgba(196, 169, 98, 0.2);
+        }
+        .guide-badge-steel {
+          background: rgba(74, 111, 165, 0.08);
+          color: var(--steel, #4A6FA5);
+          border: 1px solid rgba(74, 111, 165, 0.15);
+        }
+        .guide-feature-info {
+          flex: 1;
+          min-width: 0;
+        }
+        .guide-feature-title {
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: var(--text-primary, #1a1a2e);
+          margin: 0 0 2px;
+          letter-spacing: -0.01em;
+        }
+        .guide-feature-subtitle {
+          font-size: 0.75rem;
+          color: var(--text-muted, #8b8fa3);
+          margin: 0;
+          line-height: 1.4;
+        }
+        .guide-feature-tag {
+          display: inline-block;
+          font-size: 0.6rem;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          padding: 3px 8px;
+          border-radius: 3px;
+          flex-shrink: 0;
+        }
+        .guide-tag-ai {
+          color: var(--navy, #1B2A4A);
+          background: rgba(27, 42, 74, 0.06);
+          border: 1px solid rgba(27, 42, 74, 0.15);
+        }
+        .guide-tag-quant {
+          color: var(--gold, #C4A962);
+          background: rgba(196, 169, 98, 0.08);
+          border: 1px solid rgba(196, 169, 98, 0.15);
+        }
+        .guide-tag-data {
+          color: var(--steel, #4A6FA5);
+          background: rgba(74, 111, 165, 0.06);
+          border: 1px solid rgba(74, 111, 165, 0.15);
+        }
+        .guide-tag-charts {
+          color: #5b7a3d;
+          background: rgba(91, 122, 61, 0.06);
+          border: 1px solid rgba(91, 122, 61, 0.15);
+        }
+        .guide-tag-options {
+          color: #8b5a2b;
+          background: rgba(139, 90, 43, 0.06);
+          border: 1px solid rgba(139, 90, 43, 0.15);
+        }
+        .guide-tag-macro {
+          color: #6b4c8a;
+          background: rgba(107, 76, 138, 0.06);
+          border: 1px solid rgba(107, 76, 138, 0.15);
+        }
+        .guide-tag-learn {
+          color: #2a7a6a;
+          background: rgba(42, 122, 106, 0.06);
+          border: 1px solid rgba(42, 122, 106, 0.15);
+        }
+        .guide-tag-model {
+          color: #7a4a4a;
+          background: rgba(122, 74, 74, 0.06);
+          border: 1px solid rgba(122, 74, 74, 0.15);
+        }
+        .guide-tag-i18n {
+          color: var(--text-muted, #8b8fa3);
+          background: rgba(148, 163, 184, 0.08);
+          border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+        .guide-feature-arrow {
+          flex-shrink: 0;
+          transition: transform 0.2s ease;
+        }
+        .guide-feature.open .guide-feature-arrow {
+          transform: rotate(180deg);
+        }
+        .guide-feature-body {
+          display: none;
+          padding: 0 20px 24px;
+          border-top: 1px solid rgba(148, 163, 184, 0.08);
+        }
+        .guide-feature.open .guide-feature-body {
+          display: block;
+        }
+
+        /* Infographic Stat Cards */
+        .guide-stat-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin: 16px 0;
+        }
+        .guide-stat-card {
+          background: rgba(27, 42, 74, 0.025);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          border-radius: 8px;
+          padding: 14px;
+          text-align: center;
+        }
+        .guide-stat-card-value {
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: var(--navy, #1B2A4A);
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+          display: block;
+        }
+        .guide-stat-card-label {
+          font-size: 0.65rem;
+          color: var(--text-muted, #8b8fa3);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-top: 2px;
+          display: block;
+        }
+
+        /* Flow Diagram */
+        .guide-flow {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          margin: 16px 0;
+          overflow-x: auto;
+          padding: 8px 0;
+        }
+        .guide-flow-step {
+          background: rgba(27, 42, 74, 0.04);
+          border: 1px solid rgba(148, 163, 184, 0.12);
+          border-radius: 6px;
+          padding: 10px 14px;
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: var(--text-secondary, #64748b);
+          white-space: nowrap;
+          text-align: center;
+          min-width: 80px;
+        }
+        .guide-flow-arrow {
+          flex-shrink: 0;
+          margin: 0 4px;
+          color: var(--text-muted, #8b8fa3);
+          opacity: 0.4;
+        }
+
+        /* Mockup Browser Window */
+        .guide-mockup {
+          border: 1px solid rgba(148, 163, 184, 0.15);
+          border-radius: 8px;
+          overflow: hidden;
+          margin: 16px 0;
+        }
+        .guide-mockup-bar {
+          background: rgba(27, 42, 74, 0.04);
+          padding: 8px 12px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .guide-mockup-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: rgba(148, 163, 184, 0.25);
+        }
+        .guide-mockup-dot:first-child { background: rgba(239, 68, 68, 0.4); }
+        .guide-mockup-dot:nth-child(2) { background: rgba(234, 179, 8, 0.4); }
+        .guide-mockup-dot:nth-child(3) { background: rgba(34, 197, 94, 0.4); }
+        .guide-mockup-url {
+          flex: 1;
+          text-align: center;
+          font-size: 0.625rem;
+          color: var(--text-muted, #8b8fa3);
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-mockup-body {
+          background: rgba(248, 249, 250, 0.5);
+          padding: 24px;
+          min-height: 120px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .guide-mockup-placeholder {
+          text-align: center;
+          color: var(--text-muted, #8b8fa3);
+        }
+        .guide-mockup-placeholder svg {
+          opacity: 0.3;
+          margin-bottom: 8px;
+        }
+        .guide-mockup-placeholder span {
+          display: block;
+          font-size: 0.688rem;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+        }
+
+        /* Pro Tip Box */
+        .guide-pro-tip {
+          border-left: 3px solid var(--gold, #C4A962);
+          background: rgba(196, 169, 98, 0.04);
+          padding: 12px 16px;
+          margin: 16px 0;
+          border-radius: 0 6px 6px 0;
+        }
+        .guide-pro-tip-label {
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--gold, #C4A962);
+          margin-bottom: 4px;
+        }
+        .guide-pro-tip p {
+          font-size: 0.78rem;
+          color: var(--text-secondary, #64748b);
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        /* Try It Button */
+        .guide-try-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 20px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          color: #ffffff;
+          background: var(--navy, #1B2A4A);
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: background 0.15s ease, transform 0.1s ease;
+          margin-top: 8px;
+        }
+        .guide-try-btn:hover {
+          background: #243658;
+          transform: translateY(-1px);
+        }
+        .guide-try-btn:active {
+          transform: translateY(0);
+        }
+
+        /* PDF Download Button */
+        .guide-pdf-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 14px 24px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--navy, #1B2A4A);
+          background: rgba(196, 169, 98, 0.12);
+          border: 1px solid rgba(196, 169, 98, 0.3);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease;
+          margin-top: 24px;
+        }
+        .guide-pdf-btn:hover {
+          background: rgba(196, 169, 98, 0.2);
+          border-color: rgba(196, 169, 98, 0.5);
+        }
+
+        /* Guide Disclaimer */
+        .guide-disclaimer {
+          margin-top: 32px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .guide-disclaimer p {
+          font-size: 0.7rem;
+          color: var(--text-muted, #8b8fa3);
+          line-height: 1.6;
+          margin: 0;
+        }
+      </style>
+
+      <div style="height:32px;"></div>
+
+      <!-- Guide Hero -->
+      <div class="guide-hero">
+        <div class="guide-hero-eyebrow" id="guide-hero-eyebrow">ALPHAEDGE HK &mdash; USER GUIDE</div>
+        <h2><span id="guide-hero-title">Complete Platform Guide</span></h2>
+        <p class="guide-hero-subtitle"><span id="guide-hero-subtitle">Master every feature of AlphaEdge HK's institutional-grade AI trading intelligence platform &mdash; from real-time market data to quantitative signal analysis.</span></p>
+        <div class="guide-hero-stats">
+          <div class="guide-hero-stat">
+            <span class="guide-hero-stat-value" id="guide-stat1-value">10</span>
+            <span class="guide-hero-stat-label" id="guide-stat1-label">Core Features</span>
+          </div>
+          <div class="guide-hero-stat">
+            <span class="guide-hero-stat-value" id="guide-stat2-value">158</span>
+            <span class="guide-hero-stat-label" id="guide-stat2-label">Analysis Factors</span>
+          </div>
+          <div class="guide-hero-stat">
+            <span class="guide-hero-stat-value" id="guide-stat3-value">12</span>
+            <span class="guide-hero-stat-label" id="guide-stat3-label">Factor Categories</span>
+          </div>
+          <div class="guide-hero-stat">
+            <span class="guide-hero-stat-value" id="guide-stat4-value">18yr</span>
+            <span class="guide-hero-stat-label" id="guide-stat4-label">Training Data</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Progress Bar -->
+      <div class="guide-step-bar" role="list" aria-label="Feature guide steps">
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">1</div>
+          <span class="guide-step-label" id="guide-step1-label">Market</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">2</div>
+          <span class="guide-step-label" id="guide-step2-label">AI Analysis</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">3</div>
+          <span class="guide-step-label" id="guide-step3-label">Quant Signal</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">4</div>
+          <span class="guide-step-label" id="guide-step4-label">Charts</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">5</div>
+          <span class="guide-step-label" id="guide-step5-label">Alt Data</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">6</div>
+          <span class="guide-step-label" id="guide-step6-label">Options</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">7</div>
+          <span class="guide-step-label" id="guide-step7-label">Macro</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">8</div>
+          <span class="guide-step-label" id="guide-step8-label">Study</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">9</div>
+          <span class="guide-step-label" id="guide-step9-label">Model</span>
+        </div>
+        <div class="guide-step-item" role="listitem">
+          <div class="guide-step-num">10</div>
+          <span class="guide-step-label" id="guide-step10-label">i18n</span>
+        </div>
+      </div>
+
+      <!-- ===== Feature 01: Market Overview ===== -->
+      <div class="guide-feature" id="guide-feature-1">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-1">
+          <div class="guide-feature-badge guide-badge-navy">01</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f1-title">Market Overview</h3>
+            <p class="guide-feature-subtitle" id="guide-f1-subtitle">Real-time market snapshot across 500+ Hong Kong stocks with auto-refresh</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-data" id="guide-f1-tag">DATA</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-1">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f1-stat1-value">500+</span>
+              <span class="guide-stat-card-label" id="guide-f1-stat1-label">Stocks Tracked</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f1-stat2-value">5min</span>
+              <span class="guide-stat-card-label" id="guide-f1-stat2-label">Auto-Refresh Interval</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f1-stat3-value">11</span>
+              <span class="guide-stat-card-label" id="guide-f1-stat3-label">GICS Sectors</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f1-stat4-value">24/5</span>
+              <span class="guide-stat-card-label" id="guide-f1-stat4-label">Market Coverage</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Market Overview">
+            <div class="guide-flow-step">Yahoo Finance API</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Flask Backend</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Live Ticker</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Stock Cards</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/overview</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="14" width="6" height="18" rx="1"/><rect x="13" y="8" width="6" height="24" rx="1"/><rect x="22" y="18" width="6" height="14" rx="1"/><rect x="31" y="4" width="6" height="28" rx="1"/></svg>
+                <span id="guide-f1-mockup-label">Market Overview Dashboard</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f1-tip-label">Pro Tip</div>
+            <p id="guide-f1-tip-text">Click any stock card to open the detailed analysis modal with charts, predictions, and signal breakdowns.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('overview')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f1-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 02: AI Strategic Analysis ===== -->
+      <div class="guide-feature" id="guide-feature-2">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-2">
+          <div class="guide-feature-badge guide-badge-gold">02</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f2-title">AI Strategic Analysis</h3>
+            <p class="guide-feature-subtitle" id="guide-f2-subtitle">Claude Opus deep analysis with 3-layer fundamental, technical, and macro integration</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-ai" id="guide-f2-tag">AI</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-2">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f2-stat1-value">3</span>
+              <span class="guide-stat-card-label" id="guide-f2-stat1-label">Analysis Layers</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f2-stat2-value">Opus</span>
+              <span class="guide-stat-card-label" id="guide-f2-stat2-label">Claude Model Tier</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f2-stat3-value">~30s</span>
+              <span class="guide-stat-card-label" id="guide-f2-stat3-label">Analysis Time</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f2-stat4-value">1</span>
+              <span class="guide-stat-card-label" id="guide-f2-stat4-label">Investment Thesis</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for AI Analysis">
+            <div class="guide-flow-step">Stock Data</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Prompt Builder</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Claude Opus</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Thesis Report</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/ai-analysis</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="20" cy="16" r="8"/><path d="M8 36c0-6.627 5.373-12 12-12s12 5.373 12 12"/><path d="M20 12v8l4 2"/></svg>
+                <span id="guide-f2-mockup-label">AI Analysis Interface</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f2-tip-label">Pro Tip</div>
+            <p id="guide-f2-tip-text">The AI analysis synthesizes quant signals with real-time news to generate an institutional-grade investment thesis. Review all three layers before making decisions.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('ai')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f2-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 03: Quantitative Signal Engine ===== -->
+      <div class="guide-feature" id="guide-feature-3">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-3">
+          <div class="guide-feature-badge guide-badge-steel">03</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f3-title">Quantitative Signal Engine</h3>
+            <p class="guide-feature-subtitle" id="guide-f3-subtitle">LightGBM model with 158 Alpha158 factors scored across 12 categories</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-quant" id="guide-f3-tag">QUANT</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-3">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f3-stat1-value">158</span>
+              <span class="guide-stat-card-label" id="guide-f3-stat1-label">Alpha158 Factors</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f3-stat2-value">12</span>
+              <span class="guide-stat-card-label" id="guide-f3-stat2-label">Factor Categories</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f3-stat3-value">-5/+5</span>
+              <span class="guide-stat-card-label" id="guide-f3-stat3-label">Score Range</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f3-stat4-value">5</span>
+              <span class="guide-stat-card-label" id="guide-f3-stat4-label">Market Regimes</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Quant Engine">
+            <div class="guide-flow-step">Raw OHLCV</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Alpha158 Factors</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">LightGBM Model</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Signal Score</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/quant-signals</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 32L14 18l8 8 14-20"/><circle cx="14" cy="18" r="2"/><circle cx="22" cy="26" r="2"/><circle cx="36" cy="6" r="2"/></svg>
+                <span id="guide-f3-mockup-label">Quant Signal Dashboard</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f3-tip-label">Pro Tip</div>
+            <p id="guide-f3-tip-text">Factor scores range from -5 (strong sell) to +5 (strong buy). Focus on stocks where multiple factor categories converge in the same direction for higher conviction signals.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('ai')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f3-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 04: Technical Chart Analysis ===== -->
+      <div class="guide-feature" id="guide-feature-4">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-4">
+          <div class="guide-feature-badge guide-badge-navy">04</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f4-title">Technical Chart Analysis</h3>
+            <p class="guide-feature-subtitle" id="guide-f4-subtitle">Interactive K-line charts with SMA, EMA, Bollinger Bands, and RSI overlays</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-charts" id="guide-f4-tag">CHARTS</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-4">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f4-stat1-value">4+</span>
+              <span class="guide-stat-card-label" id="guide-f4-stat1-label">Indicator Types</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f4-stat2-value">5</span>
+              <span class="guide-stat-card-label" id="guide-f4-stat2-label">Timeframes</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f4-stat3-value">OHLCV</span>
+              <span class="guide-stat-card-label" id="guide-f4-stat3-label">Candlestick Data</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f4-stat4-value">1M-5Y</span>
+              <span class="guide-stat-card-label" id="guide-f4-stat4-label">Date Range</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Charts">
+            <div class="guide-flow-step">Price History</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Indicator Calc</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Chart.js Render</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Interactive View</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/charts</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 30l8-10 6 4 8-14 10 6"/><path d="M4 20l8-2 6-6 8 2 10-8" stroke-dasharray="3 3" opacity="0.4"/></svg>
+                <span id="guide-f4-mockup-label">K-Line Chart with Indicators</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f4-tip-label">Pro Tip</div>
+            <p id="guide-f4-tip-text">Toggle multiple indicators simultaneously to spot convergence patterns. When Bollinger Bands squeeze while RSI is neutral, watch for a potential breakout.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('overview')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f4-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 05: Alternative Data Signals ===== -->
+      <div class="guide-feature" id="guide-feature-5">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-5">
+          <div class="guide-feature-badge guide-badge-gold">05</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f5-title">Alternative Data Signals</h3>
+            <p class="guide-feature-subtitle" id="guide-f5-subtitle">Short interest, insider trading, congressional trades, and dark pool flow analysis</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-data" id="guide-f5-tag">DATA</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-5">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f5-stat1-value">4</span>
+              <span class="guide-stat-card-label" id="guide-f5-stat1-label">Data Sources</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f5-stat2-value">Daily</span>
+              <span class="guide-stat-card-label" id="guide-f5-stat2-label">Update Frequency</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f5-stat3-value">SEC</span>
+              <span class="guide-stat-card-label" id="guide-f5-stat3-label">Filing Source</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f5-stat4-value">FINRA</span>
+              <span class="guide-stat-card-label" id="guide-f5-stat4-label">Short Data Source</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Alternative Data">
+            <div class="guide-flow-step">SEC / FINRA</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Data Aggregation</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Signal Processing</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Anomaly Alerts</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/alt-data</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="14" height="14" rx="2"/><rect x="22" y="4" width="14" height="14" rx="2"/><rect x="4" y="22" width="14" height="14" rx="2"/><rect x="22" y="22" width="14" height="14" rx="2"/></svg>
+                <span id="guide-f5-mockup-label">Alternative Data Dashboard</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f5-tip-label">Pro Tip</div>
+            <p id="guide-f5-tip-text">Watch for divergence between dark pool activity and price action. Unusual institutional accumulation in dark pools often precedes significant price moves by 5-10 days.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('market')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f5-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 06: Options Analysis ===== -->
+      <div class="guide-feature" id="guide-feature-6">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-6">
+          <div class="guide-feature-badge guide-badge-steel">06</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f6-title">Options Analysis</h3>
+            <p class="guide-feature-subtitle" id="guide-f6-subtitle">Options chain visualization, unusual activity scanner, and strategy builder</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-options" id="guide-f6-tag">OPTIONS</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-6">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f6-stat1-value">Chain</span>
+              <span class="guide-stat-card-label" id="guide-f6-stat1-label">Options View</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f6-stat2-value">UOA</span>
+              <span class="guide-stat-card-label" id="guide-f6-stat2-label">Unusual Activity</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f6-stat3-value">Greeks</span>
+              <span class="guide-stat-card-label" id="guide-f6-stat3-label">Delta/Gamma/Theta/Vega</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f6-stat4-value">P/C</span>
+              <span class="guide-stat-card-label" id="guide-f6-stat4-label">Put/Call Ratio</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Options Analysis">
+            <div class="guide-flow-step">Options Chain</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Greeks Calc</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Flow Scanner</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Strategy View</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/options</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20h32"/><path d="M20 4v32"/><path d="M8 28q6-16 12-16t12 16" stroke-dasharray="3 2"/><path d="M8 12q6 16 12 16t12-16"/></svg>
+                <span id="guide-f6-mockup-label">Options Chain & Strategy Builder</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f6-tip-label">Pro Tip</div>
+            <p id="guide-f6-tip-text">Scan for unusual options activity where volume exceeds 3x open interest. Large block trades by institutions often signal informed directional bets ahead of catalysts.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('ai')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f6-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 07: Economic Calendar & Macro ===== -->
+      <div class="guide-feature" id="guide-feature-7">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-7">
+          <div class="guide-feature-badge guide-badge-navy">07</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f7-title">Economic Calendar &amp; Macro</h3>
+            <p class="guide-feature-subtitle" id="guide-f7-subtitle">CPI, GDP, PMI release tracking with yield curve and consumer sentiment analysis</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-macro" id="guide-f7-tag">MACRO</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-7">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f7-stat1-value">CPI</span>
+              <span class="guide-stat-card-label" id="guide-f7-stat1-label">Consumer Prices</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f7-stat2-value">GDP</span>
+              <span class="guide-stat-card-label" id="guide-f7-stat2-label">Growth Data</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f7-stat3-value">PMI</span>
+              <span class="guide-stat-card-label" id="guide-f7-stat3-label">Manufacturing Index</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f7-stat4-value">Yield</span>
+              <span class="guide-stat-card-label" id="guide-f7-stat4-label">Curve Analysis</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Macro Calendar">
+            <div class="guide-flow-step">FRED / BLS</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Release Calendar</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Impact Analysis</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Sentiment Gauge</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/macro</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="6" width="32" height="28" rx="3"/><line x1="4" y1="14" x2="36" y2="14"/><line x1="14" y1="6" x2="14" y2="34"/><line x1="25" y1="6" x2="25" y2="34"/><line x1="4" y1="22" x2="36" y2="22"/><line x1="4" y1="28" x2="36" y2="28"/></svg>
+                <span id="guide-f7-mockup-label">Economic Calendar & Yield Curve</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f7-tip-label">Pro Tip</div>
+            <p id="guide-f7-tip-text">Monitor yield curve inversions and CPI surprises closely. Position ahead of major data releases by reviewing consensus estimates vs. historical patterns on the calendar.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('market')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f7-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 08: Interactive Study Module ===== -->
+      <div class="guide-feature" id="guide-feature-8">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-8">
+          <div class="guide-feature-badge guide-badge-gold">08</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f8-title">Interactive Study Module</h3>
+            <p class="guide-feature-subtitle" id="guide-f8-subtitle">Flashcards, quizzes, and progress tracking across 6 trading topic decks</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-learn" id="guide-f8-tag">LEARN</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-8">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f8-stat1-value">6</span>
+              <span class="guide-stat-card-label" id="guide-f8-stat1-label">Topic Decks</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f8-stat2-value">60+</span>
+              <span class="guide-stat-card-label" id="guide-f8-stat2-label">Flashcards</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f8-stat3-value">Quiz</span>
+              <span class="guide-stat-card-label" id="guide-f8-stat3-label">Assessment Mode</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f8-stat4-value">Track</span>
+              <span class="guide-stat-card-label" id="guide-f8-stat4-label">Progress Tracking</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Study Module">
+            <div class="guide-flow-step">Topic Selection</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Flashcard Deck</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Quiz Mode</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Skill Score</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/study</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="6" width="28" height="20" rx="2"/><path d="M20 26v8"/><path d="M14 34h12"/><circle cx="20" cy="16" r="4"/></svg>
+                <span id="guide-f8-mockup-label">Interactive Flashcard & Quiz UI</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f8-tip-label">Pro Tip</div>
+            <p id="guide-f8-tip-text">Complete all 6 topic decks to build a solid foundation. The quiz mode uses spaced repetition principles -- concepts you get wrong will reappear more frequently.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('study')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f8-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 09: Model Monitoring & Evolution ===== -->
+      <div class="guide-feature" id="guide-feature-9">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-9">
+          <div class="guide-feature-badge guide-badge-steel">09</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f9-title">Model Monitoring &amp; Evolution</h3>
+            <p class="guide-feature-subtitle" id="guide-f9-subtitle">Backtest validation, quality checks, training history, IC/ICIR performance metrics</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-model" id="guide-f9-tag">MODEL</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-9">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f9-stat1-value">IC</span>
+              <span class="guide-stat-card-label" id="guide-f9-stat1-label">Info Coefficient</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f9-stat2-value">ICIR</span>
+              <span class="guide-stat-card-label" id="guide-f9-stat2-label">IC Info Ratio</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f9-stat3-value">18yr</span>
+              <span class="guide-stat-card-label" id="guide-f9-stat3-label">Training History</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f9-stat4-value">QC</span>
+              <span class="guide-stat-card-label" id="guide-f9-stat4-label">Quality Checks</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for Model Monitoring">
+            <div class="guide-flow-step">Training Data</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">LightGBM Train</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">Backtest Engine</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">IC/ICIR Metrics</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/methodology</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 36L10 24l6 6 6-14 6 4 8-16"/><circle cx="10" cy="24" r="2" fill="currentColor" opacity="0.3"/><circle cx="22" cy="16" r="2" fill="currentColor" opacity="0.3"/><circle cx="36" cy="4" r="2" fill="currentColor" opacity="0.3"/></svg>
+                <span id="guide-f9-mockup-label">Model Performance Dashboard</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f9-tip-label">Pro Tip</div>
+            <p id="guide-f9-tip-text">Monitor the IC (Information Coefficient) and ICIR over rolling windows. A declining ICIR may indicate regime change, signaling it is time to reduce position sizes until the model recalibrates.</p>
+          </div>
+          <button type="button" class="guide-try-btn" onclick="switchTab('model')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            <span id="guide-f9-btn">Try It</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== Feature 10: Bilingual i18n Support ===== -->
+      <div class="guide-feature" id="guide-feature-10">
+        <div class="guide-feature-header" onclick="this.closest('.guide-feature').classList.toggle('open')" role="button" tabindex="0" aria-expanded="false" aria-controls="guide-body-10">
+          <div class="guide-feature-badge guide-badge-navy">10</div>
+          <div class="guide-feature-info">
+            <h3 class="guide-feature-title" id="guide-f10-title">Bilingual i18n Support</h3>
+            <p class="guide-feature-subtitle" id="guide-f10-subtitle">EN / Traditional Chinese / Simplified Chinese toggle with localStorage persistence</p>
+          </div>
+          <span class="guide-feature-tag guide-tag-i18n" id="guide-f10-tag">i18n</span>
+          <svg class="guide-feature-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="guide-feature-body" id="guide-body-10">
+          <div class="guide-stat-grid">
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f10-stat1-value">3</span>
+              <span class="guide-stat-card-label" id="guide-f10-stat1-label">Languages</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f10-stat2-value">EN</span>
+              <span class="guide-stat-card-label" id="guide-f10-stat2-label">English</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f10-stat3-value">繁中</span>
+              <span class="guide-stat-card-label" id="guide-f10-stat3-label">Traditional Chinese</span>
+            </div>
+            <div class="guide-stat-card">
+              <span class="guide-stat-card-value" id="guide-f10-stat4-value">简中</span>
+              <span class="guide-stat-card-label" id="guide-f10-stat4-label">Simplified Chinese</span>
+            </div>
+          </div>
+          <div class="guide-flow" aria-label="Data flow for i18n system">
+            <div class="guide-flow-step">Language Toggle</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">i18n Dictionary</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">DOM Update</div>
+            <svg class="guide-flow-arrow" width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h16M12 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <div class="guide-flow-step">localStorage Save</div>
+          </div>
+          <div class="guide-mockup">
+            <div class="guide-mockup-bar">
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <div class="guide-mockup-dot"></div>
+              <span class="guide-mockup-url">alphaedge.hk/?lang=zh-TW</span>
+            </div>
+            <div class="guide-mockup-body">
+              <div class="guide-mockup-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="20" cy="20" r="16"/><ellipse cx="20" cy="20" rx="8" ry="16"/><path d="M4 20h32"/><path d="M6 12h28"/><path d="M6 28h28"/></svg>
+                <span id="guide-f10-mockup-label">Language Toggle & Full UI Translation</span>
+              </div>
+            </div>
+          </div>
+          <div class="guide-pro-tip">
+            <div class="guide-pro-tip-label" id="guide-f10-tip-label">Pro Tip</div>
+            <p id="guide-f10-tip-text">Your language preference is saved automatically and persists across sessions. Click the language button in the header to cycle through EN, Traditional Chinese, and Simplified Chinese.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guide PDF Download -->
+      <button type="button" class="guide-pdf-btn" id="guide-download-btn" onclick="downloadGuidePDF()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2v10M5 8l4 4 4-4"/><path d="M2 13v2a1 1 0 001 1h12a1 1 0 001-1v-2"/></svg>
+        <span id="guide-download-label">Download Guide as PDF</span>
+      </button>
+
+      <!-- Guide Disclaimer -->
+      <div class="guide-disclaimer">
+        <p id="guide-disclaimer-text">This guide describes features available in AlphaEdge HK. All data and analysis are provided for educational and research purposes only. Past model performance does not guarantee future results. This is not financial advice.</p>
+      </div>
+
     </div>
 
   </main>

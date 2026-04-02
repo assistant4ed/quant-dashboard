@@ -1059,6 +1059,7 @@ window.onLanguageChange = function () {
     renderAll();
   }
   updateModelComparisonLabels();
+  renderGuideLabels();
 };
 
 /* ============================================================
@@ -2611,6 +2612,9 @@ document.addEventListener('DOMContentLoaded', function () {
   /* Initialize study cards */
   initStudyCards();
 
+  /* Initialize guide tab labels */
+  renderGuideLabels();
+
   /* Start auto-refresh */
   startAutoRefresh();
 
@@ -3022,4 +3026,107 @@ function updateModelComparisonLabels() {
     var descKeys = { ai: 'ai.claude.desc', factors: 'ai.factors.desc', model1: 'ai.model1.desc' };
     descEl.textContent = t(descKeys[activeAnalysisMethod] || 'ai.claude.desc');
   }
+}
+
+/* ============================================================
+   Guide Tab: i18n Label Rendering
+   ============================================================ */
+function renderGuideLabels() {
+  /* Tab button */
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    var tab = btn.getAttribute('data-tab');
+    var key = 'tab.' + tab;
+    if (typeof t === 'function') btn.textContent = t(key);
+  });
+
+  /* Hero */
+  var el;
+  el = document.getElementById('guide-hero-eyebrow');
+  if (el) el.textContent = t('guide.eyebrow');
+  el = document.getElementById('guide-hero-title');
+  if (el) el.textContent = t('guide.title');
+  el = document.getElementById('guide-hero-subtitle');
+  if (el) el.textContent = t('guide.subtitle');
+
+  /* Hero stats */
+  var heroStatMap = {1: 'features', 2: 'factors', 3: 'categories', 4: 'training'};
+  [1, 2, 3, 4].forEach(function (n) {
+    el = document.getElementById('guide-stat' + n + '-label');
+    if (el) el.textContent = t('guide.stat.' + heroStatMap[n]);
+  });
+
+  /* Feature sections */
+  for (var i = 1; i <= 10; i++) {
+    var prefix = 'guide-f' + i;
+    el = document.getElementById(prefix + '-title');
+    if (el) el.textContent = t('guide.f' + i + '.title');
+    el = document.getElementById(prefix + '-subtitle');
+    if (el) el.textContent = t('guide.f' + i + '.subtitle');
+    el = document.getElementById(prefix + '-tip-label');
+    if (el) el.textContent = t('guide.pro.tip');
+    el = document.getElementById(prefix + '-tip-text');
+    if (el) el.textContent = t('guide.f' + i + '.tip');
+
+    /* Stat cards inside features */
+    for (var s = 1; s <= 4; s++) {
+      el = document.getElementById(prefix + '-stat' + s + '-label');
+      if (el) el.textContent = t('guide.f' + i + '.s' + s + '.label');
+      el = document.getElementById(prefix + '-stat' + s + '-value');
+      if (el) el.textContent = t('guide.f' + i + '.s' + s + '.value');
+    }
+
+    /* Try-it buttons */
+    el = document.getElementById(prefix + '-try-btn');
+    if (el) {
+      var span = el.querySelector('span');
+      if (span) span.textContent = t('guide.try.btn');
+    }
+  }
+
+  /* Download button */
+  el = document.getElementById('guide-download-label');
+  if (el) el.textContent = t('guide.download');
+
+  /* Disclaimer */
+  el = document.getElementById('guide-disclaimer-text');
+  if (el) el.textContent = t('guide.disclaimer');
+}
+
+/* ============================================================
+   Guide Tab: PDF Download
+   ============================================================ */
+function downloadGuidePDF() {
+  var guidePanel = document.getElementById('tab-guide');
+  if (!guidePanel) return;
+
+  /* Open all accordions for the print */
+  var features = guidePanel.querySelectorAll('.guide-feature');
+  features.forEach(function (f) { f.classList.add('open'); });
+
+  /* Create a print-friendly window */
+  var printWin = window.open('', '_blank');
+  if (!printWin) {
+    alert('Please allow pop-ups to download the PDF.');
+    return;
+  }
+
+  var styles = '';
+  document.querySelectorAll('style, link[rel="stylesheet"]').forEach(function (s) {
+    styles += s.outerHTML;
+  });
+
+  printWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AlphaEdge HK - User Guide</title>' + styles + '<style>'
+    + 'body { background: #fff !important; padding: 24px; }'
+    + '.guide-pdf-btn, .guide-try-btn, .guide-feature-arrow { display: none !important; }'
+    + '.guide-feature .guide-feature-body { display: block !important; }'
+    + '.tab-panel { display: block !important; }'
+    + '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }'
+    + '</style></head><body>');
+  printWin.document.write(guidePanel.innerHTML);
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+
+  setTimeout(function () {
+    printWin.print();
+  }, 500);
 }
