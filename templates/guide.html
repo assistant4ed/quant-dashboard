@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AlphaEdge HK 使用指南 — 如何閱讀AI股票分析、量化信號及多因子評分">
+  <title>AlphaEdge HK — 使用指南</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body { background: var(--bg-primary, #F7F8FA); }
+    .guide-page { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+    .guide-back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 600; color: var(--steel, #4A6FA5);
+      text-decoration: none; margin-bottom: 20px; padding: 6px 0;
+      transition: color 0.15s;
+    }
+    .guide-back-link:hover { color: var(--navy, #1B2A4A); }
+    @media print {
+      .guide-back-link { display: none; }
+      .guide-pdf-btn { display: none !important; }
+      body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .guide-section { break-inside: avoid; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="guide-page">
+    <a href="/" class="guide-back-link">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 12L6 8l4-4"/></svg>
+      返回儀表板
+    </a>
+
+      <style>
+        /* ========================================
+           Guide Tab Styles — Practical Reading Guide
+           ======================================== */
+
+        /* Section Layout */
+        .guide-section {
+          margin-bottom: 40px;
+          padding-bottom: 32px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .guide-section:last-of-type {
+          border-bottom: none;
+        }
+        .guide-section-num {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--navy, #1B2A4A);
+          color: #fff;
+          font-size: 0.75rem;
+          font-weight: 800;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+          margin-right: 12px;
+          flex-shrink: 0;
+        }
+        .guide-section-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .guide-section-title {
+          font-size: 1.2rem;
+          font-weight: 800;
+          color: var(--navy, #1B2A4A);
+          margin: 0;
+          letter-spacing: -0.01em;
+        }
+        .guide-section-subtitle {
+          font-size: 0.8rem;
+          color: var(--text-muted, #8b8fa3);
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        /* Hero Banner */
+        .guide-hero {
+          background: linear-gradient(135deg, #1B2A4A 0%, #2a3f6b 60%, #4A6FA5 100%);
+          border-radius: 12px;
+          padding: 40px 36px 36px;
+          margin-bottom: 36px;
+          position: relative;
+          overflow: hidden;
+        }
+        .guide-hero::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          right: -20%;
+          width: 400px;
+          height: 400px;
+          border-radius: 50%;
+          background: rgba(196, 169, 98, 0.06);
+          pointer-events: none;
+        }
+        .guide-hero-eyebrow {
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          color: var(--gold, #C4A962);
+          margin-bottom: 10px;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-hero h2 {
+          font-size: 1.6rem;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0 0 8px;
+          letter-spacing: -0.02em;
+        }
+        .guide-hero-subtitle {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.65);
+          margin: 0;
+          max-width: 560px;
+          line-height: 1.6;
+        }
+
+        /* Card Mockup — Annotated Stock Card */
+        .guide-card-mockup {
+          background: #fff;
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 10px;
+          padding: 20px 24px;
+          position: relative;
+          max-width: 420px;
+          box-shadow: 0 2px 12px rgba(27, 42, 74, 0.06);
+        }
+        .guide-card-rank {
+          position: absolute;
+          top: -12px;
+          left: 16px;
+          background: var(--gold, #C4A962);
+          color: #fff;
+          font-size: 0.688rem;
+          font-weight: 800;
+          padding: 3px 10px;
+          border-radius: 4px;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+          letter-spacing: 0.05em;
+        }
+        .guide-card-ticker {
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: var(--navy, #1B2A4A);
+          margin: 8px 0 2px;
+        }
+        .guide-card-name {
+          font-size: 0.78rem;
+          color: var(--text-muted, #8b8fa3);
+          margin: 0 0 14px;
+        }
+        .guide-card-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-top: 1px solid rgba(148, 163, 184, 0.08);
+        }
+        .guide-card-label {
+          font-size: 0.72rem;
+          color: var(--text-muted, #8b8fa3);
+          font-weight: 600;
+        }
+        .guide-card-value {
+          font-size: 0.78rem;
+          font-weight: 700;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-card-value.positive { color: #16a34a; }
+        .guide-card-value.score { color: var(--navy, #1B2A4A); }
+        .guide-card-trend-up {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          color: #16a34a;
+          font-weight: 700;
+          font-size: 0.78rem;
+        }
+        .guide-card-sector {
+          display: inline-block;
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          padding: 2px 8px;
+          border-radius: 3px;
+          background: rgba(74, 111, 165, 0.08);
+          color: var(--steel, #4A6FA5);
+          border: 1px solid rgba(74, 111, 165, 0.15);
+        }
+
+        /* Annotation callout lines */
+        .guide-annotated-wrap {
+          display: flex;
+          gap: 28px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .guide-annotations {
+          flex: 1;
+          min-width: 260px;
+        }
+        .guide-annotation {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 14px;
+          align-items: flex-start;
+        }
+        .guide-annotation-dot {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: var(--gold, #C4A962);
+          color: #fff;
+          font-size: 0.625rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+        .guide-annotation-text {
+          font-size: 0.78rem;
+          color: var(--text-secondary, #64748b);
+          line-height: 1.55;
+        }
+        .guide-annotation-text strong {
+          color: var(--navy, #1B2A4A);
+          font-weight: 700;
+        }
+
+        /* Signal Gauge */
+        .guide-gauge {
+          margin: 20px 0;
+        }
+        .guide-gauge-bar {
+          display: flex;
+          height: 36px;
+          border-radius: 6px;
+          overflow: hidden;
+          margin-bottom: 8px;
+        }
+        .guide-gauge-seg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.6rem;
+          font-weight: 700;
+          color: #fff;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+          padding: 0 6px;
+        }
+        .guide-gauge-labels {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.625rem;
+          color: var(--text-muted, #8b8fa3);
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-gauge-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 0;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+        }
+        .guide-gauge-row:last-child {
+          border-bottom: none;
+        }
+        .guide-gauge-color {
+          width: 14px;
+          height: 14px;
+          border-radius: 3px;
+          flex-shrink: 0;
+        }
+        .guide-gauge-range {
+          font-size: 0.72rem;
+          font-weight: 700;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+          color: var(--navy, #1B2A4A);
+          min-width: 110px;
+        }
+        .guide-gauge-desc {
+          font-size: 0.75rem;
+          color: var(--text-secondary, #64748b);
+        }
+
+        /* Gold Insight Box */
+        .guide-insight {
+          border-left: 3px solid var(--gold, #C4A962);
+          background: rgba(196, 169, 98, 0.04);
+          padding: 14px 18px;
+          margin: 18px 0;
+          border-radius: 0 6px 6px 0;
+        }
+        .guide-insight-label {
+          font-size: 0.625rem;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--gold, #C4A962);
+          margin-bottom: 4px;
+        }
+        .guide-insight p {
+          font-size: 0.78rem;
+          color: var(--text-secondary, #64748b);
+          margin: 0;
+          line-height: 1.55;
+        }
+
+        /* AI Report Mockup */
+        .guide-ai-mockup {
+          background: rgba(248, 249, 250, 0.6);
+          border: 1px solid rgba(148, 163, 184, 0.15);
+          border-radius: 8px;
+          overflow: hidden;
+          margin: 16px 0;
+        }
+        .guide-ai-mockup-bar {
+          background: rgba(27, 42, 74, 0.04);
+          padding: 8px 14px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+          font-size: 0.688rem;
+          font-weight: 700;
+          color: var(--navy, #1B2A4A);
+          letter-spacing: 0.05em;
+        }
+        .guide-ai-section {
+          padding: 12px 18px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+        }
+        .guide-ai-section:last-child {
+          border-bottom: none;
+        }
+        .guide-ai-section-title {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--navy, #1B2A4A);
+          margin: 0 0 4px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .guide-ai-section-body {
+          font-size: 0.72rem;
+          color: var(--text-muted, #8b8fa3);
+          line-height: 1.5;
+          margin: 0;
+          font-style: italic;
+        }
+
+        /* Factor Table */
+        .guide-factor-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 16px 0;
+          font-size: 0.75rem;
+        }
+        .guide-factor-table th {
+          background: rgba(27, 42, 74, 0.04);
+          padding: 10px 14px;
+          text-align: left;
+          font-weight: 700;
+          color: var(--navy, #1B2A4A);
+          font-size: 0.688rem;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          border-bottom: 2px solid rgba(27, 42, 74, 0.1);
+        }
+        .guide-factor-table td {
+          padding: 10px 14px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+          color: var(--text-secondary, #64748b);
+        }
+        .guide-factor-table tr:last-child td {
+          border-bottom: none;
+        }
+        .guide-factor-score {
+          font-weight: 800;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-factor-score.pos { color: #16a34a; }
+        .guide-factor-score.neg { color: #dc2626; }
+
+        /* Factor Bar (horizontal mini bars) */
+        .guide-factor-bar-wrap {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .guide-factor-bar-track {
+          flex: 1;
+          height: 8px;
+          background: rgba(148, 163, 184, 0.1);
+          border-radius: 4px;
+          position: relative;
+          max-width: 100px;
+        }
+        .guide-factor-bar-fill {
+          position: absolute;
+          top: 0;
+          height: 100%;
+          border-radius: 4px;
+        }
+        .guide-factor-bar-fill.pos {
+          left: 50%;
+          background: #16a34a;
+        }
+        .guide-factor-bar-fill.neg {
+          right: 50%;
+          background: #dc2626;
+        }
+
+        /* Regime Cards */
+        .guide-regime-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 10px;
+          margin: 16px 0;
+        }
+        .guide-regime-card {
+          border-radius: 8px;
+          padding: 14px 16px;
+          border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .guide-regime-dot {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          margin-right: 6px;
+        }
+        .guide-regime-name {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: var(--navy, #1B2A4A);
+        }
+        .guide-regime-desc {
+          font-size: 0.68rem;
+          color: var(--text-muted, #8b8fa3);
+          margin-top: 4px;
+          line-height: 1.4;
+        }
+
+        /* Prediction Chart Mockup (CSS only) */
+        .guide-pred-chart {
+          position: relative;
+          height: 200px;
+          margin: 20px 0;
+          border: 1px solid rgba(148, 163, 184, 0.12);
+          border-radius: 8px;
+          overflow: hidden;
+          background: rgba(248, 249, 250, 0.4);
+        }
+        .guide-pred-band {
+          position: absolute;
+          left: 0;
+          right: 0;
+          background: rgba(74, 111, 165, 0.06);
+          border-top: 1px dashed rgba(74, 111, 165, 0.2);
+          border-bottom: 1px dashed rgba(74, 111, 165, 0.2);
+        }
+        .guide-pred-line {
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: var(--steel, #4A6FA5);
+          border-radius: 2px;
+        }
+        .guide-pred-label {
+          position: absolute;
+          font-size: 0.625rem;
+          font-weight: 700;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+          padding: 2px 6px;
+          border-radius: 3px;
+        }
+        .guide-pred-label.target {
+          background: rgba(74, 111, 165, 0.1);
+          color: var(--steel, #4A6FA5);
+        }
+        .guide-pred-label.upper {
+          color: var(--text-muted, #8b8fa3);
+        }
+        .guide-pred-label.lower {
+          color: var(--text-muted, #8b8fa3);
+        }
+        .guide-pred-label.base {
+          background: rgba(27, 42, 74, 0.06);
+          color: var(--navy, #1B2A4A);
+        }
+
+        /* Metric Row */
+        .guide-metric-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 10px;
+          margin: 16px 0;
+        }
+        .guide-metric-card {
+          background: rgba(27, 42, 74, 0.02);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          border-radius: 8px;
+          padding: 12px 14px;
+          text-align: center;
+        }
+        .guide-metric-value {
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: var(--navy, #1B2A4A);
+          display: block;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-metric-label {
+          font-size: 0.625rem;
+          color: var(--text-muted, #8b8fa3);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          display: block;
+          margin-top: 2px;
+        }
+        .guide-metric-desc {
+          font-size: 0.65rem;
+          color: var(--text-muted, #8b8fa3);
+          margin-top: 4px;
+          line-height: 1.4;
+        }
+
+        /* Workflow Steps */
+        .guide-workflow {
+          counter-reset: workflow;
+          margin: 16px 0;
+        }
+        .guide-workflow-step {
+          display: flex;
+          gap: 14px;
+          align-items: flex-start;
+          padding: 14px 0;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+          counter-increment: workflow;
+        }
+        .guide-workflow-step:last-child {
+          border-bottom: none;
+        }
+        .guide-workflow-num {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: var(--navy, #1B2A4A);
+          color: #fff;
+          font-size: 0.72rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .guide-workflow-num.warning {
+          background: #f59e0b;
+        }
+        .guide-workflow-content {
+          flex: 1;
+        }
+        .guide-workflow-title {
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: var(--navy, #1B2A4A);
+          margin: 0 0 2px;
+        }
+        .guide-workflow-desc {
+          font-size: 0.72rem;
+          color: var(--text-muted, #8b8fa3);
+          margin: 0;
+          line-height: 1.5;
+        }
+
+        /* PDF Download Button */
+        .guide-pdf-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 14px 24px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--navy, #1B2A4A);
+          background: rgba(196, 169, 98, 0.12);
+          border: 1px solid rgba(196, 169, 98, 0.3);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.15s ease, border-color 0.15s ease;
+          margin-top: 24px;
+        }
+        .guide-pdf-btn:hover {
+          background: rgba(196, 169, 98, 0.2);
+          border-color: rgba(196, 169, 98, 0.5);
+        }
+
+        /* Guide Disclaimer */
+        .guide-disclaimer {
+          margin-top: 32px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .guide-disclaimer p {
+          font-size: 0.7rem;
+          color: var(--text-muted, #8b8fa3);
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .guide-hero {
+            padding: 28px 20px 24px;
+          }
+          .guide-hero h2 {
+            font-size: 1.2rem;
+          }
+          .guide-annotated-wrap {
+            flex-direction: column;
+          }
+          .guide-card-mockup {
+            max-width: 100%;
+          }
+          .guide-metric-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .guide-regime-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+          .guide-gauge-range {
+            min-width: 80px;
+          }
+        }
+        @media (max-width: 480px) {
+          .guide-metric-grid {
+            grid-template-columns: 1fr;
+          }
+          .guide-regime-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      </style>
+
+      <div style="height:32px;"></div>
+
+      <!-- ===== Hero Banner ===== -->
+      <div class="guide-hero">
+        <div class="guide-hero-eyebrow">ALPHAEDGE HK &mdash; 實戰閱讀指南</div>
+        <h2>如何解讀分析結果</h2>
+        <p class="guide-hero-subtitle">本指南用真實範例逐步教你如何閱讀股票推薦卡、信號強弱、AI報告、多因子評分、以及價格預測圖。不是功能清單，而是「怎麼看、怎麼用」的實戰手冊。</p>
+      </div>
+
+      <!-- ============================================================
+           Section 1: 如何閱讀股票推薦卡
+           ============================================================ -->
+      <div class="guide-section">
+        <div class="guide-section-header">
+          <span class="guide-section-num">1</span>
+          <div>
+            <h3 class="guide-section-title">如何閱讀股票推薦卡</h3>
+            <p class="guide-section-subtitle">以真實數據 STX 希捷科技為例</p>
+          </div>
+        </div>
+
+        <div class="guide-annotated-wrap">
+          <!-- Mockup Card -->
+          <div class="guide-card-mockup" aria-label="股票推薦卡範例">
+            <div class="guide-card-rank">#1</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px;">
+              <div>
+                <div class="guide-card-ticker">STX</div>
+                <div class="guide-card-name">希捷科技</div>
+              </div>
+              <span class="guide-card-sector">科技</span>
+            </div>
+            <div class="guide-card-row">
+              <span class="guide-card-label">信號強度</span>
+              <span class="guide-card-value positive">+2.82%</span>
+            </div>
+            <div class="guide-card-row">
+              <span class="guide-card-label">一致性</span>
+              <span class="guide-card-value score">90%</span>
+            </div>
+            <div class="guide-card-row">
+              <span class="guide-card-label">綜合評分</span>
+              <span class="guide-card-value score">0.9997</span>
+            </div>
+            <div class="guide-card-row">
+              <span class="guide-card-label">趨勢</span>
+              <span class="guide-card-trend-up">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8l4-4 4 4"/></svg>
+                上升
+              </span>
+            </div>
+          </div>
+
+          <!-- Annotations -->
+          <div class="guide-annotations">
+            <div class="guide-annotation">
+              <span class="guide-annotation-dot">A</span>
+              <div class="guide-annotation-text">
+                <strong>排名 #1</strong> &mdash; 綜合評分最高的股票。全部458隻股票中排名第一。
+              </div>
+            </div>
+            <div class="guide-annotation">
+              <span class="guide-annotation-dot">B</span>
+              <div class="guide-annotation-text">
+                <strong>STX 希捷科技</strong> &mdash; 股票代碼與中文名稱。板塊標籤顯示「科技」所屬行業。
+              </div>
+            </div>
+            <div class="guide-annotation">
+              <span class="guide-annotation-dot">C</span>
+              <div class="guide-annotation-text">
+                <strong>信號強度 +2.82%</strong> &mdash; 模型預測未來20個交易日的超額回報率。正值代表看漲，負值代表看跌。數值越大，信號越強。
+              </div>
+            </div>
+            <div class="guide-annotation">
+              <span class="guide-annotation-dot">D</span>
+              <div class="guide-annotation-text">
+                <strong>一致性 90%</strong> &mdash; 過去20個交易日中，該股票出現在前25%的天數比例。90% 代表非常穩定的高排名表現。
+              </div>
+            </div>
+            <div class="guide-annotation">
+              <span class="guide-annotation-dot">E</span>
+              <div class="guide-annotation-text">
+                <strong>綜合評分 0.9997</strong> &mdash; 計算公式為 70% 信號強度 + 30% 一致性。接近 1.0 代表極強推薦。
+              </div>
+            </div>
+            <div class="guide-annotation">
+              <span class="guide-annotation-dot">F</span>
+              <div class="guide-annotation-text">
+                <strong>趨勢 上升</strong> &mdash; 模型判斷的價格方向。上升表示預期上漲，下降表示預期下跌。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-insight">
+          <div class="guide-insight-label">關鍵概念</div>
+          <p>綜合評分公式：<strong>70% 信號強度 + 30% 一致性</strong>。同時重視信號方向與穩定度，避免追隨一閃而過的極端信號。一致性高但信號弱的股票，通常比信號強但不穩定的股票更值得關注。</p>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 2: 如何判斷信號強弱
+           ============================================================ -->
+      <div class="guide-section">
+        <div class="guide-section-header">
+          <span class="guide-section-num">2</span>
+          <div>
+            <h3 class="guide-section-title">如何判斷信號強弱</h3>
+            <p class="guide-section-subtitle">信號強度的量尺解讀</p>
+          </div>
+        </div>
+
+        <!-- Visual Gauge -->
+        <div class="guide-gauge">
+          <div class="guide-gauge-bar" role="img" aria-label="信號強度量尺">
+            <div class="guide-gauge-seg" style="flex: 1; background: #991b1b;">強賣出</div>
+            <div class="guide-gauge-seg" style="flex: 1; background: #dc2626;">看跌</div>
+            <div class="guide-gauge-seg" style="flex: 1; background: #9ca3af;">中性</div>
+            <div class="guide-gauge-seg" style="flex: 1; background: #16a34a;">看漲</div>
+            <div class="guide-gauge-seg" style="flex: 1; background: #15803d;">強買入</div>
+            <div class="guide-gauge-seg" style="flex: 0.6; background: #166534; font-size: 0.55rem;">極強</div>
+          </div>
+          <div class="guide-gauge-labels">
+            <span>&lt; -1%</span>
+            <span>-0.1%</span>
+            <span>0</span>
+            <span>+0.1%</span>
+            <span>+1%</span>
+            <span>&gt; +3%</span>
+          </div>
+        </div>
+
+        <!-- Gauge Detail Rows -->
+        <div style="margin: 20px 0;">
+          <div class="guide-gauge-row">
+            <div class="guide-gauge-color" style="background: #166534;"></div>
+            <span class="guide-gauge-range">&gt; +3%</span>
+            <span class="guide-gauge-desc">極強買入信號（非常罕見，往往出現在重大事件後）</span>
+          </div>
+          <div class="guide-gauge-row">
+            <div class="guide-gauge-color" style="background: #15803d;"></div>
+            <span class="guide-gauge-range">+1% 至 +3%</span>
+            <span class="guide-gauge-desc">強買入信號（如 STX 的 +2.82% 即屬此範圍）</span>
+          </div>
+          <div class="guide-gauge-row">
+            <div class="guide-gauge-color" style="background: #16a34a;"></div>
+            <span class="guide-gauge-range">+0.1% 至 +1%</span>
+            <span class="guide-gauge-desc">溫和看漲（方向偏多但力度不強）</span>
+          </div>
+          <div class="guide-gauge-row">
+            <div class="guide-gauge-color" style="background: #9ca3af;"></div>
+            <span class="guide-gauge-range">-0.1% 至 +0.1%</span>
+            <span class="guide-gauge-desc">中性區域（模型無明確方向判斷）</span>
+          </div>
+          <div class="guide-gauge-row">
+            <div class="guide-gauge-color" style="background: #dc2626;"></div>
+            <span class="guide-gauge-range">-1% 至 -0.1%</span>
+            <span class="guide-gauge-desc">溫和看跌（方向偏空但力度不強）</span>
+          </div>
+          <div class="guide-gauge-row">
+            <div class="guide-gauge-color" style="background: #991b1b;"></div>
+            <span class="guide-gauge-range">&lt; -1%</span>
+            <span class="guide-gauge-desc">強賣出信號（建議特別留意風險）</span>
+          </div>
+        </div>
+
+        <div class="guide-insight">
+          <div class="guide-insight-label">統計意義</div>
+          <p>即使 +0.02 的小信號看似微不足道，但在全部 458 隻股票中持續應用，長期累積仍具有統計意義。量化投資的核心在於「微小優勢 x 大量重複 = 可觀回報」。市場平均信號為 +0.0012，因此任何大幅高於此值的信號都值得關注。</p>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 3: 如何閱讀AI分析報告
+           ============================================================ -->
+      <div class="guide-section">
+        <div class="guide-section-header">
+          <span class="guide-section-num">3</span>
+          <div>
+            <h3 class="guide-section-title">如何閱讀AI分析報告</h3>
+            <p class="guide-section-subtitle">Claude Opus 生成的深度投資分析</p>
+          </div>
+        </div>
+
+        <!-- AI Report Mockup -->
+        <div class="guide-ai-mockup">
+          <div class="guide-ai-mockup-bar">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 5v4M5 7h4"/></svg>
+            AI 分析報告 &mdash; STX 希捷科技
+          </div>
+
+          <div class="guide-ai-section">
+            <h4 class="guide-ai-section-title">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#C4A962" stroke-width="1.5"><path d="M6 1v10M1 6h10"/></svg>
+              投資論述
+            </h4>
+            <p class="guide-ai-section-body">AI 會先給出整體判斷：看漲、看跌或中性，並簡述核心邏輯。這是報告最重要的結論段落。</p>
+          </div>
+
+          <div class="guide-ai-section">
+            <h4 class="guide-ai-section-title">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4A6FA5" stroke-width="1.5"><rect x="1" y="1" width="10" height="10" rx="2"/></svg>
+              基本面分析
+            </h4>
+            <p class="guide-ai-section-body">檢視營收增長、利潤率、負債比率等財務數據，評估公司的內在價值。</p>
+          </div>
+
+          <div class="guide-ai-section">
+            <h4 class="guide-ai-section-title">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4A6FA5" stroke-width="1.5"><path d="M1 9l3-3 2 2 5-6"/></svg>
+              技術面分析
+            </h4>
+            <p class="guide-ai-section-body">分析價格走勢、支撐位、阻力位以及技術指標所呈現的動量訊號。</p>
+          </div>
+
+          <div class="guide-ai-section">
+            <h4 class="guide-ai-section-title">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4A6FA5" stroke-width="1.5"><circle cx="6" cy="6" r="5"/><path d="M3 6h6"/></svg>
+              宏觀環境
+            </h4>
+            <p class="guide-ai-section-body">評估利率政策、行業趨勢、地緣政治等宏觀因素對該股票的影響。</p>
+          </div>
+
+          <div class="guide-ai-section">
+            <h4 class="guide-ai-section-title">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#dc2626" stroke-width="1.5"><path d="M6 1l5 10H1z"/></svg>
+              風險評估
+            </h4>
+            <p class="guide-ai-section-body">識別主要下行風險，包括競爭威脅、估值過高、監管變化等潛在問題。</p>
+          </div>
+        </div>
+
+        <div class="guide-insight">
+          <div class="guide-insight-label">分析速度</div>
+          <p>AI分析由 <strong>Claude Opus</strong> 生成，整合量化信號、財務數據、以及市場情緒三層數據源。快速分析約 <strong>10 秒</strong>，完整分析約 <strong>30 秒</strong>。建議在信號強度高的股票上使用完整分析，以獲取最全面的投資論述。</p>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 4: 如何解讀多因子評分
+           ============================================================ -->
+      <div class="guide-section">
+        <div class="guide-section-header">
+          <span class="guide-section-num">4</span>
+          <div>
+            <h3 class="guide-section-title">如何解讀多因子評分</h3>
+            <p class="guide-section-subtitle">12個因子類別，每個 -5 至 +5 分</p>
+          </div>
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-secondary, #64748b); line-height: 1.6; margin: 0 0 16px;">
+          系統將 158 個原始因子歸類為 12 大類別，每類評分範圍 -5 至 +5。以下是 STX 的範例評分：
+        </p>
+
+        <!-- Factor Table with Visual Bars -->
+        <table class="guide-factor-table" role="table">
+          <thead>
+            <tr>
+              <th scope="col">因子</th>
+              <th scope="col">評分</th>
+              <th scope="col">圖示</th>
+              <th scope="col">含義</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>動量 Momentum</td>
+              <td><span class="guide-factor-score pos">+4</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 40%;"></div></div>
+                </div>
+              </td>
+              <td>近期價格趨勢非常強勁</td>
+            </tr>
+            <tr>
+              <td>價值 Value</td>
+              <td><span class="guide-factor-score neg">-1</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill neg" style="width: 10%;"></div></div>
+                </div>
+              </td>
+              <td>估值略高於同業平均</td>
+            </tr>
+            <tr>
+              <td>質量 Quality</td>
+              <td><span class="guide-factor-score pos">+3</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 30%;"></div></div>
+                </div>
+              </td>
+              <td>財務基礎穩健，利潤率良好</td>
+            </tr>
+            <tr>
+              <td>增長 Growth</td>
+              <td><span class="guide-factor-score pos">+2</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 20%;"></div></div>
+                </div>
+              </td>
+              <td>營收增長良好，前景正面</td>
+            </tr>
+            <tr>
+              <td>波動率 Volatility</td>
+              <td><span class="guide-factor-score neg">-2</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill neg" style="width: 20%;"></div></div>
+                </div>
+              </td>
+              <td>近期價格波動偏大</td>
+            </tr>
+            <tr>
+              <td>情緒 Sentiment</td>
+              <td><span class="guide-factor-score pos">+3</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 30%;"></div></div>
+                </div>
+              </td>
+              <td>市場對該股票的看法偏正面</td>
+            </tr>
+            <tr>
+              <td>宏觀 Macro</td>
+              <td><span class="guide-factor-score pos">+1</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 10%;"></div></div>
+                </div>
+              </td>
+              <td>宏觀環境略微有利</td>
+            </tr>
+            <tr>
+              <td>經濟 Economic</td>
+              <td><span class="guide-factor-score pos">+1</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 10%;"></div></div>
+                </div>
+              </td>
+              <td>經濟週期指標中性偏正</td>
+            </tr>
+            <tr>
+              <td>行業 Industry</td>
+              <td><span class="guide-factor-score pos">+3</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 30%;"></div></div>
+                </div>
+              </td>
+              <td>所屬行業整體表現優於大盤</td>
+            </tr>
+            <tr>
+              <td>風險調整 Risk-Adj</td>
+              <td><span class="guide-factor-score pos">+2</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 20%;"></div></div>
+                </div>
+              </td>
+              <td>考慮風險後的回報率仍有吸引力</td>
+            </tr>
+            <tr>
+              <td>歷史類比 Historical</td>
+              <td><span class="guide-factor-score pos">+2</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 20%;"></div></div>
+                </div>
+              </td>
+              <td>歷史上類似型態的後續走勢偏多</td>
+            </tr>
+            <tr>
+              <td>ML自適應 ML Adaptive</td>
+              <td><span class="guide-factor-score pos">+3</span></td>
+              <td>
+                <div class="guide-factor-bar-wrap">
+                  <div class="guide-factor-bar-track"><div class="guide-factor-bar-fill pos" style="width: 30%;"></div></div>
+                </div>
+              </td>
+              <td>機器學習模型給予正面預測</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Market Regimes -->
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--navy, #1B2A4A); margin: 24px 0 12px;">五大市場狀態與因子權重調整</h4>
+        <p style="font-size: 0.75rem; color: var(--text-secondary, #64748b); line-height: 1.6; margin: 0 0 12px;">
+          模型會自動偵測當前市場所處的狀態，並動態調整各因子的權重比例：
+        </p>
+
+        <div class="guide-regime-grid">
+          <div class="guide-regime-card" style="background: rgba(220, 38, 38, 0.04);">
+            <div class="guide-regime-name"><span class="guide-regime-dot" style="background: #dc2626;"></span>恐慌 PANIC</div>
+            <div class="guide-regime-desc">加重「價值」和「質量」因子。核心策略：買入被恐慌拋售的優質便宜股。</div>
+          </div>
+          <div class="guide-regime-card" style="background: rgba(234, 179, 8, 0.04);">
+            <div class="guide-regime-name"><span class="guide-regime-dot" style="background: #eab308;"></span>熊市 BEAR</div>
+            <div class="guide-regime-desc">加重「價值」和「質量」因子。偏向防守，尋找財務穩健的低估值標的。</div>
+          </div>
+          <div class="guide-regime-card" style="background: rgba(34, 197, 94, 0.04);">
+            <div class="guide-regime-name"><span class="guide-regime-dot" style="background: #22c55e;"></span>復甦 RECOVERY</div>
+            <div class="guide-regime-desc">平衡各因子權重。市場從底部回升，各類策略均有機會。</div>
+          </div>
+          <div class="guide-regime-card" style="background: rgba(74, 111, 165, 0.04);">
+            <div class="guide-regime-name"><span class="guide-regime-dot" style="background: #4A6FA5;"></span>牛市 BULL</div>
+            <div class="guide-regime-desc">加重「動量」和「增長」因子。順勢而為，追隨趨勢中的強勢股。</div>
+          </div>
+          <div class="guide-regime-card" style="background: rgba(168, 85, 247, 0.04);">
+            <div class="guide-regime-name"><span class="guide-regime-dot" style="background: #a855f7;"></span>亢奮 EUPHORIA</div>
+            <div class="guide-regime-desc">加重「增長」因子，但提高風險警戒。市場過熱時仍追增長，但需警惕泡沫。</div>
+          </div>
+        </div>
+
+        <div class="guide-insight">
+          <div class="guide-insight-label">閱讀技巧</div>
+          <p>不要只看單一因子的絕對分數。真正有價值的是在當前市場狀態下，<strong>被加重的因子</strong>得分如何。例如在牛市中，動量 +4 比質量 +4 更有意義，因為牛市權重偏向動量。</p>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 5: 如何使用價格預測圖
+           ============================================================ -->
+      <div class="guide-section">
+        <div class="guide-section-header">
+          <span class="guide-section-num">5</span>
+          <div>
+            <h3 class="guide-section-title">如何使用價格預測圖</h3>
+            <p class="guide-section-subtitle">6個月前瞻預測與信賴區間</p>
+          </div>
+        </div>
+
+        <!-- CSS-only Prediction Chart Mockup -->
+        <div class="guide-pred-chart" role="img" aria-label="價格預測圖範例">
+          <!-- Confidence Band -->
+          <div class="guide-pred-band" style="top: 25%; height: 40%;"></div>
+          <!-- Predicted Price Line (diagonal from bottom-left to upper-right) -->
+          <div style="position: absolute; left: 8%; top: 60%; width: 84%; height: 3px; background: var(--steel, #4A6FA5); border-radius: 2px; transform: rotate(-12deg); transform-origin: left center;"></div>
+          <!-- Labels -->
+          <div class="guide-pred-label base" style="left: 4%; top: 62%;">$100 基礎價</div>
+          <div class="guide-pred-label target" style="right: 4%; top: 32%;">$112 目標價</div>
+          <div class="guide-pred-label upper" style="right: 4%; top: 18%; font-size: 0.58rem;">$130 上界</div>
+          <div class="guide-pred-label lower" style="right: 4%; top: 68%; font-size: 0.58rem;">$95 下界</div>
+          <!-- Time axis label -->
+          <div style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--text-muted, #8b8fa3);">
+            今天 &rarr; 6個月後
+          </div>
+          <!-- Band label -->
+          <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--steel, #4A6FA5); background: rgba(74, 111, 165, 0.06); padding: 2px 8px; border-radius: 3px;">
+            90% 信賴區間
+          </div>
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-secondary, #64748b); line-height: 1.6; margin: 0 0 16px;">
+          圖表中藍線代表預測價格軌跡，灰色區域為90%信賴區間（上界與下界之間）。以下是關鍵指標的含義：
+        </p>
+
+        <!-- Key Metrics Grid -->
+        <div class="guide-metric-grid">
+          <div class="guide-metric-card">
+            <span class="guide-metric-value">$112</span>
+            <span class="guide-metric-label">目標價</span>
+            <div class="guide-metric-desc">6個月後的預測價格</div>
+          </div>
+          <div class="guide-metric-card">
+            <span class="guide-metric-value" style="color: #16a34a;">+12%</span>
+            <span class="guide-metric-label">增長率</span>
+            <div class="guide-metric-desc">預測漲跌幅度</div>
+          </div>
+          <div class="guide-metric-card">
+            <span class="guide-metric-value">72%</span>
+            <span class="guide-metric-label">概率</span>
+            <div class="guide-metric-desc">模型對方向的信心</div>
+          </div>
+          <div class="guide-metric-card">
+            <span class="guide-metric-value">28%</span>
+            <span class="guide-metric-label">年化波動率</span>
+            <div class="guide-metric-desc">價格波動程度</div>
+          </div>
+          <div class="guide-metric-card">
+            <span class="guide-metric-value">1.2</span>
+            <span class="guide-metric-label">夏普比率</span>
+            <div class="guide-metric-desc">風險調整後回報 (&gt;1 為佳)</div>
+          </div>
+          <div class="guide-metric-card">
+            <span class="guide-metric-value" style="color: #dc2626;">-15%</span>
+            <span class="guide-metric-label">最大回撤</span>
+            <div class="guide-metric-desc">預估最大虧損幅度</div>
+          </div>
+        </div>
+
+        <div class="guide-insight">
+          <div class="guide-insight-label">實際範例</div>
+          <p>如果基礎價格 <strong>$100</strong>，目標價 <strong>$112</strong>，增長率 <strong>+12%</strong>，信賴區間 <strong>$95 - $130</strong>，代表模型預測 6 個月後股價介於 $95 至 $130 之間，最可能落在 $112 附近。信賴區間越窄，模型信心越高；區間越寬，不確定性越大。</p>
+        </div>
+
+        <div class="guide-insight">
+          <div class="guide-insight-label">風險回報比</div>
+          <p>永遠同時查看「增長率」和「最大回撤」。如果增長率 +12% 但最大回撤 -15%，代表風險回報比約 0.8:1，風險略高於預期回報。理想情況是 <strong>風險回報比 > 1.5</strong>，即預期回報至少是風險的 1.5 倍。</p>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           Section 6: 實戰步驟
+           ============================================================ -->
+      <div class="guide-section" style="border-bottom: none;">
+        <div class="guide-section-header">
+          <span class="guide-section-num">6</span>
+          <div>
+            <h3 class="guide-section-title">實戰步驟</h3>
+            <p class="guide-section-subtitle">從開啟系統到做出判斷的完整流程</p>
+          </div>
+        </div>
+
+        <div class="guide-workflow">
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">1</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">打開「總覽」頁面，查看市場狀態</h4>
+              <p class="guide-workflow-desc">確認當前追蹤的 458 隻股票中，正向信號（234隻）和負向信號（224隻）的比例。市場平均信號 +0.0012，了解整體市場偏向。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">2</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">檢視推薦股票列表</h4>
+              <p class="guide-workflow-desc">留意信號強度 &gt; +1% 的股票。在458隻股票中，這類強信號並不多，每一個都值得深入研究。同時留意一致性是否 &gt; 70%。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">3</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">點擊感興趣的股票，查看詳細分析</h4>
+              <p class="guide-workflow-desc">展開股票卡片，查看板塊、趨勢方向、以及綜合評分的各項組成。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">4</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">切換到「AI分析」，進行深度分析</h4>
+              <p class="guide-workflow-desc">輸入股票代碼，選擇「快速分析」或「完整分析」。AI會整合基本面、技術面、宏觀環境，給出投資論述。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">5</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">對比多因子評分，確認各維度表現</h4>
+              <p class="guide-workflow-desc">查看12個因子類別的得分分布。留意當前市場狀態（如牛市）下被加重的因子是否表現良好。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">6</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">查看價格預測圖，了解風險回報比</h4>
+              <p class="guide-workflow-desc">重點看目標價、信賴區間寬度、夏普比率和最大回撤。信賴區間窄且夏普比率 &gt; 1 的標的風險回報更佳。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num">7</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">參考另類數據作為補充判斷</h4>
+              <p class="guide-workflow-desc">查看沽空比率變化、內幕交易動向、國會議員交易記錄。這些數據提供量化模型以外的額外資訊，可作為確認或反駁的依據。</p>
+            </div>
+          </div>
+          <div class="guide-workflow-step">
+            <div class="guide-workflow-num warning">!</div>
+            <div class="guide-workflow-content">
+              <h4 class="guide-workflow-title">所有分析僅供參考，不構成投資建議</h4>
+              <p class="guide-workflow-desc">模型預測基於歷史數據與統計推斷，無法保證未來表現。請結合自身的風險承受能力、投資目標和財務狀況做出獨立判斷。在做出任何投資決策前，建議諮詢持牌的財務顧問。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guide PDF Download -->
+      <button type="button" class="guide-pdf-btn" id="guide-download-btn" onclick="downloadGuidePDF()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2v10M5 8l4 4 4-4"/><path d="M2 13v2a1 1 0 001 1h12a1 1 0 001-1v-2"/></svg>
+        <span id="guide-download-label">下載指南 PDF</span>
+      </button>
+
+      <!-- Guide Disclaimer -->
+      <div class="guide-disclaimer">
+        <p id="guide-disclaimer-text">本指南介紹 AlphaEdge HK 的分析閱讀方法。所有數據、信號及分析僅供教育及研究用途。過往模型表現不代表未來結果。本指南不構成投資建議。投資涉及風險，閣下可能損失部分或全部本金。</p>
+      </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+  <script>
+    initI18n();
+    /* Render guide labels if function exists */
+    if (typeof renderGuideLabels === 'function') renderGuideLabels();
+  </script>
+</body>
+</html>

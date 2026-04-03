@@ -227,6 +227,11 @@ def create_app():
         """Serve the main dashboard page."""
         return render_template("index.html")
 
+    @app.route("/guide")
+    def guide():
+        """Serve the standalone guide page."""
+        return render_template("guide.html")
+
     # ------------------------------------------------------------------
     # API routes
     # ------------------------------------------------------------------
